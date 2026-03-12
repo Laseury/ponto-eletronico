@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <title>VISO Hotel - Cadastrar Funcionário</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="pagina-dashboard">
+
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h2 class="logo-nome">ViSO</h2>
+                <p class="logo-sub"></p>Ponto Eletrônico</p>
+            </div>
+            <nav class="menu">
+                <a class="menu-item" href="dashboard.html">Dashboard</a>
+                <a class="menu-item ativo" href="#">Funcionarios</a>
+                <a class="menu-item" href="#">Relatórios</a>
+            </nav>
+        </div>
+
+        <div class="conteudo">
+            <div class="topbar">
+                <p class="topbar-titulo">Cadastrar Funcionário</p>
+                <a href="dashboard.html" style="color: #9399a6; font-size: 13px; text-decoration:none">← Voltar</a>
+            </div>
+            <div style="padding: 28px 32px">
+                <div class="form-card">
+                    <div class="form-grupo">
+                        <label class="rotulo">Nome Completo</label>
+                        <input class="entrada" type="text" id="campo-nome" placeholder="Digite seu nome">
+                    </div>
+
+                    <div class="form-grupo">
+                        <label class="rotulo">Tipo</label>
+                        <select class="entrada" id="campo-tipo">
+                            <option value="">Selecione...</option>
+                            <option value="Mensalista">Mensalista</option>
+                            <option value="Horista">Horista</option>
+                            <option value="Horista Noturno">Horista Noturno</option>
+                        </select>
+                    </div>
+                    <div id="mensagem"></div>
+
+                    <button class="botao-entrar" style="width:auto; padding: 10px 28px; margin-top: 8px;"
+                        onclick="cadastrarFuncionario()">Cadastrar</button>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+    <script src="cadastro.js"></script>
+</body>
+
+</html>

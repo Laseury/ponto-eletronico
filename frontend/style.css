@@ -1,0 +1,309 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background: #0e0f11;
+}
+
+/* Faz a pagina ocupar a tela toda e centraliza tudo*/
+/*INDEX*/
+.pagina-login{
+    background: #0e0f11;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* A caixa branca do meio*/
+.caixa-login{
+    background: #16181c;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    padding: 40px;
+    width: 380px;
+}
+
+/* Titulo VISO Hotel*/
+.titulo{
+    color: #c9a84c;
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+/* Subtitulo */
+.subtitulo{
+    color: #5a6070;
+    font-size: 14px;
+    margin-bottom: 32px;
+}
+
+/* Cada grupo label + input*/
+.campo{
+    margin-bottom: 16px;
+}
+
+/* O Texto acima do Input*/
+.rotulo{
+    display: block;
+    color: #9399a6;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+/* Os Campo de texto*/
+.entrada{
+    width: 100%;
+    background: #1e2026;
+    border: 1px solid #2a2d35;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e8e9ec;
+    font-size: 14px;
+}
+
+/* Botão */
+.botao-entrada{
+    width: 100%;
+    background: #c9a84c;
+    color: #0e0f11;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 8px;
+    cursor: pointer;
+}
+
+/*Dashboard*/
+
+/* Layout geral do dashboard */
+.pagina-dashboard{
+    display: flex;
+    height: 100vh;
+    background: #0e0f11
+}
+
+/*Sidebar*/
+.sidebar{
+    width: 220px;
+    background: #16181c;
+    border-right: 1px solid #2a2d35;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-logo{
+    padding: 0 24px 24px;
+    border-bottom: 1px solid #2a2d35
+}
+
+.logo-nome{
+    color: #c9a84c;
+    font-size: 20px;
+}
+
+.logo-sub{
+    color: #5a6070;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/* Menu */
+.menu{
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-item{
+    padding: 10px 24px;
+    color: #9399a6;
+    font-size: 14px;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+}
+
+.menu-item:hover{
+    color: #e8e9ec;
+    background: #1e2026;
+}
+
+.menu-item.active{
+    color: #c9a84c;
+    border-left-color: #c9a84c;
+    background: rgba(201,168,76,0.06);
+}
+
+/* Conteudo Principal */
+.conteudo{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/*Topbar*/
+.topbar{
+    height: 56px;
+    background: #16181c;
+    border-bottom: 1px solid #2a2d35;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+}
+
+.topbar-titulo{
+    color: #e8e9ec;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Cards de Resumo*/
+.cards{
+    display: flex;
+    gap: 16px;
+    padding: 28px 32px;
+}
+
+.card{
+    background: #16181c;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    padding: 20px 24px;
+    flex: 1;
+
+}
+
+.card-label{
+    color: #5a6070;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px
+}
+
+.card-valor{color: #e8e9ec;
+    font-size: 26px;
+    font-weight: 600;
+}
+    
+
+.verde{color: #4caf7d;}
+.vermelhor{color: #e05c5c;}
+
+.secao{
+    padding: 0 32px 32px;
+
+}
+
+.secao-titulo{
+    color: #e8e9ec;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.grid-funcionarios{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.card-funcionario{
+    background: #16181c;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.card-funcionario:hover{
+    border-color: #c9a84c;
+}
+
+.card-nome{
+    color: #e8e9ec;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.card-tipo{
+    color: #5a6070;
+    font-size: 12px;
+    margin-bottom: 14px;
+}
+
+.card-metricas{
+    display: flex;
+    gap: 8px;
+}
+
+.metrica{
+    background: #1e2026;
+    border-radius: 7px;
+    padding: 8px 10px;
+    flex: 1;
+}
+
+.metrica-label{
+    color: #5a6070;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 3px;
+}
+
+.metrica-valor{
+    color: #9399a6;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.metrica-valor.verde{color: #4caf7d;}
+.metrica-valor.vermelhor{color: #e05c5c;}
+
+/* Página do funcionário */
+.table-wrap{
+    background: #16181c;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Pagina cadastro */
+.form-card{
+    background: #16181c;
+    border: 1px solid #2a2d35;
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 480px;
+}
+
+.form-grupo{
+    margin-bottom: 18px;
+}
+
+.mensagem{
+    color: #FFFFFF;
+}
+
+.mensagem-sucesso{
+    color: #4caf7d;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.mensagem-erro{
+    color: #e05c5c;
+    font-size: 13px;
+    margin-bottom: 12px;
+}

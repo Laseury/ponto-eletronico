@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <title>Viso Hotel Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="pagina-dashboard">
+        <div class="sidebar">
+            <div class="sidebar-logo">
+            <h2 class="logo-nome">VISO</h2>
+            <p class="logo-sub">Ponto Eletronico</p>
+            </div>
+        <nav class="menu">
+            <a class="menu-item ativo" href="dashboard.html">Dashboard</a>
+            <a class="menu-item" href="cadastro.html">Funcionários</a>
+            <a class="menu-item" href="#">Relatórios</a>
+        </nav>
+        </div>
+
+    <div class="conteudo">
+        <div class="topbar">
+            <p class="topbar-titulo">Dashboard - Fevereiro 2025</p>
+            <button class="botao-entrar" style="width: auto; padding: 8px 20px">+ Lançar Ponto</button>
+            </div>
+
+            <div class="cards">
+                <div class="card">
+                    <p class="card-label">Funcionários</p>
+                    <p class="card-valor">14</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Horas Extras</p>
+                    <p class="card-valor verde">+47h 20m</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Horas Negativas</p>
+                    <p class="card-valor vermelho">-12h 40m</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Eventos</p>
+                    <p class="card-valor">38</p>
+                </div>
+            </div>
+
+
+        <div class="secao">
+                <p class="secao-titulo">Funcionários</p>
+                <div class="grid-funcionarios" id="grid-funcionarios"></div>
+            </div>
+
+        </div>
+        </div>
+    <script src="script.js"></script>
+    <script>carregarDashboard();</script>
+</body>
+
+</html>
