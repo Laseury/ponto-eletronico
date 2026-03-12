@@ -10,7 +10,7 @@ function carregarFuncionarios() {
     })}
 
     function lancarPonto(){
-        let funcionarioId = document.getElementById("campo-funcionario").value
+        let funcionario_id = document.getElementById("campo-funcionario").value
         let data = document.getElementById("campo-data").value
         let evento = document.getElementById("campo-evento").value
         let e1 = document.getElementById("e1").value || null
