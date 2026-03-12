@@ -307,3 +307,26 @@ html, body {
     font-size: 13px;
     margin-bottom: 12px;
 }
+
+/* lançamento */
+.turno-secao{
+    background: #1e2026;
+    border: 1px solid #2a2d35;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.turno-label{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0,1em;
+    color: #5a6070;
+    margin-bottom: 10px;
+}
+
+.turno-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px
+}
