@@ -16,6 +16,32 @@ const pool = new Pool({
     password: "Sifra10*"
 })
 
+function calcularMinutos(horario){
+    if(!horario) return 0;
+    const partes = horario.split(":");
+    return parseInt(partes[0]) * 60 + parseInt(partes[1]);
+
+}
+
+function calcularTurno (entrada, saida){
+    if (!entrada || !saida) return 0;
+    let minEntrada = calcularMinutos(entrada);
+    let minSaida = calcularMinutos(saida);
+
+     // Se passou da meia-noite
+     if(minSaida < minEntrada){
+        minSaida += 1140
+     }
+     return minSaida - minEntrada;
+}
+
+function minutosParaHorario(minutos){
+    if (minutos <= 0) return "00:00"
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+    return `${String(horas).padStart(2, "0")}:${String(mins).padStart(2, "0")}`
+}
+
 // Rota 1 - Retorna todos os funcionários
 app.get("/funcionarios", async function (req,res){
    try{
@@ -81,6 +107,44 @@ app.post("/registros", async function(req,res){
         if (!funcionario_id || !data){
             return res.status(400).json({erro: "Funcionário e data são obrigatórios"});
         }
+
+        //Busca a carga horária do funcionario
+        const funcResult = await pool.query(
+            "SELECT tipo FROM funcionarios WHERE id = $1", [funcionario_id]
+        );
+        const tipo = funcResult.rows[0].tipo;
+
+        //Define a carga horario por tipo
+        let cargaMinutos = 440 // 7h20 padrão mensalista
+        if (tipo === "horista" || tipo === "Horista Noturno"){
+            cargaMinutos = 480 // 8h padrão horista
+        }
+
+        //Calcula os minutos de cada turno
+        let totalMinutos = 0;
+        if(!evento){
+            totalMinutos += calcularTurno(e1, s1);
+            totalMinutos += calcularMinutos(e2, s2);
+            totalMinutos += calcularMinutos(e3, s3);
+        }
+
+        // Calcula extras e negativas
+        let extrasMinutos = 0;
+        let negativosMinutos = 0;
+
+        if(!evento && totalMinutos > 0){
+            if(totalMinutos > cargaMinutos){
+                extrasMinutos = totalMinutos - cargaMinutos
+            } else {
+                negativosMinutos = cargaMinutos - totalMinutos
+            }
+        }
+
+        // Converte para formato HH:MM
+        const total = totalMinuto > 0 ? minutosParaHorario(totalMinutos) : null;
+        const extras = extrasMinutos > 0 ? "+" + minutosParaHorario(extrasMinutos) : "00:00";
+        const negativos = negativosMinutos > 0 ? "-" + minutosParaHorario(negativosMinutos) : "00:00";
+
         const resultado = await pool.query(`
             INSERT INTO registros_ponto (funcionario_id, data, e1, s1, e2, s2, e3, s3, evento)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
