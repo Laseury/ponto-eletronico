@@ -64,5 +64,3 @@ function renderizarRegistros(registros) {
     html += `</tbody></table>`;
     container.innerHTML = html;
 }
-
-iniciar();

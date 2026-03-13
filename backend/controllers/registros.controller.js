@@ -23,6 +23,42 @@ function minutosParaHorario(minutos) {
     return `${String(horas).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
+// Calcula quantos minutos de um turno caem entre 22:00 e 05:00
+function calcularNoturno(entrada, saida) {
+    if (!entrada || !saida) return 0;
+
+    let minEntrada = calcularMinutos(entrada);
+    let minSaida = calcularMinutos(saida);
+
+    // Se passou da meia-noite, ajusta a saída somando 24h
+    if (minSaida < minEntrada) minSaida += 1440;
+
+    // Limites do horário noturno em minutos
+    // 22:00 = 1320min | 05:00 do dia seguinte = 1320 + 420 = 1740min (29:00)
+    const NOTURNO_INICIO = 22 * 60;        // 1320
+    const NOTURNO_FIM = (24 + 5) * 60;  // 1740
+
+    // Para comparar corretamente, se a entrada for antes das 22h
+    // e a saída depois das 22h, precisamos trabalhar na mesma linha do tempo
+    // Estratégia: se a entrada for < 22h, a janela noturna começa em 22h
+    // Se a entrada já for noturna (>= 22h ou < 5h), começa na própria entrada
+
+    // Normaliza: se entrada < 5h (ex: turno que começa à 00:00 ou 02:00)
+    // soma 24h para colocar na mesma linha de tempo que NOTURNO_FIM
+    let eNorm = minEntrada;
+    let sNorm = minSaida;
+    if (eNorm < 5 * 60) {
+        eNorm += 1440;
+        sNorm += 1440;
+    }
+
+    // Interseção entre [eNorm, sNorm] e [NOTURNO_INICIO, NOTURNO_FIM]
+    const inicio = Math.max(eNorm, NOTURNO_INICIO);
+    const fim = Math.min(sNorm, NOTURNO_FIM);
+
+    return fim > inicio ? fim - inicio : 0;
+}
+
 // ── Rota 4 — buscar registros de um funcionário ────────────────────────────
 async function listarRegistros(req, res) {
     try {
@@ -95,40 +131,6 @@ RETURNING *`,
     }
 }
 
-// Calcula quantos minutos de um turno caem entre 22:00 e 05:00
-function calcularNoturno(entrada, saida) {
-    if (!entrada || !saida) return 0;
 
-    let minEntrada = calcularMinutos(entrada);
-    let minSaida = calcularMinutos(saida);
-
-    // Se passou da meia-noite, ajusta a saída somando 24h
-    if (minSaida < minEntrada) minSaida += 1440;
-
-    // Limites do horário noturno em minutos
-    // 22:00 = 1320min | 05:00 do dia seguinte = 1320 + 420 = 1740min (29:00)
-    const NOTURNO_INICIO = 22 * 60;        // 1320
-    const NOTURNO_FIM = (24 + 5) * 60;  // 1740
-
-    // Para comparar corretamente, se a entrada for antes das 22h
-    // e a saída depois das 22h, precisamos trabalhar na mesma linha do tempo
-    // Estratégia: se a entrada for < 22h, a janela noturna começa em 22h
-    // Se a entrada já for noturna (>= 22h ou < 5h), começa na própria entrada
-
-    // Normaliza: se entrada < 5h (ex: turno que começa à 00:00 ou 02:00)
-    // soma 24h para colocar na mesma linha de tempo que NOTURNO_FIM
-    let eNorm = minEntrada;
-    let sNorm = minSaida;
-    if (eNorm < 5 * 60) {
-        eNorm += 1440;
-        sNorm += 1440;
-    }
-
-    // Interseção entre [eNorm, sNorm] e [NOTURNO_INICIO, NOTURNO_FIM]
-    const inicio = Math.max(eNorm, NOTURNO_INICIO);
-    const fim = Math.min(sNorm, NOTURNO_FIM);
-
-    return fim > inicio ? fim - inicio : 0;
-}
 
 module.exports = { listarRegistros, salvarRegistro };
