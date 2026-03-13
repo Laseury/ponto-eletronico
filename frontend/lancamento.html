@@ -14,8 +14,9 @@
             </div>
             <nav class="menu">
                 <a class="menu-item" href="dashboard.html">Dashboard</a>
-                <a class="menu-item ativo" href="#">Lançar Ponto</a>
-                <a class="menu-item" href="#">Relatórios</a>
+                <a class="menu-item ativo" href="lancamento.html">Lançar Ponto</a>
+                <a class="menu-item" href="relatorio.html">Relatórios</a>
+                <button class="botao-legenda" onclick="abrirLegenda()">? Legenda</button>
             </nav>
         </div>
 
@@ -117,7 +118,66 @@
         </div><!-- fecha conteudo -->
 
     </div><!-- fecha pagina-dashboard -->
+<!-- Overlay escuro atrás do painel -->
+<div class="legenda-overlay" id="legenda-overlay" onclick="fecharLegenda()"></div>
 
+<!-- Painel lateral -->
+<div class="legenda-painel" id="legenda-painel">
+    <div class="legenda-titulo">
+        Legenda de Eventos
+        <button class="legenda-fechar" onclick="fecharLegenda()">✕</button>
+    </div>
+
+    <div class="legenda-item">
+        <div class="legenda-icone">🏖️</div>
+        <div>
+            <p class="legenda-texto-nome">Férias</p>
+            <p class="legenda-texto-desc">Período de descanso anual remunerado. Não gera extras nem negativos.</p>
+        </div>
+    </div>
+
+    <div class="legenda-item">
+        <div class="legenda-icone">❌</div>
+        <div>
+            <p class="legenda-texto-nome">Falta</p>
+            <p class="legenda-texto-desc">Ausência não justificada. Conta como dia não trabalhado e pode impactar o DSR.</p>
+        </div>
+    </div>
+
+    <div class="legenda-item">
+        <div class="legenda-icone">📅</div>
+        <div>
+            <p class="legenda-texto-nome">Folga</p>
+            <p class="legenda-texto-desc">Dia de descanso previsto na escala. Não gera desconto nem hora extra.</p>
+        </div>
+    </div>
+
+    <div class="legenda-item">
+        <div class="legenda-icone">🏥</div>
+        <div>
+            <p class="legenda-texto-nome">Atestado</p>
+            <p class="legenda-texto-desc">Ausência justificada por documento médico. Não gera desconto no salário.</p>
+        </div>
+    </div>
+
+    <div class="legenda-item">
+        <div class="legenda-icone">🎉</div>
+        <div>
+            <p class="legenda-texto-nome">Feriado</p>
+            <p class="legenda-texto-desc">Dia não útil por calendário oficial. Trabalho neste dia gera hora extra em dobro.</p>
+        </div>
+    </div>
+
+    <div class="legenda-item">
+        <div class="legenda-icone">📆</div>
+        <div>
+            <p class="legenda-texto-nome">DSR</p>
+            <p class="legenda-texto-desc">Descanso Semanal Remunerado. Dia de folga garantido por lei, normalmente o domingo.</p>
+        </div>
+    </div>
+</div>
+<script src="auth.js"></script>
+<script>guardarPagina("admin");</script>
     <script src="lancamento.js"></script>
 </body>
 </html>

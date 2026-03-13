@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>VISO Hotel — Funcionário</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="auth.js"></script>
+    <script>guardarPagina("gestor");</script>
+</head>
+<body>
+
+<div class="topbar">
+    <span id="topbar-titulo">Funcionário</span>
+    <div style="display:flex;align-items:center;gap:10px">
+        <button class="botao-acao secundario"
+                onclick="window.location.href='relatorio-gestor.html'">
+            ← Voltar
+        </button>
+        <button class="botao-logout" onclick="sair()">Sair</button>
+    </div>
+</div>
+
+<div class="conteudo">
+    <div class="toolbar">
+        <span id="toolbar-titulo">Registros</span>
+        <!-- Gestor só visualiza, sem botão de lançar ponto -->
+    </div>
+    <div id="tabela-registros"></div>
+</div>
+
+<script src="funcionario-gestor.js"></script>
+</body>
+</html>

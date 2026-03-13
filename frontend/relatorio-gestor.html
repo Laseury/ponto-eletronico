@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>VISO Hotel — Relatório</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="auth.js"></script>
+    <script>guardarPagina("gestor");</script>
+</head>
+<body>
+
+<div class="topbar">
+    <span id="topbar-titulo">Relatório Mensal</span>
+    <div style="display:flex;align-items:center;gap:10px">
+        <select id="sel-mes" class="sel-mes-ano" onchange="mudarFiltro()">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+            <option value="3">Março</option><option value="4">Abril</option>
+            <option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option>
+            <option value="9">Setembro</option><option value="10">Outubro</option>
+            <option value="11">Novembro</option><option value="12">Dezembro</option>
+        </select>
+        <select id="sel-ano" class="sel-mes-ano" onchange="mudarFiltro()">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px">
+            <label style="color:#9399a6;font-size:13px">R$/h:</label>
+            <input id="inp-valor-hora" type="number" step="0.01" placeholder="0.00"
+                   class="inp-valor-hora" onchange="mudarFiltro()">
+        </div>
+        <button class="botao-ciclo"   onclick="trocarCiclo()">Trocar Ciclo</button>
+        <button class="botao-legenda" onclick="abrirLegenda()">? Legenda</button>
+        <button class="botao-logout"  onclick="sair()">Sair</button>
+    </div>
+</div>
+
+<div class="conteudo">
+    <div class="toolbar">
+        <span id="toolbar-titulo">Resumo</span>
+        <div style="display:flex;gap:8px">
+            <button class="botao-exportar" onclick="exportar('xlsx')">⬇ Excel</button>
+            <button class="botao-exportar" onclick="exportar('csv')">⬇ CSV</button>
+            <button class="botao-acao secundario" onclick="window.location.href='gestor.html'">
+                ← Voltar
+            </button>
+        </div>
+    </div>
+    <div id="tabela-relatorio"></div>
+</div>
+
+<!-- Legenda -->
+<div class="legenda-overlay" id="legenda-overlay" onclick="fecharLegenda()"></div>
+<div class="legenda-painel" id="legenda-painel">
+    <div class="legenda-titulo">
+        Legenda de Eventos
+        <button class="legenda-fechar" onclick="fecharLegenda()">✕</button>
+    </div>
+    <div class="legenda-item"><div class="legenda-icone">🏖️</div><div><p class="legenda-texto-nome">Férias</p><p class="legenda-texto-desc">Período de descanso anual remunerado.</p></div></div>
+    <div class="legenda-item"><div class="legenda-icone">❌</div><div><p class="legenda-texto-nome">Falta</p><p class="legenda-texto-desc">Ausência não justificada.</p></div></div>
+    <div class="legenda-item"><div class="legenda-icone">📅</div><div><p class="legenda-texto-nome">Folga</p><p class="legenda-texto-desc">Dia de descanso previsto na escala.</p></div></div>
+    <div class="legenda-item"><div class="legenda-icone">🏥</div><div><p class="legenda-texto-nome">Atestado</p><p class="legenda-texto-desc">Ausência justificada por documento médico.</p></div></div>
+    <div class="legenda-item"><div class="legenda-icone">🎉</div><div><p class="legenda-texto-nome">Feriado</p><p class="legenda-texto-desc">Dia não útil por calendário oficial.</p></div></div>
+    <div class="legenda-item"><div class="legenda-icone">📆</div><div><p class="legenda-texto-nome">DSR</p><p class="legenda-texto-desc">Descanso Semanal Remunerado.</p></div></div>
+</div>
+
+<script src="relatorio-gestor.js"></script>
+<script>
+    function abrirLegenda()  {
+        document.getElementById("legenda-painel").classList.add("aberto");
+        document.getElementById("legenda-overlay").classList.add("aberto");
+    }
+    function fecharLegenda() {
+        document.getElementById("legenda-painel").classList.remove("aberto");
+        document.getElementById("legenda-overlay").classList.remove("aberto");
+    }
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") fecharLegenda();
+    });
+</script>
+
+</body>
+</html>

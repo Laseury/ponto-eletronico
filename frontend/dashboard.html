@@ -1,60 +1,89 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
-    <title>Viso Hotel Dashboard</title>
+    <title>VISO Hotel — Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <div class="pagina-dashboard">
         <div class="sidebar">
             <div class="sidebar-logo">
-            <h2 class="logo-nome">VISO</h2>
-            <p class="logo-sub">Ponto Eletronico</p>
+                <h2 class="logo-nome">VISO</h2>
+                <p class="logo-sub">Ponto Eletrônico</p>
             </div>
-        <nav class="menu">
-            <a class="menu-item ativo" href="dashboard.html">Dashboard</a>
-            <a class="menu-item" href="cadastro.html">Funcionários</a>
-            <a class="menu-item" href="#">Relatórios</a>
-        </nav>
+            <nav class="menu">
+                <a class="menu-item active" href="dashboard.html">Dashboard</a>
+                <a class="menu-item" href="cadastro.html">Funcionários</a>
+                <a class="menu-item" href="relatorio.html">Relatórios</a>
+             
+            </nav>
         </div>
 
-    <div class="conteudo">
-        <div class="topbar">
-            <p class="topbar-titulo">Dashboard - Fevereiro 2025</p>
-            <button class="botao-entrar" style="width: auto; padding: 8px 20px" onClick="window.location.href='lancamento.html'">+ Lançar Ponto</button>
+        <div class="conteudo">
+            <div class="topbar">
+                <!-- ✅ id="topbar-titulo" para o JS atualizar dinamicamente -->
+                <p class="topbar-titulo" id="topbar-titulo">Dashboard</p>
+
+                <div style="display:flex;align-items:center;gap:10px">
+                    <!-- ✅ Seletor de mês — ao mudar chama mudarMes() -->
+                    <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+
+                    <select id="sel-ano" class="sel-mes-ano" onchange="mudarMes()">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+
+                    <button class="botao-entrar" style="width:auto;padding:8px 20px"
+                        onclick="window.location.href='lancamento.html'">+ Lançar Ponto</button>
+                </div>
+                <button class="botao-logout" onclick="sair()">Sair</button>
             </div>
 
+            <!-- ✅ Cards com id= para o JS preencher com dados reais -->
             <div class="cards">
-                <div class="card">
-                    <p class="card-label">Funcionários</p>
-                    <p class="card-valor">14</p>
-                </div>
-                <div class="card">
-                    <p class="card-label">Horas Extras</p>
-                    <p class="card-valor verde">+47h 20m</p>
-                </div>
-                <div class="card">
-                    <p class="card-label">Horas Negativas</p>
-                    <p class="card-valor vermelho">-12h 40m</p>
-                </div>
-                <div class="card">
-                    <p class="card-label">Eventos</p>
-                    <p class="card-valor">38</p>
-                </div>
+                 <div class="card">
+        <p class="card-label">Funcionários</p>
+        <p class="card-valor" id="card-funcionarios">—</p>
+    </div>
+    <div class="card">
+        <p class="card-label">Lançados Hoje</p>
+        <p class="card-valor" id="card-lancados-hoje">—</p>
+    </div>
+    <div class="card">
+        <p class="card-label">Extras no Mês</p>
+        <p class="card-valor" id="card-extras">—</p>
+    </div>
+    <div class="card">
+        <p class="card-label">Faltas no Mês</p>
+        <p class="card-valor" id="card-faltas">—</p>
+    </div>
             </div>
 
-
-        <div class="secao">
+            <div class="secao">
                 <p class="secao-titulo">Funcionários</p>
-                <div class="grid-funcionarios" id="grid-funcionarios"></div>
+                <div class="grid-funcionarios" id="grid-funcionarios">
+                    <p style="color:#5a6070;font-size:13px">Carregando...</p>
+                </div>
             </div>
-
         </div>
-        </div>
+    </div>
+    <script src="auth.js"></script>
+<script>guardarPagina("admin");</script>
     <script src="script.js"></script>
     <script>carregarDashboard();</script>
 </body>
-
 </html>
