@@ -29,3 +29,14 @@ function sair() {
     sessionStorage.clear();
     window.location.href = "../index.html";
 }
+
+// Exibe "Olá, nome" na topbar se existir o elemento
+function exibirUsuarioLogado() {
+    const usuario = sessionStorage.getItem("usuario");
+    const el      = document.getElementById("topbar-usuario");
+    if (el && usuario) {
+        el.textContent = "Olá, " + usuario;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", exibirUsuarioLogado);

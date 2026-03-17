@@ -50,10 +50,21 @@ function calcularNoturno(entrada, saida) {
 async function listarRegistros(req, res) {
     try {
         const funcionario_id = parseInt(req.params.funcionario_id);
-        const resultado = await pool.query(
-            "SELECT * FROM registros_ponto WHERE funcionario_id = $1 ORDER BY data",
-            [funcionario_id]
-        );
+        const mes = req.query.mes ? parseInt(req.query.mes) : null;
+        const ano = req.query.ano ? parseInt(req.query.ano) : null;
+
+        let query  = "SELECT * FROM registros_ponto WHERE funcionario_id = $1";
+        let params = [funcionario_id];
+
+        // Se mes e ano forem passados, filtra pelo mês
+        if (mes && ano) {
+            query  += " AND EXTRACT(MONTH FROM data) = $2 AND EXTRACT(YEAR FROM data) = $3";
+            params  = [funcionario_id, mes, ano];
+        }
+
+        query += " ORDER BY data";
+
+        const resultado = await pool.query(query, params);
         res.json(resultado.rows);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
@@ -131,6 +142,24 @@ RETURNING *`,
     }
 }
 
+async function verificarRegistro(req, res) {
+    try {
+        const { funcionario_id, data } = req.query;
+        const resultado = await pool.query(
+            "SELECT * FROM registros_ponto WHERE funcionario_id = $1 AND data = $2",
+            [funcionario_id, data]
+        );
+        if (resultado.rows.length > 0) {
+            res.json({ existe: true, registro: resultado.rows[0] });
+        } else {
+            res.json({ existe: false });
+        }
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message });
+    }
+}
+
+module.exports = { listarRegistros, salvarRegistro, verificarRegistro };
 
 
 module.exports = { listarRegistros, salvarRegistro };

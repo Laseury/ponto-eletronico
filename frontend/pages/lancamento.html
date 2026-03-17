@@ -176,6 +176,88 @@
         </div>
     </div>
 </div>
+<!-- Modal de confirmação de sobrescrita -->
+<div id="modal-sobrescrita"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+            z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#1a1c22;border:1px solid #2a2d35;border-radius:12px;
+                padding:28px 32px;width:440px;max-width:90vw;">
+
+        <p style="font-size:15px;font-weight:600;color:#e8e9ec;margin-bottom:6px">
+            ⚠️ Registro já existe
+        </p>
+        <p style="font-size:13px;color:#9399a6;margin-bottom:20px">
+            Já existe um registro para <strong id="sobrescrita-data"
+            style="color:#e8e9ec"></strong>. Veja os dados atuais antes de substituir:
+        </p>
+
+        <!-- Dados existentes -->
+        <div style="background:#13151a;border:1px solid #2a2d35;border-radius:8px;
+                    padding:16px;margin-bottom:20px">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);
+                        gap:12px;margin-bottom:12px">
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">E1</p>
+                    <p style="font-size:14px;color:#e8e9ec;font-family:monospace"
+                       id="sobrescrita-e1">—</p>
+                </div>
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">S1</p>
+                    <p style="font-size:14px;color:#e8e9ec;font-family:monospace"
+                       id="sobrescrita-s1">—</p>
+                </div>
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">E2</p>
+                    <p style="font-size:14px;color:#e8e9ec;font-family:monospace"
+                       id="sobrescrita-e2">—</p>
+                </div>
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">S2</p>
+                    <p style="font-size:14px;color:#e8e9ec;font-family:monospace"
+                       id="sobrescrita-s2">—</p>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">Total</p>
+                    <p style="font-size:14px;color:#e8e9ec;font-family:monospace"
+                       id="sobrescrita-total">—</p>
+                </div>
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">Extras</p>
+                    <p style="font-size:14px;color:#4caf82;font-family:monospace"
+                       id="sobrescrita-extras">—</p>
+                </div>
+                <div>
+                    <p style="font-size:10px;color:#5a6070;text-transform:uppercase;
+                               margin-bottom:4px">Evento</p>
+                    <p style="font-size:14px;color:#e8e9ec" id="sobrescrita-evento">—</p>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:13px;color:#e05c5c;margin-bottom:20px">
+            Ao confirmar, esses dados serão substituídos pelo novo lançamento.
+        </p>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="fecharModalSobrescrita()" class="botao-logout">
+                Cancelar
+            </button>
+            <button id="btn-confirmar-sobrescrita" class="botao-entrar"
+                    style="width:auto;padding:8px 20px;
+                           background:#c0392b;border-color:#c0392b">
+                Sim, substituir
+            </button>
+        </div>
+    </div>
+</div>
 <script src="../js/auth.js"></script>
 <script>guardarPagina("admin");</script>
     <script src="../js/lancamento.js"></script>

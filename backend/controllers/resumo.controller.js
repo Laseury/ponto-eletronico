@@ -54,7 +54,9 @@ async function gerarResumo(req, res) {
     total_faltas:       parseInt(row.total_faltas),
     total_extras:    extrasMin    > 0 ? "+" + minutosParaHorario(extrasMin)    : "00:00",
     total_negativos: negativosMin > 0 ? "-" + minutosParaHorario(negativosMin) : "00:00",
-    total_eventos:   parseInt(row.total_eventos)
+    total_eventos:   parseInt(row.total_eventos),
+    funcs_com_lacuna:  parseInt(row.funcs_com_lacuna)  || 0,
+    total_dias_lacuna: parseInt(row.total_dias_lacuna) || 0,
 });
     } catch (erro) {
         res.status(500).json({ erro: erro.message });

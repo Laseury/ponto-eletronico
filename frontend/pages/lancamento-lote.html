@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>VISO Hotel — Lançamento em Lote</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+<div class="pagina-dashboard">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2 class="logo-nome">VISO</h2>
+            <p class="logo-sub">Ponto Eletrônico</p>
+        </div>
+        <nav class="menu">
+            <a class="menu-item" href="dashboard.html">Dashboard</a>
+            <a class="menu-item" href="cadastro.html">Funcionários</a>
+            <a class="menu-item ativo" href="lancamento.html">Lançar Ponto</a>
+            <a class="menu-item" href="relatorio.html">Relatórios</a>
+        </nav>
+    </div>
+
+    <div class="conteudo">
+        <div class="topbar">
+            <p class="topbar-titulo">Lançamento em Lote</p>
+            <div style="display:flex;gap:10px;align-items:center">
+                <a href="lancamento.html" class="botao-entrar"
+                   style="width:auto;padding:8px 20px;text-decoration:none">
+                    ← Lançamento Individual
+                </a>
+                <button class="botao-logout" onclick="sair()">Sair</button>
+            </div>
+        </div>
+
+        <div style="padding:28px 32px">
+
+            <!-- Configuração do lançamento -->
+            <div class="table-wrap" style="margin-bottom:24px">
+                <div class="table-toolbar">
+                    <p style="color:#5a6070;font-size:13px;padding:20px">
+                        Configurar Lançamento
+                    </p>
+                </div>
+                <div style="padding:0 24px 24px;display:grid;
+                            grid-template-columns:1fr 1fr 1fr;gap:16px">
+                    <div>
+                        <label class="rotulo">Data</label>
+                        <input type="date" id="lote-data" class="entrada" style="width:100%">
+                    </div>
+                    <div>
+                        <label class="rotulo">Evento</label>
+                        <select id="lote-evento" class="sel-mes-ano" style="width:100%">
+                            <option value="">— Selecione —</option>
+                            <option value="DSR">DSR</option>
+                            <option value="Folga">Folga</option>
+                            <option value="Folga Banco">Folga Banco</option>
+                            <option value="Falta">Falta</option>
+                            <option value="Atestado">Atestado</option>
+                            <option value="Feriado">Feriado</option>
+                            <option value="Ferias">Férias</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de funcionários -->
+            <div class="table-wrap">
+                <div class="table-toolbar" style="display:flex;
+                     justify-content:space-between;align-items:center">
+                    <p style="color:#5a6070;font-size:13px;padding:20px">
+                        Selecionar Funcionários
+                    </p>
+                    <div style="display:flex;gap:8px;padding-right:20px">
+                        <button class="botao-exportar" onclick="selecionarTodos()">
+                            Selecionar Todos
+                        </button>
+                        <button class="botao-exportar" onclick="deselecionarTodos()">
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+                <div id="lista-funcionarios" style="padding:0 24px 8px"></div>
+            </div>
+
+            <!-- Resultado -->
+            <div style="margin-top:20px;display:flex;
+                        align-items:center;justify-content:space-between">
+                <p id="lote-resultado" style="font-size:13px;color:#5a6070"></p>
+                <button class="botao-entrar"
+                        style="width:auto;padding:10px 28px"
+                        onclick="lancarLote()">
+                    Lançar para Selecionados
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="../../js/auth.js"></script>
+<script>guardarPagina("admin");</script>
+<script src="../../js/lancamento-lote.js"></script>
+</body>
+</html>

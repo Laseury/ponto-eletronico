@@ -23,7 +23,8 @@
             <div class="topbar">
                 <!-- ✅ id="topbar-titulo" para o JS atualizar dinamicamente -->
                 <p class="topbar-titulo" id="topbar-titulo">Dashboard</p>
-
+                <span id="topbar-usuario"
+      style="font-size:13px;color:#5a6070;margin-right:8px"></span>
                 <div style="display:flex;align-items:center;gap:10px">
                     <!-- ✅ Seletor de mês — ao mudar chama mudarMes() -->
                     <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
@@ -49,6 +50,10 @@
 
                     <button class="botao-entrar" style="width:auto;padding:8px 20px"
                         onclick="window.location.href='lancamento.html'">+ Lançar Ponto</button>
+                        <button class="botao-exportar"
+    onclick="window.location.href='lancamento-lote.html'">
+    Lançar em Lote
+</button>
                 </div>
                 <button class="botao-logout" onclick="sair()">Sair</button>
             </div>
@@ -71,6 +76,14 @@
         <p class="card-label">Faltas no Mês</p>
         <p class="card-valor" id="card-faltas">—</p>
     </div>
+    <div class="card">
+    <p class="card-label">Func. c/ Lacuna</p>
+    <p class="card-valor" id="card-lacuna-funcs">—</p>
+</div>
+<div class="card">
+    <p class="card-label">Dias sem Registro</p>
+    <p class="card-valor" id="card-lacuna-dias">—</p>
+</div>
             </div>
 
             <div class="secao">
@@ -81,6 +94,7 @@
             </div>
         </div>
     </div>
+    <script src="../../js/ano-seletor.js"></script>
     <script src="../js/auth.js"></script>
 <script>guardarPagina("admin");</script>
     <script src="../js/script.js"></script>

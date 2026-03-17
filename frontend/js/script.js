@@ -61,6 +61,10 @@ function carregarDashboard() {
     setText("card-lancados-hoje", dados.lancados_hoje);
     setText("card-extras",        dados.total_extras);
     setText("card-faltas",        dados.total_faltas);
+    setText("card-lacuna-funcs", dados.funcs_com_lacuna);
+setText("card-lacuna-dias",  dados.total_dias_lacuna);
+colorir("card-lacuna-funcs", dados.funcs_com_lacuna > 0, "vermelho");
+colorir("card-lacuna-dias",  dados.total_dias_lacuna > 0, "vermelho");
 
     colorir("card-extras", dados.total_extras    !== "00:00", "verde");
     colorir("card-faltas", dados.total_faltas     > 0,        "vermelho");
@@ -95,6 +99,13 @@ function colorir(id, condicao, classe) {
     if (condicao) el.classList.add(classe);
 }
 
+function calcularSaldoMin(saldo) {
+    if (!saldo || saldo === "00:00") return 0;
+    const sinal  = saldo.startsWith("-") ? -1 : 1;
+    const limpo  = saldo.replace(/^[+\-]/, "").split(":");
+    return sinal * (parseInt(limpo[0]) * 60 + parseInt(limpo[1]));
+}
+
 function renderizarFuncionarios(funcionarios) {
     let container = document.getElementById("grid-funcionarios");
     if (!container) return;
@@ -105,32 +116,41 @@ function renderizarFuncionarios(funcionarios) {
     }
 
     let html = "";
-    funcionarios.forEach(function (f) {
-        let corExtras = f.total_extras && f.total_extras !== "00:00" ? "verde"    : "";
-        let corFaltas = f.faltas > 0                                 ? "vermelho" : "";
+   funcionarios.forEach(function (f) {
+    let corExtras = f.total_extras && f.total_extras !== "00:00" ? "verde" : "";
+    let corFaltas = f.faltas > 0 ? "vermelho" : "";
 
-        html += `
-            <div class="card-funcionario" onclick="window.location.href='funcionario.html?id=${f.id}'">
+    // Banco crítico: saldo negativo maior que 5h (300 min)
+    const saldoMin = calcularSaldoMin(f.saldo_mes);
+    const bancoCritico = saldoMin < -300;
+
+    html += `
+        <div class="card-funcionario ${bancoCritico ? "card-critico" : ""}"
+             onclick="window.location.href='funcionario.html?id=${f.id}'">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
                 <p class="card-nome">${f.nome}</p>
-                <p class="card-tipo">${f.tipo}</p>
-                <div class="card-metricas">
-                    <div class="metrica">
-                        <p class="metrica-label">Extras</p>
-                        <p class="metrica-valor ${corExtras}">${f.total_extras || "00:00"}</p>
-                    </div>
-                    <div class="metrica">
-                        <p class="metrica-label">Faltas</p>
-                        <p class="metrica-valor ${corFaltas}">${f.faltas}</p>
-                    </div>
-                    <div class="metrica">
-                        <p class="metrica-label">Dias</p>
-                        <p class="metrica-valor">${f.dias_trabalhados}</p>
-                    </div>
+                ${bancoCritico ? `<span class="badge-critico">⚠ Banco crítico</span>` : ""}
+            </div>
+            <p class="card-tipo">${f.tipo}</p>
+            <div class="card-metricas">
+                <div class="metrica">
+                    <p class="metrica-label">Extras</p>
+                    <p class="metrica-valor ${corExtras}">${f.total_extras || "00:00"}</p>
                 </div>
-            </div>`;
-    });
+                <div class="metrica">
+                    <p class="metrica-label">Faltas</p>
+                    <p class="metrica-valor ${corFaltas}">${f.faltas}</p>
+                </div>
+                <div class="metrica">
+                    <p class="metrica-label">Dias</p>
+                    <p class="metrica-valor">${f.dias_trabalhados}</p>
+                </div>
+            </div>
+        </div>`;
+});
     container.innerHTML = html;
 }
+
 
 
 

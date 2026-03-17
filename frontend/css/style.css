@@ -940,3 +940,70 @@ html, body {
     color: #e8e9ec;
     font-family: monospace;
 }
+
+/* Botão editar na tabela */
+.btn-editar {
+    background: transparent;
+    border: 1px solid #2a2d35;
+    border-radius: 6px;
+    color: #9399a6;
+    font-size: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-editar:hover {
+    border-color: #c9a84c;
+    color: #c9a84c;
+}
+
+/* Lançamento em lote */
+.lote-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #1e2028;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.lote-item:last-child { border-bottom: none; }
+
+.lote-item:hover { background: #16181f; }
+
+.lote-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #c9a84c;
+    cursor: pointer;
+}
+
+.lote-nome {
+    flex: 1;
+    font-size: 14px;
+    color: #e8e9ec;
+    font-weight: 500;
+}
+
+/* Card com banco crítico */
+.card-critico {
+    border-color: #5a1a1a !important;
+    background: #1a1212 !important;
+}
+
+.card-critico:hover {
+    border-color: #e05c5c !important;
+}
+
+.badge-critico {
+    font-size: 10px;
+    font-weight: 700;
+    color: #e05c5c;
+    background: rgba(224, 92, 92, 0.1);
+    border: 1px solid rgba(224, 92, 92, 0.3);
+    border-radius: 4px;
+    padding: 2px 7px;
+    white-space: nowrap;
+}

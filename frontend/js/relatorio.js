@@ -63,36 +63,45 @@ function exportarCSV(dados, mes, ano) {
     URL.revokeObjectURL(url);
 }
 
-function exportarXLSX(dados, mes, ano) {
-    const linhas = montarLinhas(dados);
+function montarLinhas(dados) {
+    const cabecalho = [
+        "Nome", "Tipo",
+        "Dias Trabalhados", "Faltas",
+        "Extras", "Negativos", "Saldo do Mês",
+        "Banco de Horas",
+        "H. Diurnas",       // ✅ novo
+        "H. Noturnas",      // ✅ novo
+        "Noturno c/ Fator", // ✅ novo
+        "Valor Noturno (R$)"
+    ];
 
-    // Monta o XML do Excel manualmente (sem biblioteca externa)
-    let xml = `<?xml version="1.0"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Worksheet ss:Name="Folha ${mes}-${ano}">
-    <Table>`;
+    const linhas = dados.map(function(f) {
+        // Calcula diurnas e noturno com fator no frontend
+        const noturnoMin = horaParaMinutos(f.total_noturno);
+        const totalMin   = horaParaMinutos(f.total_extras) +
+                           horaParaMinutos(f.total_negativos === "00:00" ? "00:00" : f.total_negativos);
 
-    linhas.forEach((linha, i) => {
-        xml += `<Row>`;
-        linha.forEach(cel => {
-            const tipo  = i === 0 || isNaN(cel) ? "String" : "Number";
-            const valor = String(cel).replace(/&/g,"&amp;").replace(/</g,"&lt;");
-            xml += `<Cell><Data ss:Type="${tipo}">${valor}</Data></Cell>`;
-        });
-        xml += `</Row>`;
+        // Diurnas = total trabalhado - noturno
+        // Como não temos o total bruto aqui, usamos o que o backend retorna
+        const noturnoComFator = minutosParaHorario(Math.round(noturnoMin * (60 / 52)));
+
+        return [
+            f.nome,
+            f.tipo,
+            f.dias_trabalhados,
+            f.faltas,
+            f.total_extras,
+            f.total_negativos,
+            f.saldo_mes,
+            f.banco_horas,
+            f.total_diurno   || "—",   // ✅ novo — vem do backend
+            f.total_noturno,            // ✅ novo
+            noturnoComFator,            // ✅ novo
+            f.valor_noturno
+        ];
     });
 
-    xml += `</Table></Worksheet></Workbook>`;
-
-    const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" });
-    const url  = URL.createObjectURL(blob);
-
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `folha_${mes}_${ano}.xls`;
-    a.click();
-    URL.revokeObjectURL(url);
+    return [cabecalho, ...linhas];
 }
 
 function iniciar() {
