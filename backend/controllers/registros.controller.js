@@ -28,35 +28,22 @@ function calcularNoturno(entrada, saida) {
     if (!entrada || !saida) return 0;
 
     let minEntrada = calcularMinutos(entrada);
-    let minSaida = calcularMinutos(saida);
-
-    // Se passou da meia-noite, ajusta a saída somando 24h
+    let minSaida   = calcularMinutos(saida);
     if (minSaida < minEntrada) minSaida += 1440;
 
-    // Limites do horário noturno em minutos
-    // 22:00 = 1320min | 05:00 do dia seguinte = 1320 + 420 = 1740min (29:00)
-    const NOTURNO_INICIO = 22 * 60;        // 1320
-    const NOTURNO_FIM = (24 + 5) * 60;  // 1740
+    // Janela de início noturno: 22:00 (1320) até 05:00 (300)
+    // Um turno é noturno se a entrada estiver entre 22:00 e 05:00
+    const entradaNoPeriodo = minEntrada >= 22 * 60 || minEntrada < 5 * 60;
 
-    // Para comparar corretamente, se a entrada for antes das 22h
-    // e a saída depois das 22h, precisamos trabalhar na mesma linha do tempo
-    // Estratégia: se a entrada for < 22h, a janela noturna começa em 22h
-    // Se a entrada já for noturna (>= 22h ou < 5h), começa na própria entrada
-
-    // Normaliza: se entrada < 5h (ex: turno que começa à 00:00 ou 02:00)
-    // soma 24h para colocar na mesma linha de tempo que NOTURNO_FIM
-    let eNorm = minEntrada;
-    let sNorm = minSaida;
-    if (eNorm < 5 * 60) {
-        eNorm += 1440;
-        sNorm += 1440;
+    if (entradaNoPeriodo) {
+        // Turno inteiro é noturno
+        return minSaida - minEntrada;
     }
 
-    // Interseção entre [eNorm, sNorm] e [NOTURNO_INICIO, NOTURNO_FIM]
-    const inicio = Math.max(eNorm, NOTURNO_INICIO);
-    const fim = Math.min(sNorm, NOTURNO_FIM);
-
-    return fim > inicio ? fim - inicio : 0;
+    // Se entrou fora do período noturno, conta só a parte após 22:00
+    const NOTURNO_INICIO = 22 * 60;
+    const inicio = Math.max(minEntrada, NOTURNO_INICIO);
+    return minSaida > NOTURNO_INICIO ? minSaida - inicio : 0;
 }
 
 // ── Rota 4 — buscar registros de um funcionário ────────────────────────────
@@ -87,31 +74,44 @@ async function salvarRegistro(req, res) {
         );
         const tipo = funcResult.rows[0].tipo;
 
-        let cargaMinutos = 440;
-        if (tipo === "Horista" || tipo === "Horista Noturno") cargaMinutos = 480;
+      let totalMinutos = 0;
+if (!evento) {
+    totalMinutos += calcularTurno(e1, s1);
+    totalMinutos += calcularTurno(e2, s2);
+    totalMinutos += calcularTurno(e3, s3);
+}
+        // Mensalista tem carga fixa de 7h20 por dia
+// Horista e Horista Noturno NÃO têm carga fixa — só geram extra acima de 8h,
+// nunca geram negativo (escala variável)
+const ehHorista = tipo === "Horista" || tipo === "Horista Noturno";
+const cargaMinutos = ehHorista ? totalMinutos : 440;
 
-        let totalMinutos = 0;
-        if (!evento) {
-            totalMinutos += calcularTurno(e1, s1);
-            totalMinutos += calcularTurno(e2, s2);
-            totalMinutos += calcularTurno(e3, s3);
-        }
+let extrasMinutos    = 0;
+let negativosMinutos = 0;
 
-        let extrasMinutos = 0;
-        let negativosMinutos = 0;
-        if (!evento && totalMinutos > 0) {
-            if (totalMinutos > cargaMinutos) {
-                extrasMinutos = totalMinutos - cargaMinutos;
-            } else {
-                negativosMinutos = cargaMinutos - totalMinutos;
-            }
+if (evento === "Folga Banco") {
+    // Folga Banco deduz a carga do dia do banco de horas
+    // Mensalista: 7h20 (440min) | Horista: 8h (480min)
+    negativosMinutos = ehHorista ? 480 : 440;
+
+} else if (!evento && totalMinutos > 0) {
+    if (ehHorista) {
+        if (totalMinutos > 480) {
+            extrasMinutos = totalMinutos - 480;
         }
+    } else {
+        if (totalMinutos > cargaMinutos) {
+            extrasMinutos = totalMinutos - cargaMinutos;
+        } else {
+            negativosMinutos = cargaMinutos - totalMinutos;
+        }
+    }
+}
 
         const total = totalMinutos > 0 ? minutosParaHorario(totalMinutos) : null;
         const extras = extrasMinutos > 0 ? "+" + minutosParaHorario(extrasMinutos) : "00:00";
         const negativos = negativosMinutos > 0 ? "-" + minutosParaHorario(negativosMinutos) : "00:00";
 
-        // ✅ ADICIONE estas três linhas logo abaixo:
         const noturnoMin = calcularNoturno(e1, s1)
             + calcularNoturno(e2, s2)
             + calcularNoturno(e3, s3);

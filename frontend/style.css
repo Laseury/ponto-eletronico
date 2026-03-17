@@ -829,3 +829,114 @@ html, body {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Cards mini — rodapé da página do funcionário */
+.cards-mini {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.card-mini {
+    background: #09190e;
+    border: 1px solid #2a2d35;
+    border-radius: 10px;
+    padding: 14px 20px;
+    min-width: 160px;
+    flex: 1;
+}
+
+.card-mini-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5a6070;
+    margin-bottom: 6px;
+}
+
+.card-mini-valor {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e8e9ec;
+    font-family: monospace;
+}
+
+/* ── Bloco noturno ────────────────────────────────────────────── */
+.cards-noturno {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.card-noturno {
+    background: #13151a;
+    border: 1px solid #2a2d35;
+    border-radius: 10px;
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.card-noturno.destaque {
+    border-color: #3d2d5a;
+    background: #16121f;
+}
+
+.card-noturno-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5a6070;
+    margin-bottom: 8px;
+}
+
+.card-noturno-valor {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e8e9ec;
+    font-family: monospace;
+}
+
+.roxo { color: #a78bfa; }
+
+/* ── Tabela de pagamento ──────────────────────────────────────── */
+.tabela-pagamento {
+    background: #13151a;
+    border: 1px solid #2a2d35;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.tabela-pagamento-titulo {
+    background: #1e1a2e;
+    color: #a78bfa;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px;
+    border-bottom: 1px solid #2a2d35;
+}
+
+.tabela-pagamento-linha {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 20px;
+    font-size: 13px;
+    color: #9399a6;
+    border-bottom: 1px solid #1e2028;
+}
+
+.tabela-pagamento-linha:last-child {
+    border-bottom: none;
+}
+
+.tabela-pagamento-linha span:last-child {
+    font-weight: 600;
+    color: #e8e9ec;
+    font-family: monospace;
+}

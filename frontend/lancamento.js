@@ -38,13 +38,14 @@ function lancarPonto() {
         .then(function (resposta) {
             return resposta.json()
         })
+        // DEPOIS — usa "dados" corretamente e trata o elemento mensagem como DOM
         .then(function (dados) {
-            // Onde você mostra a confirmação do lançamento, adicione:
-            if (registro.noturno && registro.noturno !== "00:00") {
-                mensagem += ` | 🌙 Noturno: ${registro.noturno}`;
+            let textoMensagem = "Registro salvo com sucesso!";
+            if (dados.noturno && dados.noturno !== "00:00") {
+                textoMensagem += ` | 🌙 Noturno: ${dados.noturno}`;
             }
-            mensagem.className = "mensagem-sucesso"
-            mensagem.textContent = "Registro salvo com sucesso!"
+            mensagem.className = "mensagem-sucesso";
+            mensagem.textContent = textoMensagem;
         })
 
 
