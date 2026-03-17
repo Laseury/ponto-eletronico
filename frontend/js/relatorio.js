@@ -24,46 +24,6 @@ function exportar(formato) {
 }
 
 function montarLinhas(dados) {
-    // Cabeçalho
-    const cabecalho = [
-        "Nome", "Tipo", "Dias Trabalhados", "Faltas",
-        "Extras", "Negativos", "Saldo do Mês",
-        "Banco de Horas", "Noturno", "Valor Noturno (R$)"
-    ];
-
-    // Linhas de dados
-    const linhas = dados.map(f => [
-        f.nome,
-        f.tipo,
-        f.dias_trabalhados,
-        f.faltas,
-        f.total_extras,
-        f.total_negativos,
-        f.saldo_mes,
-        f.banco_horas,
-        f.total_noturno,
-        f.valor_noturno
-    ]);
-
-    return [cabecalho, ...linhas];
-}
-
-function exportarCSV(dados, mes, ano) {
-    const linhas = montarLinhas(dados);
-    const csv    = linhas.map(l => l.join(";")).join("\n");
-
-    // Adiciona BOM para o Excel abrir com acentos corretamente
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-    const url  = URL.createObjectURL(blob);
-
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `folha_${mes}_${ano}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function montarLinhas(dados) {
     const cabecalho = [
         "Nome", "Tipo",
         "Dias Trabalhados", "Faltas",

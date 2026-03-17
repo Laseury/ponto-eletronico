@@ -129,14 +129,52 @@ if (evento === "Folga Banco") {
         const noturno = minutosParaHorario(noturnoMin); // ex: "02:30" ou "00:00"
 
         const resultado = await pool.query(`
-           INSERT INTO registros_ponto (funcionario_id, data, e1, s1, e2, s2, e3, s3, evento, total, extras, negativos, noturno)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-ON CONFLICT (funcionario_id, data)
-DO UPDATE SET e1=$3, s1=$4, e2=$5, s2=$6, e3=$7, s3=$8, evento=$9, total=$10, extras=$11, negativos=$12, noturno=$13
-RETURNING *`,
-            [funcionario_id, data, e1, s1, e2, s2, e3, s3, evento, total, extras, negativos, noturno]
-        );
-        res.status(201).json(resultado.rows[0]);
+    INSERT INTO registros_ponto (funcionario_id, data, e1, s1, e2, s2, e3, s3, evento, total, extras, negativos, noturno)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+    ON CONFLICT (funcionario_id, data)
+    DO UPDATE SET e1=$3, s1=$4, e2=$5, s2=$6, e3=$7, s3=$8, evento=$9, total=$10, extras=$11, negativos=$12, noturno=$13
+    RETURNING *, (xmax = 0) AS foi_criacao`,
+    [funcionario_id, data, e1, s1, e2, s2, e3, s3, evento, total, extras, negativos, noturno]
+);
+
+const registro  = resultado.rows[0];
+const foiCriacao = registro.foi_criacao;
+const usuario   = req.headers["x-usuario"] || "desconhecido";
+const acao      = foiCriacao ? "criacao" : "edicao";
+
+// Campos que podem ter mudado
+const campos = ["e1","s1","e2","s2","e3","s3","evento","total","extras","negativos","noturno"];
+
+if (foiCriacao) {
+    // Criação — registra um log único
+    await pool.query(`
+        INSERT INTO log_registros (funcionario_id, data_registro, usuario, acao)
+        VALUES ($1, $2, $3, $4)`,
+        [funcionario_id, data, usuario, "criacao"]
+    );
+} else {
+    // Edição — busca o registro anterior para comparar
+    const anterior = await pool.query(
+        "SELECT * FROM registros_ponto WHERE funcionario_id = $1 AND data = $2",
+        [funcionario_id, data]
+    );
+    const ant = anterior.rows[0] || {};
+
+    for (const campo of campos) {
+        const valAnt = ant[campo] || null;
+        const valNov = registro[campo] || null;
+        if (valAnt !== valNov) {
+            await pool.query(`
+                INSERT INTO log_registros
+                    (funcionario_id, data_registro, usuario, acao, campo_alterado, valor_anterior, valor_novo)
+                VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                [funcionario_id, data, usuario, "edicao", campo, valAnt, valNov]
+            );
+        }
+    }
+}
+
+res.status(201).json(registro);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     }
@@ -160,6 +198,3 @@ async function verificarRegistro(req, res) {
 }
 
 module.exports = { listarRegistros, salvarRegistro, verificarRegistro };
-
-
-module.exports = { listarRegistros, salvarRegistro };

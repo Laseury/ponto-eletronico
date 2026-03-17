@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>VISO Hotel — Log de Alterações</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="pagina-dashboard">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2 class="logo-nome">VISO</h2>
+            <p class="logo-sub">Ponto Eletrônico</p>
+        </div>
+        <nav class="menu">
+            <a class="menu-item" href="dashboard.html">Dashboard</a>
+            <a class="menu-item" href="cadastro.html">Funcionários</a>
+            <a class="menu-item" href="relatorio.html">Relatórios</a>
+            <a class="menu-item active" href="logs.html">Logs</a>
+        </nav>
+    </div>
+
+    <div class="conteudo">
+        <div class="topbar">
+            <span id="topbar-titulo">Log de Alterações</span>
+            <div style="display:flex;align-items:center;gap:10px">
+                <span id="topbar-usuario"
+                      style="font-size:13px;color:#5a6070"></span>
+                <select id="sel-mes" class="sel-mes-ano" onchange="carregarLogs()">
+                    <option value="">Todos os meses</option>
+                    <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+                    <option value="3">Março</option><option value="4">Abril</option>
+                    <option value="5">Maio</option><option value="6">Junho</option>
+                    <option value="7">Julho</option><option value="8">Agosto</option>
+                    <option value="9">Setembro</option><option value="10">Outubro</option>
+                    <option value="11">Novembro</option><option value="12">Dezembro</option>
+                </select>
+                <select id="sel-ano" class="sel-mes-ano" onchange="carregarLogs()"></select>
+                <button class="botao-logout" onclick="sair()">Sair</button>
+            </div>
+        </div>
+
+        <div style="padding:28px 32px">
+            <div class="table-wrap">
+                <div class="table-toolbar">
+                    <p style="color:#5a6070;font-size:13px;padding:20px">
+                        Últimas 200 alterações
+                    </p>
+                </div>
+                <div id="tabela-logs"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>guardarPagina("admin");</script>
+<script src="../js/ano-seletor.js"></script>
+<script>
+const API = "http://localhost:3000";
+
+function carregarLogs() {
+    const mes = document.getElementById("sel-mes").value;
+    const ano = document.getElementById("sel-ano").value;
+    const container = document.getElementById("tabela-logs");
+    container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Carregando...</p>`;
+
+    let url = `${API}/logs?`;
+    if (mes && ano) url += `mes=${mes}&ano=${ano}`;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(renderizarLogs);
+}
+
+function renderizarLogs(logs) {
+    const container = document.getElementById("tabela-logs");
+
+    if (logs.length === 0) {
+        container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Nenhum log encontrado.</p>`;
+        return;
+    }
+
+    let html = `
+        <table class="tabela">
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Usuário</th>
+                <th>Funcionário</th>
+                <th>Data do Registro</th>
+                <th>Ação</th>
+                <th>Campo</th>
+                <th>Anterior</th>
+                <th>Novo</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    logs.forEach(function(l) {
+        const dataHora = new Date(l.criado_em).toLocaleString("pt-BR");
+        const dataReg  = new Date(l.data_registro).toLocaleDateString("pt-BR", { timeZone: "UTC" });
+
+        const acaoCor  = l.acao === "criacao" ? "verde" : "noturno-badge";
+        const acaoLabel = l.acao === "criacao" ? "Criação" : "Edição";
+
+        html += `
+            <tr>
+                <td style="font-size:12px;color:#9399a6">${dataHora}</td>
+                <td><strong style="color:#c9a84c">${l.usuario}</strong></td>
+                <td>${l.funcionario}</td>
+                <td>${dataReg}</td>
+                <td><span class="${acaoCor}">${acaoLabel}</span></td>
+                <td style="color:#9399a6">${l.campo_alterado || "—"}</td>
+                <td style="color:#e05c5c;font-family:monospace">${l.valor_anterior || "—"}</td>
+                <td style="color:#4caf82;font-family:monospace">${l.valor_novo || "—"}</td>
+            </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+carregarLogs();
+</script>
+</body>
+</html>

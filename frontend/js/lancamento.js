@@ -55,7 +55,10 @@ function lancarPonto() {
 function salvarRegistro(funcionario_id, data, e1, s1, e2, s2, e3, s3, evento, mensagem) {
     fetch("http://localhost:3000/registros", {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "x-usuario": sessionStorage.getItem("usuario") || "desconhecido"
+        },
         body: JSON.stringify({ funcionario_id, data, e1, s1, e2, s2, e3, s3, evento })
     })
     .then(r => r.json())

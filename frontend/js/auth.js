@@ -5,14 +5,14 @@ function guardarPagina(...perfisPermitidos) {
 
     if (!perfil) {
         // Não está logado — volta pro login
-        window.location.href = "../index.html";
+        window.location.href = "/index.html";
         return;
     }
 
     if (!perfisPermitidos.includes(perfil)) {
         // Logado mas sem permissão para esta página
         alert("Você não tem permissão para acessar esta página.");
-        window.location.href = "../index.html";
+        window.location.href = "/index.html";
         return;
     }
 }
@@ -27,7 +27,7 @@ function usuarioAtual() {
 
 function sair() {
     sessionStorage.clear();
-    window.location.href = "../index.html";
+    window.location.href = "/index.html";
 }
 
 // Exibe "Olá, nome" na topbar se existir o elemento

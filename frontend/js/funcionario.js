@@ -290,7 +290,10 @@ function salvarEdicao() {
 
     fetch("http://localhost:3000/registros", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "x-usuario": sessionStorage.getItem("usuario") || "desconhecido"
+        },
         body: JSON.stringify({ funcionario_id: funcId, data, e1, s1, e2, s2, e3, s3, evento })
     })
     .then(function(r) { return r.json(); })
@@ -344,6 +347,141 @@ function validarHorarios(e1, s1, e2, s2, e3, s3, evento) {
     if (turnoInvalido(e3, s3)) erros.push("Turno 3: entrada depois da saída.");
 
     return erros;
+}
+
+function gerarPDF() {
+    const nome = document.getElementById("topbar-nome").textContent;
+    const tipo = document.getElementById("info-tipo").textContent;
+    const mes  = document.getElementById("sel-mes-func").value;
+    const ano  = document.getElementById("sel-ano-func").value;
+
+    const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const labelMes = MESES[parseInt(mes) - 1] + " " + ano;
+
+    // Pega os dados já renderizados na tabela
+    const tabela = document.querySelector("#tabela-registros table");
+    if (!tabela) { alert("Nenhum registro para exportar."); return; }
+
+    // Pega os cards de resumo
+    const saldo    = document.getElementById("info-saldo")?.textContent    || "—";
+    const faltas   = document.getElementById("info-faltas")?.textContent   || "—";
+    const total    = document.getElementById("info-total")?.textContent    || "—";
+    const extras   = document.getElementById("info-extras")?.textContent   || "—";
+    const negativos = document.getElementById("info-negativos")?.textContent || "—";
+
+    // Monta HTML do PDF em uma janela nova
+    const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <title>Ficha — ${nome} — ${labelMes}</title>
+        <style>
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
+
+            .cabecalho { display:flex; justify-content:space-between;
+                         align-items:flex-start; margin-bottom: 24px;
+                         padding-bottom: 16px; border-bottom: 2px solid #1a1a1a; }
+            .empresa   { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+            .subtitulo { font-size: 12px; color: #666; margin-top: 4px; }
+            .periodo   { text-align:right; font-size: 13px; color: #444; }
+
+            .info-func { display:grid; grid-template-columns: repeat(4, 1fr);
+                         gap:12px; margin-bottom: 24px; }
+            .info-card { border: 1px solid #ddd; border-radius: 6px;
+                         padding: 10px 14px; }
+            .info-label { font-size: 10px; text-transform: uppercase;
+                          color: #999; margin-bottom: 4px; }
+            .info-valor { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+            .info-valor.verde    { color: #1a7a4a; }
+            .info-valor.vermelho { color: #c0392b; }
+
+            table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+            th    { background: #1a1a1a; color: #fff; padding: 7px 10px;
+                    font-size: 11px; text-align: left; }
+            td    { padding: 6px 10px; border-bottom: 1px solid #eee;
+                    font-size: 11px; }
+            tr:nth-child(even) td { background: #f9f9f9; }
+            tr.vazio td           { color: #ccc; }
+
+            .rodape { margin-top: 32px; padding-top: 16px;
+                      border-top: 1px solid #ddd;
+                      display: flex; justify-content: space-between;
+                      font-size: 11px; color: #999; }
+
+            .resumo { display:grid; grid-template-columns: repeat(3,1fr);
+                      gap:12px; margin-bottom:24px; }
+            .resumo-card { border:1px solid #ddd; border-radius:6px;
+                           padding:10px 14px; text-align:center; }
+            .resumo-label { font-size:10px; text-transform:uppercase;
+                            color:#999; margin-bottom:4px; }
+            .resumo-valor { font-size:14px; font-weight:700; }
+        </style>
+    </head>
+    <body>
+        <div class="cabecalho">
+            <div>
+                <div class="empresa">VISO HOTEL</div>
+                <div class="subtitulo">Sistema de Ponto Eletrônico</div>
+            </div>
+            <div class="periodo">
+                <strong>Ficha de Ponto</strong><br>
+                ${labelMes}
+            </div>
+        </div>
+
+        <div class="info-func">
+            <div class="info-card">
+                <div class="info-label">Funcionário</div>
+                <div class="info-valor" style="font-size:14px">${nome}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Tipo</div>
+                <div class="info-valor" style="font-size:14px">${tipo}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Faltas</div>
+                <div class="info-valor ${parseInt(faltas) > 0 ? 'vermelho' : ''}">${faltas}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Saldo do Mês</div>
+                <div class="info-valor ${saldo.startsWith('+') ? 'verde' : saldo.startsWith('-') ? 'vermelho' : ''}">${saldo}</div>
+            </div>
+        </div>
+
+        <div class="resumo">
+            <div class="resumo-card">
+                <div class="resumo-label">Horas Normais</div>
+                <div class="resumo-valor">${total}</div>
+            </div>
+            <div class="resumo-card">
+                <div class="resumo-label">Horas Extras</div>
+                <div class="resumo-valor" style="color:#1a7a4a">${extras}</div>
+            </div>
+            <div class="resumo-card">
+                <div class="resumo-label">Horas Negativas</div>
+                <div class="resumo-valor" style="color:#c0392b">${negativos}</div>
+            </div>
+        </div>
+
+        ${tabela.outerHTML}
+
+        <div class="rodape">
+            <span>Gerado em ${new Date().toLocaleString("pt-BR")}</span>
+            <span>VISO Hotel — Sistema de Ponto Eletrônico</span>
+        </div>
+    </body>
+    </html>`;
+
+    // Abre em janela nova e aciona o print do navegador
+    const janela = window.open("", "_blank");
+    janela.document.write(html);
+    janela.document.close();
+    janela.onload = function() {
+        janela.print();
+    };
 }
 
 carregarFuncionario();
