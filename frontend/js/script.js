@@ -28,9 +28,9 @@ function fazerLogin() {
         sessionStorage.setItem("usuario", usuario);
 
         // Redireciona conforme o perfil
-        if (encontrado.perfil === "admin")    window.location.href = "dashboard.html";
-        if (encontrado.perfil === "gestor")   window.location.href = "gestor.html";
-        if (encontrado.perfil === "contador") window.location.href = "contador.html";
+        if (encontrado.perfil === "admin")    window.location.href = "pages/dashboard.html";
+        if (encontrado.perfil === "gestor")   window.location.href = "pages/gestor/gestor.html";
+        if (encontrado.perfil === "contador") window.location.href = "pages/contador/contador.html";
         
     } else {
         alert("Usuário ou senha incorretos.");
