@@ -1,8 +1,4 @@
 🔴 Alta prioridade — resolve dores reais do dia a dia
-Edição de funcionários cadastrados
-Hoje não tem como editar o nome ou tipo de um funcionário depois de cadastrado. Se errar o tipo (ex: cadastrou como Mensalista mas é Horista), precisa apagar e recadastrar.
-Inativação de funcionários
-Quando um funcionário sai da empresa, ele some do sistema ou continua aparecendo em tudo. Uma flag ativo/inativo resolveria — o funcionário inativo não aparece nos lançamentos e no dashboard, mas o histórico dele é preservado.
 Lançamento em lote por horário
 Hoje o lote só suporta eventos. Poder lançar o mesmo horário (ex: todos entraram às 07:00 e saíram às 15:00) para vários funcionários de uma vez economizaria muito tempo para o RH.
 
@@ -17,10 +13,6 @@ Comparativo mês anterior
 No card de extras e faltas do dashboard, mostrar uma seta indicando se aumentou ou diminuiu em relação ao mês anterior — ex: "↑ 3h em relação a janeiro".
 
 🟢 Qualidade de vida
-Busca de funcionário
-Com 14 funcionários ainda é gerenciável, mas se crescer a lista do dashboard vai ficar difícil de navegar. Uma barra de busca simples filtrando por nome resolveria.
-Atalhos de teclado no lançamento
-Navegar entre os campos de horário com Tab já funciona pelo navegador, mas um atalho para confirmar o lançamento sem tirar a mão do teclado (além do Enter que já existe) tornaria o processo mais rápido para o RH.
 Tema claro
 O sistema tem tema escuro fixo. Um botão para alternar para tema claro seria útil para quem usa em ambientes muito iluminados.
 Impressão do dashboard

@@ -1,44 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap");
 
 /* ══════════════════════════════════════════
    VARIÁVEIS GLOBAIS — Paleta quente
    ══════════════════════════════════════════ */
 :root {
-  --fundo:          #09190e;   /* verde-noite profundo */
-  --fundo-card:     #0f2415;   /* card principal */
-  --fundo-elevado:  #162d1c;   /* elemento acima do card */
-  --borda:          #1e4028;   /* bordas sutis */
-  --borda-hover:    #2e6040;
+  --fundo: #09190e; /* verde-noite profundo */
+  --fundo-card: #0f2415; /* card principal */
+  --fundo-elevado: #162d1c; /* elemento acima do card */
+  --borda: #1e4028; /* bordas sutis */
+  --borda-hover: #2e6040;
 
-  --ouro:           #fdf3e7;   /* creme quente */
-  --ouro-suave:     rgba(253, 243, 231, 0.10);
+  --ouro: #fdf3e7; /* creme quente */
+  --ouro-suave: rgba(253, 243, 231, 0.1);
 
-  --texto-primario: #f0ede6;   /* branco quente */
-  --texto-sec:      #a5b8a8;   /* cinza-verde claro */
-  --texto-muted:    #4a6650;   /* apagado */
+  --texto-primario: #f0ede6; /* branco quente */
+  --texto-sec: #a5b8a8; /* cinza-verde claro */
+  --texto-muted: #4a6650; /* apagado */
 
-  --verde:          #5cb87a;
-  --vermelho:       #e05c5c;
-  --roxo:           #a78bfa;
+  --verde: #5cb87a;
+  --vermelho: #e05c5c;
+  --roxo: #a78bfa;
 
-  --raio:           12px;
-  --raio-sm:        8px;
-  --sombra:         0 4px 24px rgba(0,0,0,0.45);
+  --raio: 12px;
+  --raio-sm: 8px;
+  --sombra: 0 4px 24px rgba(0, 0, 0, 0.45);
 }
 
 /* ══════════════════════════════════════════
    RESET
    ══════════════════════════════════════════ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   background: var(--fundo);
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   color: var(--texto-primario);
   -webkit-font-smoothing: antialiased;
 }
@@ -53,8 +56,11 @@ html, body {
   align-items: center;
   justify-content: center;
   /* textura sutil de ruído sobre o fundo */
-  background-image:
-    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 70%);
+  background-image: radial-gradient(
+    ellipse 60% 50% at 50% 0%,
+    rgba(201, 168, 76, 0.06) 0%,
+    transparent 70%
+  );
 }
 
 .caixa-login {
@@ -70,15 +76,17 @@ html, body {
 
 /* linha decorativa dourada no topo do card */
 .caixa-login::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 3px;
   background: linear-gradient(90deg, transparent, var(--ouro), transparent);
 }
 
 .titulo {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   color: var(--ouro);
   font-size: 32px;
   font-weight: 600;
@@ -116,8 +124,10 @@ html, body {
   padding: 12px 16px;
   color: var(--texto-primario);
   font-size: 15px;
-  font-family: 'DM Sans', sans-serif;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: "DM Sans", sans-serif;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   outline: none;
 }
 
@@ -127,47 +137,59 @@ html, body {
 
 .entrada:focus {
   border-color: var(--ouro);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12);
 }
 
 /* ── Botão Principal (Entrar / Salvar) ── */
 .botao-entrada {
   width: 100%;
-  background: linear-gradient(135deg, #b8902e 0%, var(--ouro) 50%, #d4b55a 100%);
+  background: linear-gradient(
+    135deg,
+    #b8902e 0%,
+    var(--ouro) 50%,
+    #d4b55a 100%
+  );
   color: #0a1a0d;
   border: none;
   border-radius: var(--raio-sm);
   padding: 14px;
   font-size: 15px;
   font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-top: 10px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
-  box-shadow: 0 4px 16px rgba(253,243,231,0.15);
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s,
+    filter 0.2s;
+  box-shadow: 0 4px 16px rgba(253, 243, 231, 0.15);
 }
 
 .botao-entrada::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 50%
+  );
   pointer-events: none;
 }
 
 .botao-entrada:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(253,243,231,0.22);
+  box-shadow: 0 8px 28px rgba(253, 243, 231, 0.22);
   filter: brightness(1.07);
 }
 
 .botao-entrada:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(253,243,231,0.1);
+  box-shadow: 0 2px 8px rgba(253, 243, 231, 0.1);
 }
 
 /* ══════════════════════════════════════════
@@ -194,7 +216,7 @@ html, body {
 }
 
 .logo-nome {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   color: var(--ouro);
   font-size: 22px;
   font-weight: 600;
@@ -207,6 +229,16 @@ html, body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-top: 3px;
+}
+
+.caixa-nome {
+  background: var(--fundo-elevado);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  color: var(--texto-primario);
+  font-size: 13px;
+  font-family: "DM Sans", sans-serif;
+  padding: 7px 12px;
 }
 
 /* ── Menu Items ── */
@@ -247,7 +279,7 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;    /* permite rolar e ver todos os cards */
+  overflow-y: auto; /* permite rolar e ver todos os cards */
   overflow-x: hidden;
 }
 
@@ -267,7 +299,7 @@ html, body {
 
 .topbar-titulo {
   color: var(--texto-primario);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -304,9 +336,11 @@ html, body {
   background: var(--fundo-card);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  padding: 22px 26px;
+  padding: 18px 22px;
   flex: 1;
-  transition: border-color 0.2s, transform 0.2s;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
 }
 
 .card:hover {
@@ -327,7 +361,7 @@ html, body {
   color: var(--texto-primario);
   font-size: 28px;
   font-weight: 600;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
 }
 
 /* ══════════════════════════════════════════
@@ -341,7 +375,7 @@ html, body {
   color: var(--texto-primario);
   font-size: 18px;
   font-weight: 600;
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   margin-bottom: 16px;
   letter-spacing: 0.01em;
 }
@@ -358,12 +392,15 @@ html, body {
   border-radius: var(--raio);
   padding: 20px 22px;
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 
 .card-funcionario:hover {
   border-color: var(--ouro);
-  box-shadow: 0 4px 20px rgba(201,168,76,0.1);
+  box-shadow: 0 4px 20px rgba(201, 168, 76, 0.1);
   transform: translateY(-2px);
 }
 
@@ -405,18 +442,31 @@ html, body {
   color: var(--texto-sec);
   font-size: 14px;
   font-weight: 500;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
 }
 
 /* ══════════════════════════════════════════
    CORES SEMÂNTICAS
    ══════════════════════════════════════════ */
-.verde             { color: var(--verde); }
-.vermelho          { color: var(--vermelho); }
-.vermelhor         { color: var(--vermelho); }
-.metrica-valor.verde    { color: var(--verde); }
-.metrica-valor.vermelhor{ color: var(--vermelho); }
-.noturno-badge     { color: var(--roxo); font-weight: 600; }
+.verde {
+  color: var(--verde);
+}
+.vermelho {
+  color: var(--vermelho);
+}
+.vermelhor {
+  color: var(--vermelho);
+}
+.metrica-valor.verde {
+  color: var(--verde);
+}
+.metrica-valor.vermelhor {
+  color: var(--vermelho);
+}
+.noturno-badge {
+  color: var(--roxo);
+  font-weight: 600;
+}
 
 /* ══════════════════════════════════════════
    TABELA
@@ -454,12 +504,12 @@ html, body {
   padding: 11px 18px;
   font-size: 14px;
   color: var(--texto-sec);
-  border-bottom: 1px solid rgba(30,64,40,0.5);
-  font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid rgba(30, 64, 40, 0.5);
+  font-family: "DM Mono", monospace;
 }
 
 .tabela tr:hover td {
-  background: rgba(255,255,255,0.018);
+  background: rgba(255, 255, 255, 0.018);
 }
 
 /* ══════════════════════════════════════════
@@ -478,9 +528,20 @@ html, body {
   margin-bottom: 20px;
 }
 
-.mensagem       { color: var(--texto-primario); font-size: 14px; }
-.mensagem-sucesso { color: var(--verde);    font-size: 13px; margin-bottom: 12px; }
-.mensagem-erro   { color: var(--vermelho);  font-size: 13px; margin-bottom: 12px; }
+.mensagem {
+  color: var(--texto-primario);
+  font-size: 14px;
+}
+.mensagem-sucesso {
+  color: var(--verde);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.mensagem-erro {
+  color: var(--vermelho);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
 
 /* ══════════════════════════════════════════
    LANÇAMENTO / TURNO
@@ -517,7 +578,7 @@ html, body {
   border-radius: var(--raio-sm);
   color: var(--texto-primario);
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   padding: 7px 12px;
   cursor: pointer;
   outline: none;
@@ -544,19 +605,19 @@ html, body {
 .badge-mensalista {
   background: rgba(99, 135, 210, 0.15);
   color: #7ea3e0;
-  border: 1px solid rgba(99,135,210,0.2);
+  border: 1px solid rgba(99, 135, 210, 0.2);
 }
 
 .badge-horista {
   background: var(--ouro-suave);
   color: var(--ouro);
-  border: 1px solid rgba(201,168,76,0.2);
+  border: 1px solid rgba(201, 168, 76, 0.2);
 }
 
 .badge-noturno {
-  background: rgba(167,139,250,0.12);
+  background: rgba(167, 139, 250, 0.12);
   color: var(--roxo);
-  border: 1px solid rgba(167,139,250,0.2);
+  border: 1px solid rgba(167, 139, 250, 0.2);
 }
 
 /* ══════════════════════════════════════════
@@ -583,7 +644,7 @@ html, body {
   border-radius: var(--raio-sm);
   color: var(--texto-primario);
   font-size: 13px;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   padding: 7px 12px;
   width: 90px;
   outline: none;
@@ -592,7 +653,7 @@ html, body {
 
 .inp-valor-hora:focus {
   border-color: var(--ouro);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
 }
 
 /* ══════════════════════════════════════════
@@ -606,7 +667,7 @@ html, body {
   border-radius: var(--raio-sm);
   color: var(--texto-sec);
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 500;
   padding: 7px 16px;
   cursor: pointer;
@@ -617,10 +678,14 @@ html, body {
 }
 
 .botao-exportar::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, transparent 60%, rgba(201,168,76,0.06));
+  background: linear-gradient(
+    135deg,
+    transparent 60%,
+    rgba(201, 168, 76, 0.06)
+  );
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -634,6 +699,32 @@ html, body {
   opacity: 1;
 }
 
+.botao-editar {
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  color: var(--texto-sec);
+  font-size: 13px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 500;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.03em;
+  position: relative;
+  overflow: hidden;
+  margin-top: 7px;
+}
+
+.botao-editar:hover {
+  border-color: var(--ouro);
+  color: var(--ouro);
+}
+
+.botao-editar:hover::before {
+  opacity: 1;
+}
+
 /* ── Legenda ── */
 .botao-legenda {
   background: transparent;
@@ -641,7 +732,7 @@ html, body {
   border-radius: var(--raio-sm);
   color: var(--texto-sec);
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 500;
   padding: 7px 16px;
   cursor: pointer;
@@ -662,7 +753,7 @@ html, body {
   border-radius: var(--raio-sm);
   color: #e07070;
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: 600;
   padding: 8px 18px;
   cursor: pointer;
@@ -689,7 +780,7 @@ html, body {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 100;
   backdrop-filter: blur(2px);
 }
@@ -717,7 +808,7 @@ html, body {
 }
 
 .legenda-titulo {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   font-size: 16px;
   font-weight: 600;
   color: var(--texto-primario);
@@ -784,7 +875,7 @@ html, body {
   line-height: 1.55;
 }
 
-@import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,400');
+@import url("https://fonts.googleapis.com/css?family=Fira+Sans:300,400");
 
 .botao-entrar {
   position: relative;
@@ -793,36 +884,39 @@ html, body {
   justify-content: center;
   width: 100px;
   height: 35px;
-  border: 2px solid var(--ouro);        /* era: #fff */
+  border: 2px solid var(--ouro); /* era: #fff */
   border-radius: 2px;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;   /* era: Fira Sans */
+  font-family: "DM Sans", sans-serif; /* era: Fira Sans */
   font-weight: 500;
   font-size: 12px;
-  color: var(--ouro);                   /* era: #fff */
+  color: var(--ouro); /* era: #fff */
   text-transform: uppercase;
   letter-spacing: 1px;
   overflow: hidden;
   background: transparent;
-  transition: color .3s, background .3s, box-shadow .2s;
+  transition:
+    color 0.3s,
+    background 0.3s,
+    box-shadow 0.2s;
 }
 
 .botao-entrar .text {
   position: relative;
   left: -10px;
-  transition: left .4s .1s;
+  transition: left 0.4s 0.1s;
 }
 
 /* Hover */
 .botao-entrar:hover {
-  color: var(--fundo);                             /* era: #2C3940 */
-  background: var(--ouro);                         /* era: #fff */
+  color: var(--fundo); /* era: #2C3940 */
+  background: var(--ouro); /* era: #fff */
   box-shadow: 0px 17px 18px -14px rgba(0, 0, 0, 0.2);
 }
 
 .botao-entrar:hover .text {
   left: 16px;
-  transition: left .4s;
+  transition: left 0.4s;
 }
 
 .botao-entrar:hover .arrow {
@@ -832,178 +926,184 @@ html, body {
 
 /* Cards mini — rodapé da página do funcionário */
 .cards-mini {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .card-mini {
-    background: #09190e;
-    border: 1px solid #2a2d35;
-    border-radius: 10px;
-    padding: 14px 20px;
-    min-width: 160px;
-    flex: 1;
+  background: #09190e;
+  border: 1px solid #2a2d35;
+  border-radius: 10px;
+  padding: 14px 20px;
+  min-width: 160px;
+  flex: 1;
 }
 
 .card-mini-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #5a6070;
-    margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a6070;
+  margin-bottom: 6px;
 }
 
 .card-mini-valor {
-    font-size: 18px;
-    font-weight: 700;
-    color: #e8e9ec;
-    font-family: monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8e9ec;
+  font-family: monospace;
 }
 
 /* ── Bloco noturno ────────────────────────────────────────────── */
 .cards-noturno {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .card-noturno {
-    background: #13151a;
-    border: 1px solid #2a2d35;
-    border-radius: 10px;
-    padding: 16px 20px;
-    flex: 1;
-    min-width: 160px;
+  background: #13151a;
+  border: 1px solid #2a2d35;
+  border-radius: 10px;
+  padding: 16px 20px;
+  flex: 1;
+  min-width: 160px;
 }
 
 .card-noturno.destaque {
-    border-color: #3d2d5a;
-    background: #16121f;
+  border-color: #3d2d5a;
+  background: #16121f;
 }
 
 .card-noturno-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #5a6070;
-    margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5a6070;
+  margin-bottom: 8px;
 }
 
 .card-noturno-valor {
-    font-size: 22px;
-    font-weight: 700;
-    color: #e8e9ec;
-    font-family: monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: #e8e9ec;
+  font-family: monospace;
 }
 
-.roxo { color: #a78bfa; }
+.roxo {
+  color: #a78bfa;
+}
 
 /* ── Tabela de pagamento ──────────────────────────────────────── */
 .tabela-pagamento {
-    background: #13151a;
-    border: 1px solid #2a2d35;
-    border-radius: 10px;
-    overflow: hidden;
+  background: #13151a;
+  border: 1px solid #2a2d35;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .tabela-pagamento-titulo {
-    background: #1e1a2e;
-    color: #a78bfa;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-align: center;
-    padding: 10px;
-    border-bottom: 1px solid #2a2d35;
+  background: #1e1a2e;
+  color: #a78bfa;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 10px;
+  border-bottom: 1px solid #2a2d35;
 }
 
 .tabela-pagamento-linha {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 20px;
-    font-size: 13px;
-    color: #9399a6;
-    border-bottom: 1px solid #1e2028;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: #9399a6;
+  border-bottom: 1px solid #1e2028;
 }
 
 .tabela-pagamento-linha:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .tabela-pagamento-linha span:last-child {
-    font-weight: 600;
-    color: #e8e9ec;
-    font-family: monospace;
+  font-weight: 600;
+  color: #e8e9ec;
+  font-family: monospace;
 }
 
 /* Botão editar na tabela */
 .btn-editar {
-    background: transparent;
-    border: 1px solid #2a2d35;
-    border-radius: 6px;
-    color: #9399a6;
-    font-size: 12px;
-    padding: 4px 8px;
-    cursor: pointer;
-    transition: all 0.15s;
+  background: transparent;
+  border: 1px solid #2a2d35;
+  border-radius: 6px;
+  color: #9399a6;
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
 .btn-editar:hover {
-    border-color: #c9a84c;
-    color: #c9a84c;
+  border-color: #c9a84c;
+  color: #c9a84c;
 }
 
 /* Lançamento em lote */
 .lote-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid #1e2028;
-    cursor: pointer;
-    transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #1e2028;
+  cursor: pointer;
+  transition: background 0.1s;
 }
 
-.lote-item:last-child { border-bottom: none; }
+.lote-item:last-child {
+  border-bottom: none;
+}
 
-.lote-item:hover { background: #16181f; }
+.lote-item:hover {
+  background: #16181f;
+}
 
 .lote-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #c9a84c;
-    cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: #c9a84c;
+  cursor: pointer;
 }
 
 .lote-nome {
-    flex: 1;
-    font-size: 14px;
-    color: #e8e9ec;
-    font-weight: 500;
+  flex: 1;
+  font-size: 14px;
+  color: #e8e9ec;
+  font-weight: 500;
 }
 
 /* Card com banco crítico */
 .card-critico {
-    border-color: #5a1a1a !important;
-    background: #1a1212 !important;
+  border-color: #5a1a1a !important;
+  background: #1a1212 !important;
 }
 
 .card-critico:hover {
-    border-color: #e05c5c !important;
+  border-color: #e05c5c !important;
 }
 
 .badge-critico {
-    font-size: 10px;
-    font-weight: 700;
-    color: #e05c5c;
-    background: rgba(224, 92, 92, 0.1);
-    border: 1px solid rgba(224, 92, 92, 0.3);
-    border-radius: 4px;
-    padding: 2px 7px;
-    white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  color: #e05c5c;
+  background: rgba(224, 92, 92, 0.1);
+  border: 1px solid rgba(224, 92, 92, 0.3);
+  border-radius: 4px;
+  padding: 2px 7px;
+  white-space: nowrap;
 }
