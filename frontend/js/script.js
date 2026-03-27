@@ -1,5 +1,5 @@
 const API = "http://localhost:3000";
-
+let todosFuncionarios = [];
 // Nomes dos meses para montar os títulos dinamicamente
 const MESES = [
     "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
@@ -73,7 +73,10 @@ colorir("card-lacuna-dias",  dados.total_dias_lacuna > 0, "vermelho");
     // Busca a lista de funcionários com métricas do mês (Rota 6 existente)
     fetch(`${API}/relatorio/${mes}/${ano}`)
         .then(r => r.json())
-        .then(dados => renderizarFuncionarios(dados));
+        .then(dados => {
+            todosFuncionarios = dados;
+            renderizarFuncionarios(dados);
+});
 }
 
 // Chamada quando o usuário troca o mês/ano nos seletores
@@ -117,7 +120,7 @@ function renderizarFuncionarios(funcionarios) {
 
     let html = "";
    funcionarios.forEach(function (f) {
-    let corExtras = f.total_extras && f.total_extras !== "00:00" ? "verde" : "";
+     let corSaldo = f.saldo_mes.startsWith("-") ? "vermelho" : (f.saldo_mes !== "00:00" ? "verde" : "");
     let corFaltas = f.faltas > 0 ? "vermelho" : "";
 
     // Banco crítico: saldo negativo maior que 5h (300 min)
@@ -134,8 +137,8 @@ function renderizarFuncionarios(funcionarios) {
             <p class="card-tipo">${f.tipo}</p>
             <div class="card-metricas">
                 <div class="metrica">
-                    <p class="metrica-label">Extras</p>
-                    <p class="metrica-valor ${corExtras}">${f.total_extras || "00:00"}</p>
+                    <p class="metrica-label">Saldo</p>
+                    <p class="metrica-valor ${corSaldo}">${f.saldo_mes || "00:00"}</p>
                 </div>
                 <div class="metrica">
                     <p class="metrica-label">Faltas</p>
@@ -145,13 +148,74 @@ function renderizarFuncionarios(funcionarios) {
                     <p class="metrica-label">Dias</p>
                     <p class="metrica-valor">${f.dias_trabalhados}</p>
                 </div>
-            </div>
+           
+           </div>
+           <button class="botao-editar" onclick="abrirModalEditar(${f.id}, '${f.nome}', '${f.tipo}'); event.stopPropagation()">Editar</button>
         </div>`;
 });
     container.innerHTML = html;
 }
 
+function abrirModalEditar(id, nome, tipo) {
+    const modal = document.getElementById("modal-editar");
+    if (!modal) return;     
+     document.getElementById("edit-id").value = id;
+     document.getElementById("edit-nome").value = nome;
+     document.getElementById("edit-tipo").value = tipo;
+     document.getElementById("modal-editar").style.display = "flex";
+}
+
+function fecharModal() {
+     document.getElementById("modal-editar").style.display = "none";
+}
+
+function salvarEdicao() {
+    const id = document.getElementById("edit-id").value;
+    const nome = document.getElementById("edit-nome").value.trim();
+    const tipo = document.getElementById("edit-tipo").value;
+
+    if (!nome) {
+        alert("O nome não pode ser vazio.");
+        return;
+    }   
+   fetch(`${API}/funcionarios/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome, tipo })
+}).then(r => r.json())
+.then(dados => {
+   fecharModal();
+    carregarDashboard();
+})
+}
+
+function inativarFuncionario() {
+
+    const id = document.getElementById("edit-id").value;
+
+    if (!confirm("Tem certeza que deseja inativar este funcionário?")) return;
+
+    fetch(`${API}/funcionarios/${id}/ativo`, { method: "PATCH" })
+        .then(r => r.json())
+        .then(dados => {
+            alert(dados.mensagem);
+            fecharModal();
+            carregarDashboard();
+        });
 
 
+}
 
+function filtrarFuncionarios() {
+    const busca  = document.getElementById("busca-nome").value.toLowerCase();
+    const tipo   = document.getElementById("filtro-tipo").value;
+    const inativos = document.getElementById("filtro-inativos").checked;
 
+    const resultado = todosFuncionarios.filter(function(f) {
+        return f.nome.toLowerCase().includes(busca)
+        && (tipo === "" || f.tipo === tipo)
+        && (inativos || f.ativo === true);
+    });
+
+    renderizarFuncionarios(resultado);
+}

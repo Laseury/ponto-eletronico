@@ -94,14 +94,22 @@
                 <p class="logo-sub">Ponto Eletrônico</p>
             </div>
             <nav class="menu">
-                <a class="menu-item" href="dashboard.html"> Dashboard</a>
-                <a class="menu-item" href="funcionario.html">Funcionários</a>
-                <a class="menu-item" href="relatorio.html">Relatórios</a>
+                <a class="menu-item" href="dashboard.html">Dashboard</a>
+          <a class="menu-item" href="lancamento.html">Lançamentos</a>
+          <a class="menu-item" href="cadastro.html">Funcionários</a>
+          <a class="menu-item" href="relatorio.html">Relatórios</a>
+          <a class="menu-item" href="logs.html">Logs</a>
                 <button class="botao-legenda" onclick="abrirLegenda()">? Legenda</button>
             </nav>
         </div>
 
-        <div style="display:flex;align-items:center;gap:10px">
+        <div class="conteudo">
+        <div class="topbar">
+          <!-- ✅ id="topbar-titulo" para o JS atualizar dinamicamente -->
+          <p class="topbar-titulo" id="topbar-nome"></p>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <!-- ✅ Seletor de mês — ao mudar chama mudarMes() -->
+             <div style="display:flex;align-items:center;gap:10px">
     <select id="sel-mes-func" class="sel-mes-ano" onchange="mudarMesFuncionario()">
         <option value="1">Janeiro</option><option value="2">Fevereiro</option>
         <option value="3">Março</option><option value="4">Abril</option>
@@ -115,16 +123,22 @@
         <option value="2025">2025</option>
         <option value="2026">2026</option>
     </select>
+      <button class="botao-exportar" style="margin-right:20px" onclick="gerarPDF()">
+        ⬇ Exportar como PDF
+    </button>
     <a href="dashboard.html" class="botao-entrar"
         style="width:auto;padding:8px 20px;text-decoration:none;">
         ← Voltar
     </a>
 </div>
+</div>
+</div>
 
-   <div style="padding: 28px 32px;">
+
+   <div style="padding: 12px 32px;">
 
     <!-- Cards principais — maiores, resumo rápido para o RH -->
-    <div class="cards" style="margin-bottom: 24px">
+    <div class="cards" style="margin-bottom: 12px">
         <div class="card">
             <p class="card-label">Tipo</p>
             <p class="card-valor" id="info-tipo">-</p>
@@ -142,11 +156,8 @@
     <!-- Tabela de registros -->
     <div class="table-wrap">
         <div class="table-toolbar">
-            <p style="color:#5a6070;font-size:13px;padding:20px">Registro Detalhado do Ponto</p>
+            <p style="color:#5a6070;font-size:13px;padding:15px">Registro Detalhado do Ponto</p>
         </div>
-            <button class="botao-exportar" style="margin-right:20px" onclick="gerarPDF()">
-        ⬇ PDF
-    </button>
         <div id="tabela-registros"></div>
     </div>
 

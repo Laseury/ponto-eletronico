@@ -1,0 +1,25 @@
+🔴 Alta prioridade — resolve dores reais do dia a dia
+Lançamento em lote por horário
+Hoje o lote só suporta eventos. Poder lançar o mesmo horário (ex: todos entraram às 07:00 e saíram às 15:00) para vários funcionários de uma vez economizaria muito tempo para o RH.
+
+🟡 Importante — adiciona valor profissional
+Relatório anual consolidado
+Hoje só tem relatório mensal. Um relatório do ano inteiro mostrando o acumulado de cada funcionário (total de horas, extras, faltas, banco de horas final) seria muito útil para o fechamento anual e para o contador.
+Gráfico no dashboard
+Um gráfico de barras simples mostrando extras vs negativos dos últimos 6 meses daria uma visão rápida de tendências sem precisar abrir relatório por relatório.
+Aviso de férias vencendo
+Se cadastrar a data de admissão do funcionário, o sistema pode alertar no dashboard quando alguém está a menos de 30 dias de completar 1 ano (férias vencendo).
+Comparativo mês anterior
+No card de extras e faltas do dashboard, mostrar uma seta indicando se aumentou ou diminuiu em relação ao mês anterior — ex: "↑ 3h em relação a janeiro".
+
+🟢 Qualidade de vida
+Tema claro
+O sistema tem tema escuro fixo. Um botão para alternar para tema claro seria útil para quem usa em ambientes muito iluminados.
+Impressão do dashboard
+Um botão "Imprimir" no dashboard que gera uma versão limpa para papel, sem sidebar e sem botões — útil para reuniões ou para deixar impresso no quadro de avisos.
+
+🔵 Segunda fase — mais complexo mas de alto valor
+Integração com folha de pagamento
+Exportar no formato que o sistema de folha da empresa aceita (muitos aceitam CSV com colunas específicas), eliminando a necessidade de digitar os dados duas vezes.
+Controle de banco de horas com limite
+Definir um limite máximo de acúmulo no banco (ex: 40h). Quando o funcionário ultrapassa, o sistema alerta que as horas excedentes precisam ser pagas ou compensadas.
