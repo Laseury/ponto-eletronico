@@ -55,15 +55,21 @@
               <div>
                 <!-- conteúdo do modal -->
                 <input type="hidden" id="edit-id" />
-                <input type="text" id="edit-nome" class="caixa-nome"/>
+                <input type="text" id="edit-nome" class="caixa-nome" />
                 <select id="edit-tipo" class="sel-mes-ano">
                   <option value="Mensalista">Mensalista</option>
                   <option value="Horista">Horista</option>
                   <option value="Horista Noturno">Horista Noturno</option>
                 </select>
-                <button class="botao-legenda" onclick="salvarEdicao()">Salvar</button>
-                <button class="botao-legenda" onclick="fecharModal()">Cancelar</button>
-                <button class="botao-legenda" onclick="inativarFuncionario()">Inativar</button>
+                <button class="botao-legenda" onclick="salvarEdicao()">
+                  Salvar
+                </button>
+                <button class="botao-legenda" onclick="fecharModal()">
+                  Cancelar
+                </button>
+                <button class="botao-legenda" onclick="inativarFuncionario()">
+                  Inativar
+                </button>
               </div>
             </div>
             <button
@@ -104,13 +110,46 @@
           </div>
         </div>
 
-            <div class="secao">
-                <p class="secao-titulo">Funcionários</p>
-                <div class="grid-funcionarios" id="grid-funcionarios">
-                    <p style="color:#5a6070;font-size:13px">Carregando...</p>
-                </div>
-            </div>
+        <div class="secao">
+          <p class="secao-titulo">Funcionários</p>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 16px;
+            "
+          >
+            <input
+              type="text"
+              id="busca-nome"
+              class="busca-nome"
+              placeholder="Digite um nome"
+              oninput="filtrarFuncionarios()"
+            />
+            <select
+              id="filtro-tipo"
+              class="filtro-tipo"
+              onchange="filtrarFuncionarios()"
+            >
+              <option value="">Todos os tipos</option>
+              <option value="Mensalista">Mensalista</option>
+              <option value="Horista">Horista</option>
+              <option value="Horista Noturno">Horista Noturno</option>
+            </select>
+            <input
+              type="checkbox"
+              id="filtro-inativos"
+              class="botao-check"
+              onchange="filtrarFuncionarios()"
+            />
+            <label for="filtro-inativos">Mostrar inativos</label>
+          </div>
+          <div class="grid-funcionarios" id="grid-funcionarios">
+            <p style="color: #5a6070; font-size: 13px">Carregando...</p>
+          </div>
         </div>
+      </div>
     </div>
     <script src="../../js/ano-seletor.js"></script>
     <script src="../js/auth.js"></script>
