@@ -17,7 +17,7 @@ async function gerarRelatorio(req, res) {
 
         const resultado = await pool.query(`
             SELECT
-                f.id, f.nome, f.tipo,
+                f.id, f.nome, f.tipo, f.ativo,
                 COUNT(r.id) FILTER (WHERE r.evento IS NULL OR r.evento = '')       AS dias_trabalhados,
                 COUNT(r.id) FILTER (WHERE r.evento IS NOT NULL AND r.evento != '') AS dias_evento,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Falta')                      AS faltas,
@@ -44,7 +44,8 @@ async function gerarRelatorio(req, res) {
                 ON r.funcionario_id = f.id
                 AND EXTRACT(MONTH FROM r.data) = $1
                 AND EXTRACT(YEAR FROM r.data)  = $2
-            GROUP BY f.id, f.nome, f.tipo
+            WHERE f.ativo = TRUE
+            GROUP BY f.id, f.nome, f.tipo, f.ativo
             ORDER BY f.nome
         `, [mes, ano]);
 
@@ -99,6 +100,7 @@ async function gerarRelatorio(req, res) {
                 id:               row.id,
                 nome:             row.nome,
                 tipo:             row.tipo,
+                ativo:            row.ativo,
                 dias_trabalhados: parseInt(row.dias_trabalhados),
                 dias_evento:      parseInt(row.dias_evento),
                 faltas:           parseInt(row.faltas),
