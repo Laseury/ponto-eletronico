@@ -23,3 +23,4 @@ Integração com folha de pagamento
 Exportar no formato que o sistema de folha da empresa aceita (muitos aceitam CSV com colunas específicas), eliminando a necessidade de digitar os dados duas vezes.
 Controle de banco de horas com limite
 Definir um limite máximo de acúmulo no banco (ex: 40h). Quando o funcionário ultrapassa, o sistema alerta que as horas excedentes precisam ser pagas ou compensadas.
+Função de Ler a folha de ponto, extrair os dados e lançar eles no sistema, dentro dessa função a pessoa iria conferir se estava ok.
