@@ -1,104 +1,138 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-<head>
+  <head>
     <title>VISO Hotel — Dashboard</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
     <div class="pagina-dashboard">
-        <div class="sidebar">
-            <div class="sidebar-logo">
-                <h2 class="logo-nome">VISO</h2>
-                <p class="logo-sub">Ponto Eletrônico</p>
+      <div class="sidebar">
+        <div class="sidebar-logo">
+          <h2 class="logo-nome">VISO</h2>
+          <p class="logo-sub">Ponto Eletrônico</p>
+        </div>
+        <nav class="menu">
+          <a class="menu-item active" href="dashboard.html">Dashboard</a>
+          <a class="menu-item" href="lancamento.html">Lançamentos</a>
+          <a class="menu-item" href="cadastro.html">Funcionários</a>
+          <a class="menu-item" href="relatorio.html">Relatórios</a>
+          <a class="menu-item" href="logs.html">Logs</a>
+        </nav>
+      </div>
+
+      <div class="conteudo">
+        <div class="topbar">
+          <!-- ✅ id="topbar-titulo" para o JS atualizar dinamicamente -->
+          <p class="topbar-titulo" id="topbar-titulo">Dashboard</p>
+          <span
+            id="topbar-usuario"
+            style="font-size: 13px; color: #5a6070; margin-right: 8px"
+          ></span>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <!-- ✅ Seletor de mês — ao mudar chama mudarMes() -->
+            <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
+              <option value="1">Janeiro</option>
+              <option value="2">Fevereiro</option>
+              <option value="3">Março</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+
+            <select id="sel-ano" class="sel-mes-ano" onchange="mudarMes()">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+
+            <div id="modal-editar" style="display: none" class="botao-legenda">
+              <div>
+                <!-- conteúdo do modal -->
+                <input type="hidden" id="edit-id" />
+                <input type="text" id="edit-nome" class="caixa-nome"/>
+                <select id="edit-tipo" class="sel-mes-ano">
+                  <option value="Mensalista">Mensalista</option>
+                  <option value="Horista">Horista</option>
+                  <option value="Horista Noturno">Horista Noturno</option>
+                </select>
+                <button class="botao-legenda" onclick="salvarEdicao()">Salvar</button>
+                <button class="botao-legenda" onclick="fecharModal()">Cancelar</button>
+                <button class="botao-legenda" onclick="inativarFuncionario()">Inativar</button>
+              </div>
             </div>
-            <nav class="menu">
-                <a class="menu-item active" href="dashboard.html">Dashboard</a>
-                <a class="menu-item" href="cadastro.html">Funcionários</a>
-                <a class="menu-item" href="relatorio.html">Relatórios</a>
-                <a class="menu-item" href="logs.html">Logs</a>
-             
-            </nav>
+            <button
+              class="botao-exportar"
+              onclick="window.location.href = 'lancamento-lote.html'"
+            >
+              Lançar em Lote
+            </button>
+          </div>
+          <button class="botao-logout" onclick="sair()">Sair</button>
         </div>
 
-        <div class="conteudo">
-            <div class="topbar">
-                <!-- ✅ id="topbar-titulo" para o JS atualizar dinamicamente -->
-                <p class="topbar-titulo" id="topbar-titulo">Dashboard</p>
-                <span id="topbar-usuario"
-      style="font-size:13px;color:#5a6070;margin-right:8px"></span>
-                <div style="display:flex;align-items:center;gap:10px">
-                    <!-- ✅ Seletor de mês — ao mudar chama mudarMes() -->
-                    <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
-                    </select>
-
-                    <select id="sel-ano" class="sel-mes-ano" onchange="mudarMes()">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
-
-                    <button class="botao-entrar" style="width:auto;padding:8px 20px"
-                        onclick="window.location.href='lancamento.html'">+ Lançar Ponto</button>
-                        <button class="botao-exportar"
-    onclick="window.location.href='lancamento-lote.html'">
-    Lançar em Lote
-</button>
-                </div>
-                <button class="botao-logout" onclick="sair()">Sair</button>
-            </div>
-
-            <!-- ✅ Cards com id= para o JS preencher com dados reais -->
-            <div class="cards">
-                 <div class="card">
-        <p class="card-label">Funcionários</p>
-        <p class="card-valor" id="card-funcionarios">—</p>
-    </div>
-    <div class="card">
-        <p class="card-label">Lançados Hoje</p>
-        <p class="card-valor" id="card-lancados-hoje">—</p>
-    </div>
-    <div class="card">
-        <p class="card-label">Extras no Mês</p>
-        <p class="card-valor" id="card-extras">—</p>
-    </div>
-    <div class="card">
-        <p class="card-label">Faltas no Mês</p>
-        <p class="card-valor" id="card-faltas">—</p>
-    </div>
-    <div class="card">
-    <p class="card-label">Func. c/ Lacuna</p>
-    <p class="card-valor" id="card-lacuna-funcs">—</p>
-</div>
-<div class="card">
-    <p class="card-label">Dias sem Registro</p>
-    <p class="card-valor" id="card-lacuna-dias">—</p>
-</div>
-            </div>
-
-            <div class="secao">
-                <p class="secao-titulo">Funcionários</p>
-                <div class="grid-funcionarios" id="grid-funcionarios">
-                    <p style="color:#5a6070;font-size:13px">Carregando...</p>
-                </div>
-            </div>
+        <!-- ✅ Cards com id= para o JS preencher com dados reais -->
+        <div class="cards">
+          <div class="card">
+            <p class="card-label">Funcionários</p>
+            <p class="card-valor" id="card-funcionarios">—</p>
+          </div>
+          <div class="card">
+            <p class="card-label">Lançados Hoje</p>
+            <p class="card-valor" id="card-lancados-hoje">—</p>
+          </div>
+          <div class="card">
+            <p class="card-label">Extras no Mês</p>
+            <p class="card-valor" id="card-extras">—</p>
+          </div>
+          <div class="card">
+            <p class="card-label">Faltas no Mês</p>
+            <p class="card-valor" id="card-faltas">—</p>
+          </div>
+          <div class="card">
+            <p class="card-label">Func. c/ Lacuna</p>
+            <p class="card-valor" id="card-lacuna-funcs">—</p>
+          </div>
+          <div class="card">
+            <p class="card-label">Dias sem Registro</p>
+            <p class="card-valor" id="card-lacuna-dias">—</p>
+          </div>
         </div>
+
+        <div class="secao">
+          <p class="secao-titulo">Funcionários</p>
+           <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+  <input type="text" id="busca-nome" class="busca-nome" placeholder="Digite um nome" oninput="filtrarFuncionarios()">
+  <select id="filtro-tipo" class="filtro-tipo" onchange="filtrarFuncionarios()">
+    <option value="">Todos os tipos</option>
+    <option value="Mensalista">Mensalista</option>
+    <option value="Horista">Horista</option>
+    <option value="Horista Noturno">Horista Noturno</option>
+  </select>
+  <input type="checkbox" id="filtro-inativos" class="botao-check" onchange="filtrarFuncionarios()"></input>
+  <label for="filtro-inativos">Mostrar inativos</label>
+</div>
+
+
+          <div class="grid-funcionarios" id="grid-funcionarios">
+            <p style="color: #5a6070; font-size: 13px">Carregando...</p>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="../../js/ano-seletor.js"></script>
     <script src="../js/auth.js"></script>
-<script>guardarPagina("admin");</script>
+    <script>
+      guardarPagina("admin");
+    </script>
     <script src="../js/script.js"></script>
-    <script>carregarDashboard();</script>
-</body>
+    <script>
+      carregarDashboard();
+    </script>
+  </body>
 </html>
