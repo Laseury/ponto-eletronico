@@ -25,8 +25,12 @@ function anoAtual() {
 
 // Usuários fixos — troque as senhas para algo seguro
 const USUARIOS = {
+<<<<<<< HEAD
   admin: { senha: "123", perfil: "admin" },
   rh: { senha: "rh123", perfil: "admin" },
+=======
+  admin: { senha: "1234", perfil: "admin" },
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   gestor: { senha: "gestor", perfil: "gestor" },
   contador: { senha: "cont", perfil: "contador" },
 };
@@ -38,6 +42,7 @@ function fazerLogin() {
   const encontrado = USUARIOS[usuario];
 
   if (encontrado && encontrado.senha === senha) {
+<<<<<<< HEAD
     sessionStorage.setItem("perfil", encontrado.perfil);
     sessionStorage.setItem("usuario", usuario);
 
@@ -48,6 +53,19 @@ function fazerLogin() {
     } else if (encontrado.perfil === "contador") {
       window.location.href = "pages/contador/contador.html";
     }
+=======
+    // Salva o perfil na sessão para as outras páginas verificarem
+    sessionStorage.setItem("perfil", encontrado.perfil);
+    sessionStorage.setItem("usuario", usuario);
+
+    // Redireciona conforme o perfil
+    if (encontrado.perfil === "admin")
+      window.location.href = "pages/dashboard.html";
+    if (encontrado.perfil === "gestor")
+      window.location.href = "pages/gestor/gestor.html";
+    if (encontrado.perfil === "contador")
+      window.location.href = "pages/contador/contador.html";
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   } else {
     alert("Usuário ou senha incorretos.");
   }
@@ -87,6 +105,7 @@ function carregarDashboard() {
     });
 
   // Busca a lista de funcionários com métricas do mês
+<<<<<<< HEAD
   fetch(`${API}/relatorio/${mes}/${ano}`)
     .then((r) => r.json())
     .then((dados) => {
@@ -94,6 +113,18 @@ function carregarDashboard() {
       todosFuncionarios = dados;
       // Aplica o filtro inicial (que mostrará apenas ativos por padrão)
       filtrarFuncionarios();
+=======
+  // No arquivo do Dashboard, dentro da carregarDashboard()
+fetch(`${API}/relatorio/${mes}/${ano}`)
+    .then(r => r.json())
+    .then(dados => {
+        // FILTRO: Só deixa passar quem NÃO for false
+        // Isso remove quem está como 'false' e mantém quem está como 'true'
+        const apenasAtivos = dados.filter(f => f.ativo !== false);
+        
+        todosFuncionarios = apenasAtivos; 
+        renderizarFuncionarios(apenasAtivos);
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
     });
 }
 
@@ -140,7 +171,11 @@ function renderizarFuncionarios(funcionarios) {
   funcionarios.forEach(function (f) {
     let corSaldo = f.saldo_mes.startsWith("-")
       ? "vermelho"
+<<<<<<< HEAD
       : f.saldo_mes !== "00:00" && f.saldo_mes !== "0:00"
+=======
+      : f.saldo_mes !== "00:00"
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
         ? "verde"
         : "";
     let corFaltas = f.faltas > 0 ? "vermelho" : "";
@@ -190,6 +225,7 @@ function abrirModalEditar(id, nome, tipo) {
   document.getElementById("edit-id").value = id;
   document.getElementById("edit-nome").value = nome;
   document.getElementById("edit-tipo").value = tipo;
+<<<<<<< HEAD
   modal.style.display = "flex";
   // Bloqueia o scroll do corpo enquanto o modal estiver aberto
   document.body.style.overflow = "hidden";
@@ -199,6 +235,13 @@ function fecharModal() {
   const modal = document.getElementById("modal-editar");
   if (modal) modal.style.display = "none";
   document.body.style.overflow = "auto";
+=======
+  document.getElementById("modal-editar").style.display = "flex";
+}
+
+function fecharModal() {
+  document.getElementById("modal-editar").style.display = "none";
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
 }
 
 function salvarEdicao() {
@@ -255,9 +298,17 @@ function filtrarFuncionarios() {
     // 2. Filtro de Tipo
     const bateTipo = (tipo === "" || f.tipo === tipo);
     
+<<<<<<< HEAD
     // 3. Filtro de Status
     // Se 'mostrarInativos' for true, mostra todos. Se false, mostra apenas ativos.
     const bateStatus = mostrarInativos || f.ativo !== false;
+=======
+    // 3. Filtro de Status (A MÁGICA ESTÁ AQUI)
+    // Se 'mostrarInativos' for true, queremos f.ativo === false
+    // Se 'mostrarInativos' for false, queremos f.ativo === true
+    const statusDesejado = mostrarInativos ? false : true;
+    const bateStatus = (f.ativo === statusDesejado);
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
 
     return bateNome && bateTipo && bateStatus;
   });

@@ -101,15 +101,22 @@ function calcularEExibir(registros, mes, ano) {
   const elSaldo = document.getElementById("info-saldo");
   const elFaltas = document.getElementById("info-faltas");
 
+<<<<<<< HEAD
   const val = (v, zero) => (v === zero || !v ? "" : v);
 
+=======
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   // Limpa classes antes de reaplicar (importante ao trocar mês)
   if (elSaldo) elSaldo.classList.remove("verde", "vermelho");
   if (elFaltas) elFaltas.classList.remove("vermelho");
 
   if (elSaldo) {
     if (saldoMin === 0) {
+<<<<<<< HEAD
       elSaldo.textContent = "";
+=======
+      elSaldo.textContent = "00:00";
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
     } else if (saldoMin > 0) {
       elSaldo.textContent = "+" + fmtMin(saldoMin);
       elSaldo.classList.add("verde");
@@ -119,7 +126,11 @@ function calcularEExibir(registros, mes, ano) {
     }
   }
   if (elFaltas) {
+<<<<<<< HEAD
     elFaltas.textContent = val(totalFaltas, 0);
+=======
+    elFaltas.textContent = totalFaltas;
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
     if (totalFaltas > 0) elFaltas.classList.add("vermelho");
   }
 
@@ -127,9 +138,15 @@ function calcularEExibir(registros, mes, ano) {
   const elTotal = document.getElementById("info-total");
   const elExtras = document.getElementById("info-extras");
   const elNegativo = document.getElementById("info-negativos");
+<<<<<<< HEAD
   if (elTotal) elTotal.textContent = val(fmtMin(totalNormalMin), "00:00");
   if (elExtras) elExtras.textContent = totalExtrasMin > 0 ? "+" + fmtMin(totalExtrasMin) : "";
   if (elNegativo) elNegativo.textContent = totalNegativosMin > 0 ? "-" + fmtMin(totalNegativosMin) : "";
+=======
+  if (elTotal) elTotal.textContent = fmtMin(totalNormalMin);
+  if (elExtras) elExtras.textContent = "+" + fmtMin(totalExtrasMin);
+  if (elNegativo) elNegativo.textContent = "-" + fmtMin(totalNegativosMin);
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
 
   setTimeout(function () {
     const tipo = document.getElementById("info-tipo").textContent;
@@ -198,12 +215,18 @@ function renderizarRegistros(registros) {
   const diasNoMes = new Date(ano, mes, 0).getDate();
 
   function fmt(h) {
+<<<<<<< HEAD
     return h ? h.substring(0, 5) : "";
   }
 
   const perfil = sessionStorage.getItem("perfil");
   const podeEditar = (perfil === "admin");
 
+=======
+    return h ? h.substring(0, 5) : "—";
+  }
+
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   let html = `
         <table class="tabela">
         <thead>
@@ -227,6 +250,7 @@ function renderizarRegistros(registros) {
     const dataFormatada = `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${ano}`;
     const r = mapa[chave];
 
+<<<<<<< HEAD
     let rJson = "null";
     let e1 = "", s1 = "", e2 = "", s2 = "", e3 = "", s3 = "", total = "", noturno = "", extras = "", negativos = "", eventoHtml = "";
     let classeNoturno = "";
@@ -270,6 +294,42 @@ function renderizarRegistros(registros) {
               </button>
           </td>
       </tr>`;
+=======
+    if (r) {
+      let eventoHtml = "—";
+      if (r.evento) {
+        const cor =
+          r.evento === "Falta"
+            ? "vermelho"
+            : r.evento === "Folga"
+              ? "verde"
+              : "";
+        eventoHtml = `<span class="${cor}">${r.evento}</span>`;
+      }
+
+      // Serializa o registro para passar ao modal
+      const rJson = encodeURIComponent(JSON.stringify(r));
+
+      html += `
+        <tr>
+            <td>${dataFormatada}</td>
+            <td>${fmt(r.e1)}</td><td>${fmt(r.s1)}</td>
+            <td>${fmt(r.e2)}</td><td>${fmt(r.s2)}</td>
+            <td>${fmt(r.e3)}</td><td>${fmt(r.s3)}</td>
+            <td>${r.total || "—"}</td>
+            <td class="${r.noturno && r.noturno !== "00:00" ? "noturno-badge" : ""}">${fmt(r.noturno)}</td>
+            <td class="verde">${r.extras || "—"}</td>
+            <td class="vermelho">${r.negativos || "—"}</td>
+            <td>${eventoHtml}</td>
+            <td>
+                <button class="btn-editar"
+                    onclick="abrirModalEdicao(JSON.parse(decodeURIComponent('${rJson}')))">
+                    ✏️
+                </button>
+            </td>
+        </tr>`;
+    }
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   }
 
   html += `</tbody></table>`;
@@ -412,6 +472,7 @@ function validarHorarios(e1, s1, e2, s2, e3, s3, evento) {
 function gerarPDF() {
   const nome = document.getElementById("topbar-nome").textContent;
   const tipo = document.getElementById("info-tipo").textContent;
+<<<<<<< HEAD
   const mesValue = document.getElementById("sel-mes-func").value;
   const anoValue = document.getElementById("sel-ano-func").value;
 
@@ -427,12 +488,48 @@ function gerarPDF() {
     if (tr.lastElementChild) tr.removeChild(tr.lastElementChild);
   });
 
+=======
+  const mes = document.getElementById("sel-mes-func").value;
+  const ano = document.getElementById("sel-ano-func").value;
+
+  const MESES = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+  const labelMes = MESES[parseInt(mes) - 1] + " " + ano;
+
+  // Pega os dados já renderizados na tabela
+  const tabela = document.querySelector("#tabela-registros table");
+  if (!tabela) {
+    alert("Nenhum registro para exportar.");
+    return;
+  }
+
+  // Pega os cards de resumo
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   const saldo = document.getElementById("info-saldo")?.textContent || "—";
   const faltas = document.getElementById("info-faltas")?.textContent || "—";
   const total = document.getElementById("info-total")?.textContent || "—";
   const extras = document.getElementById("info-extras")?.textContent || "—";
+<<<<<<< HEAD
   const negativos = document.getElementById("info-negativos")?.textContent || "—";
 
+=======
+  const negativos =
+    document.getElementById("info-negativos")?.textContent || "—";
+
+  // Monta HTML do PDF em uma janela nova
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   const html = `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -508,6 +605,7 @@ function gerarPDF() {
                 <div class="card-label">Tipo</div>
                 <div class="card-valor">${tipo}</div>
             </div>
+<<<<<<< HEAD
             <div class="card-topo">
                 <div class="card-label">Faltas no Mês</div>
                 <div class="card-valor ${parseInt(faltas) > 0 ? "vermelho" : ""}">${faltas || "0"}</div>
@@ -515,6 +613,15 @@ function gerarPDF() {
             <div class="card-topo">
                 <div class="card-label">Saldo Atual</div>
                 <div class="card-valor ${saldo.startsWith("+") ? "verde" : saldo.startsWith("-") ? "vermelho" : ""}">${saldo}</div>
+=======
+            <div class="info-card">
+                <div class="info-label">Faltas</div>
+                <div class="info-valor ${parseInt(faltas) > 0 ? "vermelho" : ""}">${faltas}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Saldo do Mês</div>
+                <div class="info-valor ${saldo.startsWith("+") ? "verde" : saldo.startsWith("-") ? "vermelho" : ""}">${saldo}</div>
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
             </div>
         </div>
 
@@ -542,11 +649,19 @@ function gerarPDF() {
     </body>
     </html>`;
 
+<<<<<<< HEAD
+=======
+  // Abre em janela nova e aciona o print do navegador
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   const janela = window.open("", "_blank");
   janela.document.write(html);
   janela.document.close();
   janela.onload = function () {
+<<<<<<< HEAD
     setTimeout(() => { janela.print(); }, 500);
+=======
+    janela.print();
+>>>>>>> 75cfb01766022b8807f71f98690dae191c66f473
   };
 }
 
