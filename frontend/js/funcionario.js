@@ -101,13 +101,15 @@ function calcularEExibir(registros, mes, ano) {
   const elSaldo = document.getElementById("info-saldo");
   const elFaltas = document.getElementById("info-faltas");
 
+  const val = (v, zero) => (v === zero || !v ? "" : v);
+
   // Limpa classes antes de reaplicar (importante ao trocar mês)
   if (elSaldo) elSaldo.classList.remove("verde", "vermelho");
   if (elFaltas) elFaltas.classList.remove("vermelho");
 
   if (elSaldo) {
     if (saldoMin === 0) {
-      elSaldo.textContent = "00:00";
+      elSaldo.textContent = "";
     } else if (saldoMin > 0) {
       elSaldo.textContent = "+" + fmtMin(saldoMin);
       elSaldo.classList.add("verde");
@@ -117,7 +119,7 @@ function calcularEExibir(registros, mes, ano) {
     }
   }
   if (elFaltas) {
-    elFaltas.textContent = totalFaltas;
+    elFaltas.textContent = val(totalFaltas, 0);
     if (totalFaltas > 0) elFaltas.classList.add("vermelho");
   }
 
@@ -125,9 +127,9 @@ function calcularEExibir(registros, mes, ano) {
   const elTotal = document.getElementById("info-total");
   const elExtras = document.getElementById("info-extras");
   const elNegativo = document.getElementById("info-negativos");
-  if (elTotal) elTotal.textContent = fmtMin(totalNormalMin);
-  if (elExtras) elExtras.textContent = "+" + fmtMin(totalExtrasMin);
-  if (elNegativo) elNegativo.textContent = "-" + fmtMin(totalNegativosMin);
+  if (elTotal) elTotal.textContent = val(fmtMin(totalNormalMin), "00:00");
+  if (elExtras) elExtras.textContent = totalExtrasMin > 0 ? "+" + fmtMin(totalExtrasMin) : "";
+  if (elNegativo) elNegativo.textContent = totalNegativosMin > 0 ? "-" + fmtMin(totalNegativosMin) : "";
 
   setTimeout(function () {
     const tipo = document.getElementById("info-tipo").textContent;
@@ -196,8 +198,11 @@ function renderizarRegistros(registros) {
   const diasNoMes = new Date(ano, mes, 0).getDate();
 
   function fmt(h) {
-    return h ? h.substring(0, 5) : "—";
+    return h ? h.substring(0, 5) : "";
   }
+
+  const perfil = sessionStorage.getItem("perfil");
+  const podeEditar = (perfil === "admin");
 
   let html = `
         <table class="tabela">
@@ -212,6 +217,7 @@ function renderizarRegistros(registros) {
                 <th>Extras</th>
                 <th>Negativos</th>
                 <th>Evento</th>
+                ${podeEditar ? `<th>Ações</th>` : ""}
             </tr>
         </thead>
         <tbody>`;
@@ -221,40 +227,49 @@ function renderizarRegistros(registros) {
     const dataFormatada = `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${ano}`;
     const r = mapa[chave];
 
+    let rJson = "null";
+    let e1 = "", s1 = "", e2 = "", s2 = "", e3 = "", s3 = "", total = "", noturno = "", extras = "", negativos = "", eventoHtml = "";
+    let classeNoturno = "";
+
     if (r) {
-      let eventoHtml = "—";
+      rJson = encodeURIComponent(JSON.stringify(r));
+      e1 = fmt(r.e1); s1 = fmt(r.s1);
+      e2 = fmt(r.e2); s2 = fmt(r.s2);
+      e3 = fmt(r.e3); s3 = fmt(r.s3);
+      total = r.total || "";
+      noturno = fmt(r.noturno);
+      classeNoturno = r.noturno && r.noturno !== "00:00" ? "noturno-badge" : "";
+      extras = r.extras || "";
+      negativos = r.negativos || "";
+      
       if (r.evento) {
-        const cor =
-          r.evento === "Falta"
-            ? "vermelho"
-            : r.evento === "Folga"
-              ? "verde"
-              : "";
+        const cor = r.evento === "Falta" ? "vermelho" : r.evento === "Folga" ? "verde" : "";
         eventoHtml = `<span class="${cor}">${r.evento}</span>`;
       }
-
-      // Serializa o registro para passar ao modal
-      const rJson = encodeURIComponent(JSON.stringify(r));
-
-      html += `
-        <tr>
-            <td>${dataFormatada}</td>
-            <td>${fmt(r.e1)}</td><td>${fmt(r.s1)}</td>
-            <td>${fmt(r.e2)}</td><td>${fmt(r.s2)}</td>
-            <td>${fmt(r.e3)}</td><td>${fmt(r.s3)}</td>
-            <td>${r.total || "—"}</td>
-            <td class="${r.noturno && r.noturno !== "00:00" ? "noturno-badge" : ""}">${fmt(r.noturno)}</td>
-            <td class="verde">${r.extras || "—"}</td>
-            <td class="vermelho">${r.negativos || "—"}</td>
-            <td>${eventoHtml}</td>
-            <td>
-                <button class="btn-editar"
-                    onclick="abrirModalEdicao(JSON.parse(decodeURIComponent('${rJson}')))">
-                    ✏️
-                </button>
-            </td>
-        </tr>`;
+    } else {
+        // Se não existir registro r, cria um objeto fake para o modal de edição abrir corretamente
+        const fakeR = { funcionario_id: registros[0]?.funcionario_id, data: chave + "T12:00:00Z" };
+        rJson = encodeURIComponent(JSON.stringify(fakeR));
     }
+
+    html += `
+      <tr>
+          <td>${dataFormatada}</td>
+          <td>${e1}</td><td>${s1}</td>
+          <td>${e2}</td><td>${s2}</td>
+          <td>${e3}</td><td>${s3}</td>
+          <td>${total}</td>
+          <td class="${classeNoturno}">${noturno}</td>
+          <td class="verde">${extras}</td>
+          <td class="vermelho">${negativos}</td>
+          <td>${eventoHtml}</td>
+          <td>
+              <button class="btn-editar"
+                  onclick="abrirModalEdicao(JSON.parse(decodeURIComponent('${rJson}')))">
+                  ✏️
+              </button>
+          </td>
+      </tr>`;
   }
 
   html += `</tbody></table>`;
@@ -397,41 +412,27 @@ function validarHorarios(e1, s1, e2, s2, e3, s3, evento) {
 function gerarPDF() {
   const nome = document.getElementById("topbar-nome").textContent;
   const tipo = document.getElementById("info-tipo").textContent;
-  const mes = document.getElementById("sel-mes-func").value;
-  const ano = document.getElementById("sel-ano-func").value;
+  const mesValue = document.getElementById("sel-mes-func").value;
+  const anoValue = document.getElementById("sel-ano-func").value;
 
-  const MESES = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
-  ];
-  const labelMes = MESES[parseInt(mes) - 1] + " " + ano;
+  const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const labelMes = MESES[parseInt(mesValue) - 1] + " " + anoValue;
 
-  // Pega os dados já renderizados na tabela
-  const tabela = document.querySelector("#tabela-registros table");
-  if (!tabela) {
-    alert("Nenhum registro para exportar.");
-    return;
-  }
+  // Clona a tabela para remover a coluna de ações sem mexer na tela
+  const divOriginal = document.getElementById("tabela-registros");
+  const tabelaClone = divOriginal.querySelector("table").cloneNode(true);
+  
+  // Remove a última coluna (Ações) de cada linha
+  tabelaClone.querySelectorAll("tr").forEach(tr => {
+    if (tr.lastElementChild) tr.removeChild(tr.lastElementChild);
+  });
 
-  // Pega os cards de resumo
   const saldo = document.getElementById("info-saldo")?.textContent || "—";
   const faltas = document.getElementById("info-faltas")?.textContent || "—";
   const total = document.getElementById("info-total")?.textContent || "—";
   const extras = document.getElementById("info-extras")?.textContent || "—";
-  const negativos =
-    document.getElementById("info-negativos")?.textContent || "—";
+  const negativos = document.getElementById("info-negativos")?.textContent || "—";
 
-  // Monta HTML do PDF em uma janela nova
   const html = `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -439,109 +440,113 @@ function gerarPDF() {
         <meta charset="UTF-8">
         <title>Ficha — ${nome} — ${labelMes}</title>
         <style>
-            * { margin:0; padding:0; box-sizing:border-box; }
-            body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
+            @page { size: auto; margin: 10mm 15mm; }
+            * { margin:0; padding:0; box-sizing:border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 10px; color: #1a1a1a; padding: 0; }
 
-            .cabecalho { display:flex; justify-content:space-between;
-                         align-items:flex-start; margin-bottom: 24px;
-                         padding-bottom: 16px; border-bottom: 2px solid #1a1a1a; }
-            .empresa   { font-size: 20px; font-weight: 700; color: #1a1a1a; }
-            .subtitulo { font-size: 12px; color: #666; margin-top: 4px; }
-            .periodo   { text-align:right; font-size: 13px; color: #444; }
+            .cabecalho { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #1a1a1a; }
+            .empresa { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+            .subtitulo { font-size: 11px; color: #555; margin-top: 2px; }
+            .periodo { text-align:right; font-size: 12px; line-height: 1.4; color: #333; }
 
-            .info-func { display:grid; grid-template-columns: repeat(4, 1fr);
-                         gap:12px; margin-bottom: 24px; }
-            .info-card { border: 1px solid #ddd; border-radius: 6px;
-                         padding: 10px 14px; }
-            .info-label { font-size: 10px; text-transform: uppercase;
-                          color: #999; margin-bottom: 4px; }
-            .info-valor { font-size: 16px; font-weight: 700; color: #1a1a1a; }
-            .info-valor.verde    { color: #1a7a4a; }
-            .info-valor.vermelho { color: #c0392b; }
+            .grid-topo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+            .card-topo { border: 1.5px solid #eee; border-radius: 8px; padding: 12px; background: #fafafa; }
+            .card-label { font-size: 9px; text-transform: uppercase; font-weight: 700; color: #888; margin-bottom: 5px; }
+            .card-valor { font-size: 15px; font-weight: 800; color: #000; }
+            .card-valor.verde { color: #2e7d32; }
+            .card-valor.vermelho { color: #d32f2f; }
 
-            table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-            th    { background: #1a1a1a; color: #fff; padding: 7px 10px;
-                    font-size: 11px; text-align: left; }
-            td    { padding: 6px 10px; border-bottom: 1px solid #eee;
-                    font-size: 11px; }
-            tr:nth-child(even) td { background: #f9f9f9; }
-            tr.vazio td           { color: #ccc; }
+            .resumo-linha { display: flex; gap: 40px; margin-bottom: 20px; padding: 12px; border: 1.5px solid #000; border-radius: 8px; justify-content: center; background: #fff; }
+            .resumo-item { text-align: center; }
+            .resumo-label { font-size: 9px; color: #666; font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+            .resumo-valor { font-size: 14px; font-weight: 800; }
 
-            .rodape { margin-top: 32px; padding-top: 16px;
-                      border-top: 1px solid #ddd;
-                      display: flex; justify-content: space-between;
-                      font-size: 11px; color: #999; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
+            th { background: #1a1a1a; color: #fff; padding: 6px 2px; font-size: 9px; font-weight: 600; text-transform: uppercase; border: 1px solid #1a1a1a; text-align: left; overflow: visible !important; }
+            td { padding: 5px 2px; border: 1px solid #eee; font-size: 9.5px; white-space: nowrap; overflow: visible !important; text-overflow: clip !important; }
+            
+            /* Definição de Larguras das Colunas */
+            th:nth-child(1), td:nth-child(1) { width: 95px; } /* Data (Aumentada) */
+            th:nth-child(2), td:nth-child(2), 
+            th:nth-child(3), td:nth-child(3), 
+            th:nth-child(4), td:nth-child(4), 
+            th:nth-child(5), td:nth-child(5), 
+            th:nth-child(6), td:nth-child(6), 
+            th:nth-child(7), td:nth-child(7) { width: 38px; } /* E1-S3 (Reduzidas) */
+            th:nth-child(8), td:nth-child(8) { width: 42px; } /* Total */
+            th:nth-child(9), td:nth-child(9) { width: 45px; } /* Noturno */
+            th:nth-child(10), td:nth-child(10) { width: 45px; } /* Extras */
+            th:nth-child(11), td:nth-child(11) { width: 50px; } /* Negativos */
+            th:nth-child(12), td:nth-child(12) { width: auto; }  /* Evento */
 
-            .resumo { display:grid; grid-template-columns: repeat(3,1fr);
-                      gap:12px; margin-bottom:24px; }
-            .resumo-card { border:1px solid #ddd; border-radius:6px;
-                           padding:10px 14px; text-align:center; }
-            .resumo-label { font-size:10px; text-transform:uppercase;
-                            color:#999; margin-bottom:4px; }
-            .resumo-valor { font-size:14px; font-weight:700; }
+            tr:nth-child(even) td { background: #fcfcfc; }
+            .verde { color: #2e7d32 !important; font-weight: 600; }
+            .vermelho { color: #d32f2f !important; font-weight: 600; }
+            .noturno-badge { background: rgba(0,0,0,0.05); border-radius: 4px; font-weight: 600; }
+
+            .rodape { margin-top: auto; padding-top: 15px; border-top: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 10px; color: #777; font-style: italic; }
         </style>
     </head>
     <body>
         <div class="cabecalho">
             <div>
                 <div class="empresa">VISO HOTEL</div>
-                <div class="subtitulo">Sistema de Ponto Eletrônico</div>
+                <div class="subtitulo">Sistema de Gestão de Ponto Eletrônico</div>
             </div>
             <div class="periodo">
-                <strong>Ficha de Ponto</strong><br>
-                ${labelMes}
+                <strong>RELATÓRIO MENSAL - FICHA DE PONTO</strong><br>
+                Referência: ${labelMes}
             </div>
         </div>
 
-        <div class="info-func">
-            <div class="info-card">
-                <div class="info-label">Funcionário</div>
-                <div class="info-valor" style="font-size:14px">${nome}</div>
+        <div class="grid-topo">
+            <div class="card-topo">
+                <div class="card-label">Colaborador</div>
+                <div class="card-valor">${nome}</div>
             </div>
-            <div class="info-card">
-                <div class="info-label">Tipo</div>
-                <div class="info-valor" style="font-size:14px">${tipo}</div>
+            <div class="card-topo">
+                <div class="card-label">Tipo</div>
+                <div class="card-valor">${tipo}</div>
             </div>
-            <div class="info-card">
-                <div class="info-label">Faltas</div>
-                <div class="info-valor ${parseInt(faltas) > 0 ? "vermelho" : ""}">${faltas}</div>
+            <div class="card-topo">
+                <div class="card-label">Faltas no Mês</div>
+                <div class="card-valor ${parseInt(faltas) > 0 ? "vermelho" : ""}">${faltas || "0"}</div>
             </div>
-            <div class="info-card">
-                <div class="info-label">Saldo do Mês</div>
-                <div class="info-valor ${saldo.startsWith("+") ? "verde" : saldo.startsWith("-") ? "vermelho" : ""}">${saldo}</div>
+            <div class="card-topo">
+                <div class="card-label">Saldo Atual</div>
+                <div class="card-valor ${saldo.startsWith("+") ? "verde" : saldo.startsWith("-") ? "vermelho" : ""}">${saldo}</div>
             </div>
         </div>
 
-        <div class="resumo">
-            <div class="resumo-card">
-                <div class="resumo-label">Horas Normais</div>
+        <div class="resumo-linha">
+            <div class="resumo-item">
+                <div class="resumo-label">Total Horas</div>
                 <div class="resumo-valor">${total}</div>
             </div>
-            <div class="resumo-card">
-                <div class="resumo-label">Horas Extras</div>
-                <div class="resumo-valor" style="color:#1a7a4a">${extras}</div>
+            <div class="resumo-item">
+                <div class="resumo-label">Total Ganhos (+)</div>
+                <div class="resumo-valor verde">${extras || "00:00"}</div>
             </div>
-            <div class="resumo-card">
-                <div class="resumo-label">Horas Negativas</div>
-                <div class="resumo-valor" style="color:#c0392b">${negativos}</div>
+            <div class="resumo-item">
+                <div class="resumo-label">Total Perdas (-)</div>
+                <div class="resumo-valor vermelho">${negativos || "00:00"}</div>
             </div>
         </div>
 
-        ${tabela.outerHTML}
+        ${tabelaClone.outerHTML}
 
         <div class="rodape">
-            <span>Gerado em ${new Date().toLocaleString("pt-BR")}</span>
-            <span>VISO Hotel — Sistema de Ponto Eletrônico</span>
+            <span>Extraído em: ${new Date().toLocaleString("pt-BR")}</span>
+            <span>VISO Hotel — Excelência em Gestão</span>
         </div>
     </body>
     </html>`;
 
-  // Abre em janela nova e aciona o print do navegador
   const janela = window.open("", "_blank");
   janela.document.write(html);
   janela.document.close();
   janela.onload = function () {
-    janela.print();
+    setTimeout(() => { janela.print(); }, 500);
   };
 }
 

@@ -26,46 +26,80 @@
       <div class="conteudo">
         <div class="topbar">
           <p class="topbar-titulo">Lançar Ponto</p>
-          <a
-            href="dashboard.html"
-            style="color: #9399a6; font-size: 13px; text-decoration: none"
-          >
-            ← Voltar
-          </a>
+          <div class="topbar-direita">
+            <a href="dashboard.html" class="botao-voltar">
+              <span>←</span> Voltar para Dashboard
+            </a>
+          </div>
         </div>
 
-        <div style="padding: 28px 32px">
-          <div class="form-card">
-            <div class="form-grupo">
-              <label class="rotulo">Funcionário</label>
-              <select class="entrada" id="campo-funcionario">
-                <option value="">Selecione...</option>
-              </select>
+        <div style="padding: 32px">
+          <div class="lancamento-horizontal">
+            
+            <input type="file" id="input-arquivo-ia" style="display: none;" accept="image/*,.pdf" onchange="processarIA(this)">
+
+            <div class="card-topo-lancamento">
+              <div class="form-grupo" style="margin-bottom: 0;">
+                <label class="rotulo">Funcionário</label>
+                <select class="entrada" id="campo-funcionario">
+                  <option value="">Selecione o colaborador...</option>
+                </select>
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 0;">
+                <label class="rotulo">Mês/Ano (Referência IA)</label>
+                <input class="entrada" type="month" id="campo-mes" />
+              </div>
+
+              <!-- Novo Botão IA Integrado -->
+              <div class="form-grupo" style="margin-bottom: 0;">
+                <button class="botao-voltar" id="btn-arquivo-ia" style="background: rgba(46, 125, 50, 0.1); color: #4caf82; border: 1.5px dashed #4caf82; font-weight: 600; min-width: 140px; justify-content: center; height: 38px;" onclick="document.getElementById('input-arquivo-ia').click()">
+                   <span id="spinner-btn" class="secao-oculta"><div class="spinner-ia"></div></span>
+                   <span id="texto-btn">✨ Extrair Mês via IA</span>
+                </button>
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 0;">
+                <label class="rotulo">Dia (Manual)</label>
+                <input class="entrada" type="number" id="campo-dia" min="1" max="31" placeholder="Ex: 15" />
+              </div>
+
+              <div class="form-grupo" style="margin-bottom: 0;">
+                <label class="rotulo">Evento Especial</label>
+                <select class="entrada" id="campo-evento" onchange="toggleSecaoHorarios()">
+                  <option value="">— Dia Normal —</option>
+                  <option value="Férias">🏖️ Férias</option>
+                  <option value="Folga Banco">🏦 Folga Banco</option>
+                  <option value="DSR">📆 DSR</option>
+                  <option value="Falta">❌ Falta</option>
+                  <option value="Atestado">🏥 Atestado</option>
+                  <option value="Feriado">🎉 Feriado</option>
+                </select>
+              </div>
             </div>
 
-            <div class="form-grupo">
-              <label class="rotulo">Data</label>
-              <input class="entrada" type="date" id="campo-data" />
+            <!-- Botão para Lançamento em Lote -->
+            <div style="display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 20px;">
+                <button class="botao-entrar" style="width: auto; padding: 8px 16px; font-size: 12px; background: rgba(184, 153, 94, 0.1); color: var(--ouro); border: 1px solid var(--ouro); text-decoration: none;" onclick="window.location.href='lancamento-evento-lote.html'">
+                    📅 Lançar Eventos em Lote (Férias, Faltas, etc)
+                </button>
             </div>
 
-            <div class="form-grupo">
-              <label class="rotulo"
-                >Evento (deixe vazio para registrar horários)</label
-              >
-              <select class="entrada" id="campo-evento">
-                <option value="">— Dia normal —</option>
-                <option value="Folga">Folga</option>
-                <option value="Folga Banco">Folga Banco</option>
-                <option value="DSR">DSR</option>
-                <option value="Falta">Falta</option>
-                <option value="Atestado">Atestado</option>
-                <option value="Compensado">Compensado</option>
-              </select>
+            <!-- Banner de Descanso (Oculto por padrão) -->
+            <div id="banner-descanso" class="secao-oculta" style="padding: 20px; background: rgba(184, 153, 94, 0.05); border: 1px dashed var(--borda); border-radius: 12px; margin-bottom: 24px;">
+              <p style="color: var(--ouro); font-size: 14px; text-align: center; margin: 0;">
+                ✨ <b>Evento Especial:</b> Os horários de trabalho foram ocultados para este lançamento.
+              </p>
+              <div id="secao-falta-manual" class="secao-oculta" style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <label class="rotulo" style="margin-bottom: 0;">Horas Negativas:</label>
+                <input class="entrada" type="time" id="negativo-manual" value="08:00" style="width: 100px;">
+              </div>
             </div>
 
-            <div id="secao-horarios">
-              <div class="turno-secao">
-                <p class="turno-label">Turno 1</p>
+            <!-- Seção de Horários (3 Colunas) -->
+            <div id="secao-horarios" class="turno-container-horizontal">
+              <div class="card-turno ativo">
+                <p class="turno-label" style="color: var(--ouro)">Turno Principal</p>
                 <div class="turno-grid">
                   <div class="form-grupo">
                     <label class="rotulo">Entrada 1</label>
@@ -78,13 +112,8 @@
                 </div>
               </div>
 
-              <div class="turno-secao">
-                <p class="turno-label">
-                  Turno 2
-                  <span style="color: #5a6070; font-size: 11px"
-                    >(opcional)</span
-                  >
-                </p>
+              <div class="card-turno">
+                <p class="turno-label">Turno 2</p>
                 <div class="turno-grid">
                   <div class="form-grupo">
                     <label class="rotulo">Entrada 2</label>
@@ -97,13 +126,8 @@
                 </div>
               </div>
 
-              <div class="turno-secao">
-                <p class="turno-label">
-                  Turno 3
-                  <span style="color: #5a6070; font-size: 11px"
-                    >(opcional)</span
-                  >
-                </p>
+              <div class="card-turno">
+                <p class="turno-label">Turno 3</p>
                 <div class="turno-grid">
                   <div class="form-grupo">
                     <label class="rotulo">Entrada 3</label>
@@ -116,23 +140,17 @@
                 </div>
               </div>
             </div>
-            <!-- fecha secao-horarios -->
 
-            <div id="mensagem"></div>
-
-            <button
-              class="botao-entrar"
-              style="width: auto; padding: 10px 28px; margin-top: 8px"
-              onclick="lancarPonto()"
-            >
-              Salvar Registro
-            </button>
+            <!-- Rodapé de Ações -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
+               <div id="mensagem" style="flex: 1; margin-right: 20px;"></div>
+               <button class="botao-entrada" style="width: auto; padding: 12px 40px; margin-top: 0;" onclick="lancarPonto()">
+                 Salvar Registro
+               </button>
+            </div>
           </div>
-          <!-- fecha form-card -->
         </div>
       </div>
-      
-      <!-- fecha conteudo -->
     </div>
     <!-- fecha pagina-dashboard -->
     <!-- Overlay escuro atrás do painel -->
@@ -431,6 +449,54 @@
         </div>
       </div>
     </div>
+    <!-- Modal de Revisão IA (Batch) -->
+    <div id="modal-ia-revisao" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+      <div style="background: var(--fundo-card); border: 1px solid var(--borda); border-radius: 16px; width: 1100px; max-width: 95vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 24px 32px; border-bottom: 1px solid var(--borda); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="color: var(--ouro); margin: 0;">Rever Extração Inteligente</h3>
+            <p style="font-size: 13px; color: var(--texto-muted); margin-top: 4px;">Confirme os horários encontrados pela IA antes de salvar no sistema.</p>
+          </div>
+          <button onclick="fecharModalIA()" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+        
+        <div style="padding: 24px; overflow-y: auto; flex: 1;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="color: var(--ouro); text-align: left; border-bottom: 1px solid var(--borda);">
+                <th style="padding: 12px 8px; width: 40px;">
+                   <input type="checkbox" checked onchange="marcarTodosIA(this)" class="check-revisao-ia">
+                </th>
+                <th style="padding: 16px 12px;">DATA</th>
+                <th style="padding: 16px 12px;">E1</th>
+                <th style="padding: 16px 12px;">S1</th>
+                <th style="padding: 16px 12px;">E2</th>
+                <th style="padding: 16px 12px;">S2</th>
+                <th style="padding: 16px 12px;">E3</th>
+                <th style="padding: 16px 12px;">S3</th>
+                <th style="padding: 16px 12px;">EVENTO</th>
+                <th style="padding: 16px 12px;">STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-corpo-ia">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="padding: 20px 32px; border-top: 1px solid var(--borda); display: flex; justify-content: flex-end; gap: 16px; background: rgba(0,0,0,0.2);">
+          <button onclick="fecharModalIA()" style="background: transparent; border: 1px solid var(--borda); color: var(--texto-sec); padding: 10px 24px; border-radius: 8px; cursor: pointer;">Cancelar</button>
+          <button onclick="salvarExtraçãoIA()" style="background: var(--ouro); color: #000; border: none; padding: 10px 32px; border-radius: 8px; font-weight: 600; cursor: pointer;">Confirmar e Salvar Tudo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spinner de Carregamento IA -->
+    <div id="loading-ia" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; gap: 20px;">
+       <div style="width: 50px; height: 50px; border: 4px solid rgba(201, 168, 76, 0.2); border-top-color: var(--ouro); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+       <p id="loading-ia-txt" style="color: #fff; font-weight: 500;">IA analisando folha de ponto...</p>
+    </div>
+
     <script src="../js/auth.js"></script>
     <script>
       guardarPagina("admin");

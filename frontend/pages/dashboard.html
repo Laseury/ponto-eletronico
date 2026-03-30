@@ -22,14 +22,9 @@
 
       <div class="conteudo">
         <div class="topbar">
-          <!-- ✅ id="topbar-titulo" para o JS atualizar dinamicamente -->
           <p class="topbar-titulo" id="topbar-titulo">Dashboard</p>
-          <span
-            id="topbar-usuario"
-            style="font-size: 13px; color: #5a6070; margin-right: 8px"
-          ></span>
-          <div style="display: flex; align-items: center; gap: 10px">
-            <!-- ✅ Seletor de mês — ao mudar chama mudarMes() -->
+          
+          <div class="topbar-centro">
             <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
               <option value="1">Janeiro</option>
               <option value="2">Fevereiro</option>
@@ -51,27 +46,6 @@
               <option value="2026">2026</option>
             </select>
 
-            <div id="modal-editar" style="display: none" class="botao-legenda">
-              <div>
-                <!-- conteúdo do modal -->
-                <input type="hidden" id="edit-id" />
-                <input type="text" id="edit-nome" class="caixa-nome" />
-                <select id="edit-tipo" class="sel-mes-ano">
-                  <option value="Mensalista">Mensalista</option>
-                  <option value="Horista">Horista</option>
-                  <option value="Horista Noturno">Horista Noturno</option>
-                </select>
-                <button class="botao-legenda" onclick="salvarEdicao()">
-                  Salvar
-                </button>
-                <button class="botao-legenda" onclick="fecharModal()">
-                  Cancelar
-                </button>
-                <button class="botao-legenda" onclick="inativarFuncionario()">
-                  Inativar
-                </button>
-              </div>
-            </div>
             <button
               class="botao-exportar"
               onclick="window.location.href = 'lancamento-lote.html'"
@@ -79,7 +53,11 @@
               Lançar em Lote
             </button>
           </div>
-          <button class="botao-logout" onclick="sair()">Sair</button>
+
+          <div class="topbar-direita">
+            <span id="topbar-usuario" style="font-size: 13px; color: var(--texto-sec); margin-right: 8px"></span>
+            <button class="botao-logout" onclick="sair()">Sair</button>
+          </div>
         </div>
 
         <!-- ✅ Cards com id= para o JS preencher com dados reais -->
@@ -151,6 +129,30 @@
         </div>
       </div>
     </div>
+    <!-- Modal de Edição de Funcionário -->
+    <div id="modal-editar" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-titulo">Editar Funcionário</h3>
+        <input type="hidden" id="edit-id" />
+        
+        <label class="rotulo">Nome Completo</label>
+        <input type="text" id="edit-nome" class="caixa-nome" placeholder="Nome do funcionário" />
+        
+        <label class="rotulo">Tipo de Contrato</label>
+        <select id="edit-tipo" class="sel-mes-ano">
+          <option value="Mensalista">Mensalista</option>
+          <option value="Horista">Horista</option>
+          <option value="Horista Noturno">Horista Noturno</option>
+        </select>
+
+        <div class="modal-botoes">
+          <button class="botao-logout" style="margin-right: auto;" onclick="inativarFuncionario()">Inativar</button>
+          <button class="botao-legenda" onclick="fecharModal()">Cancelar</button>
+          <button class="botao-entrada" style="width: auto; margin-top: 0; padding: 7px 24px;" onclick="salvarEdicao()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
     <script src="../../js/ano-seletor.js"></script>
     <script src="../js/auth.js"></script>
     <script>

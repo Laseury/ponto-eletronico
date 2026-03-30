@@ -41,12 +41,27 @@
         </div>
 
         <div style="padding:28px 32px">
-            <div class="table-wrap">
-                <div class="table-toolbar">
-                    <p style="color:#5a6070;font-size:13px;padding:20px">
-                        Últimas 200 alterações
-                    </p>
+            <div class="toolbar" style="margin-bottom: 24px; display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px;">
+                <div style="display:flex; flex-direction:column; gap:4px">
+                    <label style="font-size:11px; color:#5a6070; font-weight:600">Usuário:</label>
+                    <input type="text" id="filtro-usuario" class="entrada" placeholder="Nome do usuário..." oninput="carregarLogs()" style="padding: 6px 12px; width: 180px;">
                 </div>
+                
+                <div style="display:flex; flex-direction:column; gap:4px">
+                    <label style="font-size:11px; color:#5a6070; font-weight:600">Ação:</label>
+                    <select id="filtro-acao" class="entrada" onchange="carregarLogs()" style="padding: 6px 12px; width: 150px;">
+                        <option value="">Todas as ações</option>
+                        <option value="criacao">Criação</option>
+                        <option value="edicao">Edição</option>
+                    </select>
+                </div>
+                
+                <p style="color:#505560; font-size:12px; margin-left: auto; max-width: 250px;">
+                    Monitoramento em tempo real das alterações manuais realizadas no sistema.
+                </p>
+            </div>
+
+            <div class="table-wrap">
                 <div id="tabela-logs"></div>
             </div>
         </div>
@@ -62,11 +77,13 @@ const API = "http://localhost:3000";
 function carregarLogs() {
     const mes = document.getElementById("sel-mes").value;
     const ano = document.getElementById("sel-ano").value;
+    const usuario = document.getElementById("filtro-usuario").value;
+    const acao = document.getElementById("filtro-acao").value;
+    
     const container = document.getElementById("tabela-logs");
-    container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Carregando...</p>`;
-
-    let url = `${API}/logs?`;
-    if (mes && ano) url += `mes=${mes}&ano=${ano}`;
+    
+    let url = `${API}/logs?usuario=${usuario}&acao=${acao}`;
+    if (mes && ano) url += `&mes=${mes}&ano=${ano}`;
 
     fetch(url)
         .then(r => r.json())

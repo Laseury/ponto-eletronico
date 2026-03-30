@@ -24,25 +24,18 @@ function mudarFiltro() {
     carregarRelatorio(mes, ano);
 }
 
-function trocarCiclo() {
-    const selMes  = document.getElementById("sel-mes");
-    const mesAtual = parseInt(selMes.value);
-    selMes.value = mesAtual <= 6 ? 7 : 1;
-    mudarFiltro();
-}
-
 function carregarRelatorio(mes, ano) {
     const label   = `${MESES[mes - 1]} ${ano}`;
     const topbar  = document.getElementById("topbar-titulo");
     const toolbar = document.getElementById("toolbar-titulo");
-    if (topbar)  topbar.textContent  = `Relatório Mensal — ${label}`;
-    if (toolbar) toolbar.textContent = `Resumo — ${label}`;
+    if (topbar)  topbar.textContent  = `Relatórios — ${label}`;
+    if (toolbar) toolbar.textContent = `Resumo Consolidado — ${label}`;
 
     const container = document.getElementById("tabela-relatorio");
-    container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Carregando...</p>`;
+    container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Carregando dados da equipe...</p>`;
 
-    const valorHora = document.getElementById("inp-valor-hora").value || 0;
-    fetch(`${API}/relatorio/${mes}/${ano}?valor_hora=${valorHora}`)
+    // Removemos a dependência do valor_hora para o perfil gestor
+    fetch(`${API}/relatorio/${mes}/${ano}`)
         .then(r => r.json())
         .then(dados => renderizarRelatorio(dados))
         .catch(() => {
@@ -54,7 +47,7 @@ function renderizarRelatorio(dados) {
     const container = document.getElementById("tabela-relatorio");
 
     if (dados.length === 0) {
-        container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Nenhum registro encontrado.</p>`;
+        container.innerHTML = `<p style="color:#5a6070;font-size:13px;padding:20px">Nenhum registro encontrado para este período.</p>`;
         return;
     }
 
@@ -63,11 +56,16 @@ function renderizarRelatorio(dados) {
     let html = `
         <table class="tabela">
             <thead><tr>
-                <th>Funcionário</th><th>Tipo</th><th>Dias Trab.</th>
-                <th>Eventos</th><th>Faltas</th><th>Extras</th>
-                <th>Negativos</th><th>Saldo do Mês</th>
-                <th title="Acumulado do ciclo ${ciclo}">Banco (${ciclo})</th>
-                <th>Noturno</th><th>Valor Noturno</th>
+                <th>Funcionário</th>
+                <th>Tipo</th>
+                <th style="text-align:center">Dias Trab.</th>
+                <th style="text-align:center">Eventos</th>
+                <th style="text-align:center">Faltas</th>
+                <th style="text-align:center">Extras</th>
+                <th style="text-align:center">Negativos</th>
+                <th style="text-align:center">Saldo Mês</th>
+                <th style="text-align:center" title="Acumulado do ciclo ${ciclo}">Banco (${ciclo})</th>
+                <th style="text-align:center">Noturno</th>
             </tr></thead>
             <tbody>`;
 
@@ -79,20 +77,18 @@ function renderizarRelatorio(dados) {
 
         html += `
             <tr>
-                <!-- ✅ Aponta para funcionario-gestor.html em vez de funcionario.html -->
                 <td class="nome-clicavel" onclick="window.location.href='funcionario-gestor.html?id=${f.id}'">
                     ${f.nome}
                 </td>
                 <td><span class="func-badge ${tipoBadge}">${f.tipo}</span></td>
-                <td>${f.dias_trabalhados}</td>
-                <td>${f.dias_evento}</td>
-                <td class="${f.faltas > 0 ? "vermelho" : ""}">${f.faltas}</td>
-                <td class="verde">${f.total_extras}</td>
-                <td class="vermelho">${f.total_negativos}</td>
-                <td class="${corSaldo}" style="font-weight:600">${f.saldo_mes}</td>
-                <td class="${corBanco}" style="font-weight:600">${f.banco_horas}</td>
-                <td class="${f.total_noturno !== '00:00' ? 'noturno-badge' : ''}">${f.total_noturno}</td>
-                <td class="${parseFloat(f.valor_noturno) > 0 ? 'verde' : ''}">${parseFloat(f.valor_noturno) > 0 ? 'R$ ' + f.valor_noturno : '—'}</td>
+                <td style="text-align:center">${f.dias_trabalhados}</td>
+                <td style="text-align:center">${f.dias_evento}</td>
+                <td style="text-align:center" class="${f.faltas > 0 ? "vermelho" : ""}">${f.faltas}</td>
+                <td style="text-align:center" class="verde">${f.total_extras}</td>
+                <td style="text-align:center" class="vermelho">${f.total_negativos}</td>
+                <td style="text-align:center" class="${corSaldo}" style="font-weight:600">${f.saldo_mes}</td>
+                <td style="text-align:center" class="${corBanco}" style="font-weight:600">${f.banco_horas}</td>
+                <td style="text-align:center" class="${f.total_noturno !== '00:00' ? 'noturno-badge' : ''}">${f.total_noturno}</td>
             </tr>`;
     });
 
@@ -100,12 +96,11 @@ function renderizarRelatorio(dados) {
     container.innerHTML = html;
 }
 
-// Exportação — igual ao relatorio.js
+// Exportação simplificada sem valores financeiros
 function exportar(formato) {
-    const mes       = parseInt(document.getElementById("sel-mes").value);
-    const ano       = parseInt(document.getElementById("sel-ano").value);
-    const valorHora = document.getElementById("inp-valor-hora").value || 0;
-    fetch(`${API}/relatorio/${mes}/${ano}?valor_hora=${valorHora}`)
+    const mes = parseInt(document.getElementById("sel-mes").value);
+    const ano = parseInt(document.getElementById("sel-ano").value);
+    fetch(`${API}/relatorio/${mes}/${ano}`)
         .then(r => r.json())
         .then(dados => {
             if (formato === "csv")  exportarCSV(dados, mes, ano);
@@ -114,8 +109,8 @@ function exportar(formato) {
 }
 
 function montarLinhas(dados) {
-    const cabecalho = ["Nome","Tipo","Dias Trabalhados","Faltas","Extras","Negativos","Saldo do Mês","Banco de Horas","Noturno","Valor Noturno (R$)"];
-    const linhas = dados.map(f => [f.nome, f.tipo, f.dias_trabalhados, f.faltas, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno]);
+    const cabecalho = ["Nome","Tipo","Dias Trabalhados","Faltas","Extras","Negativos","Saldo do Mês","Banco de Horas","Noturno"];
+    const linhas = dados.map(f => [f.nome, f.tipo, f.dias_trabalhados, f.faltas, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno]);
     return [cabecalho, ...linhas];
 }
 
@@ -124,13 +119,13 @@ function exportarCSV(dados, mes, ano) {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const a    = document.createElement("a");
     a.href     = URL.createObjectURL(blob);
-    a.download = `folha_${mes}_${ano}.csv`;
+    a.download = `relatorio_gestao_${mes}_${ano}.csv`;
     a.click();
 }
 
 function exportarXLSX(dados, mes, ano) {
     const linhas = montarLinhas(dados);
-    let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Folha ${mes}-${ano}"><Table>`;
+    let xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Relatorio Gestão ${mes}-${ano}"><Table>`;
     linhas.forEach((linha, i) => {
         xml += `<Row>`;
         linha.forEach(cel => {
@@ -144,8 +139,13 @@ function exportarXLSX(dados, mes, ano) {
     const blob = new Blob([xml], { type: "application/vnd.ms-excel" });
     const a    = document.createElement("a");
     a.href     = URL.createObjectURL(blob);
-    a.download = `folha_${mes}_${ano}.xls`;
+    a.download = `relatorio_gestao_${mes}_${ano}.xls`;
     a.click();
+}
+
+function sair() {
+    sessionStorage.clear();
+    window.location.href = "../../index.html";
 }
 
 iniciar();

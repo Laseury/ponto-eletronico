@@ -7,56 +7,72 @@
 </head>
 <body>
 
-<div class="topbar">
-    <span id="topbar-titulo">Dashboard — Gestão</span>
-    <div style="display:flex;align-items:center;gap:10px">
-        <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
-            <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-            <option value="3">Março</option><option value="4">Abril</option>
-            <option value="5">Maio</option><option value="6">Junho</option>
-            <option value="7">Julho</option><option value="8">Agosto</option>
-            <option value="9">Setembro</option><option value="10">Outubro</option>
-            <option value="11">Novembro</option><option value="12">Dezembro</option>
-        </select>
-        <select id="sel-ano" class="sel-mes-ano" onchange="mudarMes()">
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-        </select>
-        <button class="botao-legenda" onclick="abrirLegenda()">? Legenda</button>
-        <button class="botao-logout" onclick="sair()">Sair</button>  <!-- ✅ adicionado -->
-    </div>
-</div>  <!-- ✅ fechamento da topbar -->
-
-<div class="conteudo">
-    <div class="cards">
-        <div class="card">
-            <p class="card-label">Funcionários</p>
-            <p class="card-valor" id="card-funcionarios">—</p>
+<div class="pagina-dashboard">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2 class="logo-nome">VISO</h2>
+            <p class="logo-sub">Gestão</p>
         </div>
-        <div class="card">
-            <p class="card-label">Lançados Hoje</p>
-            <p class="card-valor" id="card-lancados-hoje">—</p>
-        </div>
-        <div class="card">
-            <p class="card-label">Extras no Mês</p>
-            <p class="card-valor" id="card-extras">—</p>
-        </div>
-        <div class="card">
-            <p class="card-label">Faltas no Mês</p>
-            <p class="card-valor" id="card-faltas">—</p>
-        </div>
+        <nav class="menu">
+            <a class="menu-item active" href="gestor.html">Dashboard</a>
+            <a class="menu-item" href="relatorio-gestor.html">Relatórios</a>
+        </nav>
     </div>
 
-    <div class="toolbar">
-        <span id="toolbar-titulo">Funcionários</span>
-        <!-- Gestor pode ir para relatórios mas não cadastrar -->
-       <button class="botao-acao" onclick="window.location.href='relatorio-gestor.html'">
-    Ver Relatório
-</button>
-    </div>
+    <div class="conteudo">
+        <div class="topbar">
+            <span id="topbar-titulo">Dashboard — Gestão</span>
+            <div style="display:flex;align-items:center;gap:10px">
+                <select id="sel-mes" class="sel-mes-ano" onchange="mudarMes()">
+                    <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+                    <option value="3">Março</option><option value="4">Abril</option>
+                    <option value="5">Maio</option><option value="6">Junho</option>
+                    <option value="7">Julho</option><option value="8">Agosto</option>
+                    <option value="9">Setembro</option><option value="10">Outubro</option>
+                    <option value="11">Novembro</option><option value="12">Dezembro</option>
+                </select>
+                <select id="sel-ano" class="sel-mes-ano" onchange="mudarMes()">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+                <button class="botao-logout" onclick="sair()">Sair</button>
+            </div>
+        </div>
 
-    <div id="grid-funcionarios"></div>
+        <div class="conteudo-lista">
+            <div class="cards">
+                <div class="card">
+                    <p class="card-label">Equipe</p>
+                    <p class="card-valor" id="card-funcionarios">—</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Batidas Hoje</p>
+                    <p class="card-valor" id="card-lancados-hoje">—</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Extras Acumuladas</p>
+                    <p class="card-valor verde" id="card-extras">—</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Faltas no Período</p>
+                    <p class="card-valor vermelho" id="card-faltas">—</p>
+                </div>
+            </div>
+
+            <div class="toolbar" style="padding: 0 32px; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
+                    <span id="toolbar-titulo" style="font-family:'Playfair Display', serif; font-size:18px; font-weight:600">Acompanhamento de Colaboradores</span>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" id="busca-nome" class="entrada" placeholder="Buscar colaborador..." oninput="filtrarFuncionarios()" style="width:200px; padding:8px 12px">
+                        <button class="botao-legenda" onclick="abrirLegenda()" style="padding:8px 16px">? Legenda</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="grid-funcionarios" class="grid-funcionarios" style="padding: 0 32px"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Painel de legenda -->
@@ -128,8 +144,8 @@
 </script>
 <script src="../../js/auth.js"></script>
 <script>
-    guardarPagina("gestor");
-    iniciar();
+    guardarPagina("gestor", "admin");
+    carregarDashboard();
 </script>
 </body>
 </html>

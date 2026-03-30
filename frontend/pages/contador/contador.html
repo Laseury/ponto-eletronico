@@ -19,10 +19,8 @@
 
     <div class="conteudo">
         <div class="topbar">
-            <span id="topbar-titulo">Relatório — Contador</span>
+            <span id="topbar-titulo">Relatório para Contabilidade</span>
             <div style="display:flex;align-items:center;gap:10px">
-                <span id="topbar-usuario"
-                      style="font-size:13px;color:#5a6070;margin-right:4px"></span>
                 <select id="sel-mes" class="sel-mes-ano" onchange="mudarFiltro()">
                     <option value="1">Janeiro</option><option value="2">Fevereiro</option>
                     <option value="3">Março</option><option value="4">Abril</option>
@@ -32,69 +30,36 @@
                     <option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
                 <select id="sel-ano" class="sel-mes-ano" onchange="mudarFiltro()"></select>
-                <div style="display:flex;align-items:center;gap:6px">
-                    <label style="color:#9399a6;font-size:13px">R$/h:</label>
-                    <input id="inp-valor-hora" type="number" step="0.01"
-                           placeholder="0.00" class="inp-valor-hora"
-                           onchange="mudarFiltro()">
-                </div>
-                <button class="botao-exportar" onclick="exportar('xlsx')">⬇ Excel</button>
-                <button class="botao-exportar" onclick="exportar('csv')">⬇ CSV</button>
                 <button class="botao-logout" onclick="sair()">Sair</button>
             </div>
         </div>
 
-        <div class="conteudo">
-            <!-- Cards resumo — somente leitura -->
-            <div class="cards" style="margin-bottom:0">
+        <div class="conteudo-lista">
+            <div class="cards" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
                 <div class="card">
-                    <p class="card-label">Funcionários</p>
-                    <p class="card-valor" id="card-funcionarios">—</p>
+                    <p class="card-label">Total Colaboradores</p>
+                    <p class="card-valor" id="card-funcionarios" style="font-size: 28px;">—</p>
                 </div>
                 <div class="card">
-                    <p class="card-label">Extras no Mês</p>
-                    <p class="card-valor" id="card-extras">—</p>
+                    <p class="card-label">Saldo de Extras (+)</p>
+                    <p class="card-valor verde" id="card-extras" style="font-size: 28px;">—</p>
                 </div>
                 <div class="card">
-                    <p class="card-label">Faltas no Mês</p>
-                    <p class="card-valor" id="card-faltas">—</p>
+                    <p class="card-label">Total de Faltas</p>
+                    <p class="card-valor vermelho" id="card-faltas" style="font-size: 28px;">—</p>
                 </div>
             </div>
 
-            <div class="toolbar">
-                <span id="toolbar-titulo">Resumo</span>
+            <div class="toolbar" style="background: rgba(0,0,0,0.05); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <span style="font-weight: 700; color: var(--ouro);">Resumo Consolidado do Mês</span>
+                <p style="font-size: 11px; color: #5a6070; margin-top: 4px;">Utilize os dados abaixo para o lançamento no sistema de folha de pagamento.</p>
             </div>
-            <div id="tabela-relatorio"></div>
+            
+            <div id="tabela-relatorio" class="container-tabela"></div>
         </div>
     </div>
 </div>
 
-<script src="../../../js/auth.js"></script>
-<script>guardarPagina("contador");</script>
-<script src="../../../js/ano-seletor.js"></script>
-<script src="../../../js/relatorio.js"></script>
-<script>
-    // Carrega os cards do resumo
-    function carregarCards() {
-        const mes = parseInt(document.getElementById("sel-mes").value);
-        const ano = parseInt(document.getElementById("sel-ano").value);
-        fetch(`http://localhost:3000/resumo/${mes}/${ano}`)
-            .then(r => r.json())
-            .then(function(d) {
-                document.getElementById("card-funcionarios").textContent = d.total_funcionarios;
-                document.getElementById("card-extras").textContent       = d.total_extras;
-                document.getElementById("card-faltas").textContent       = d.total_faltas;
-            });
-    }
-
-    // Sobrescreve mudarFiltro para também recarregar os cards
-    const _mudarFiltroOriginal = mudarFiltro;
-    function mudarFiltro() {
-        _mudarFiltroOriginal();
-        carregarCards();
-    }
-
-    carregarCards();
-</script>
+<script src="contador.js"></script>
 </body>
 </html>

@@ -21,20 +21,22 @@ async function gerarRelatorio(req, res) {
                 COUNT(r.id) FILTER (WHERE r.evento IS NULL OR r.evento = '')       AS dias_trabalhados,
                 COUNT(r.id) FILTER (WHERE r.evento IS NOT NULL AND r.evento != '') AS dias_evento,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Falta')                      AS faltas,
-                SUM(CASE WHEN r.extras LIKE '+%'
+                SUM(CASE WHEN r.extras LIKE '+%:%'
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
                     ELSE 0 END) AS total_extras_min,
-                SUM(CASE WHEN r.negativos LIKE '-%'
+                SUM(CASE WHEN r.negativos LIKE '-%:%'
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END) AS total_negativos_min,
                 SUM(
-                    CAST(SPLIT_PART(COALESCE(r.noturno,'00:00'),':',1) AS INT)*60 +
-                    CAST(SPLIT_PART(COALESCE(r.noturno,'00:00'),':',2) AS INT)
+                    CASE WHEN r.noturno LIKE '%:%'
+                    THEN CAST(SPLIT_PART(r.noturno,':',1) AS INT)*60 +
+                         CAST(SPLIT_PART(r.noturno,':',2) AS INT)
+                    ELSE 0 END
                 ) AS total_noturno_min,
                 SUM(
-                    CASE WHEN r.total IS NOT NULL
+                    CASE WHEN r.total LIKE '%:%'
                     THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 +
                          CAST(SPLIT_PART(r.total,':',2) AS INT)
                     ELSE 0 END
@@ -52,11 +54,11 @@ async function gerarRelatorio(req, res) {
         const bancResult = await pool.query(`
             SELECT
                 r.funcionario_id,
-                SUM(CASE WHEN r.extras LIKE '+%'
+                SUM(CASE WHEN r.extras LIKE '+%:%'
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
                     ELSE 0 END) AS banco_extras_min,
-                SUM(CASE WHEN r.negativos LIKE '-%'
+                SUM(CASE WHEN r.negativos LIKE '-%:%'
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END) AS banco_negativos_min

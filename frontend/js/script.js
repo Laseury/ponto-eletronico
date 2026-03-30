@@ -25,7 +25,8 @@ function anoAtual() {
 
 // Usuários fixos — troque as senhas para algo seguro
 const USUARIOS = {
-  admin: { senha: "1234", perfil: "admin" },
+  admin: { senha: "123", perfil: "admin" },
+  rh: { senha: "rh123", perfil: "admin" },
   gestor: { senha: "gestor", perfil: "gestor" },
   contador: { senha: "cont", perfil: "contador" },
 };
@@ -37,17 +38,16 @@ function fazerLogin() {
   const encontrado = USUARIOS[usuario];
 
   if (encontrado && encontrado.senha === senha) {
-    // Salva o perfil na sessão para as outras páginas verificarem
     sessionStorage.setItem("perfil", encontrado.perfil);
     sessionStorage.setItem("usuario", usuario);
 
-    // Redireciona conforme o perfil
-    if (encontrado.perfil === "admin")
+    if (encontrado.perfil === "admin") {
       window.location.href = "pages/dashboard.html";
-    if (encontrado.perfil === "gestor")
+    } else if (encontrado.perfil === "gestor") {
       window.location.href = "pages/gestor/gestor.html";
-    if (encontrado.perfil === "contador")
+    } else if (encontrado.perfil === "contador") {
       window.location.href = "pages/contador/contador.html";
+    }
   } else {
     alert("Usuário ou senha incorretos.");
   }
@@ -87,16 +87,13 @@ function carregarDashboard() {
     });
 
   // Busca a lista de funcionários com métricas do mês
-  // No arquivo do Dashboard, dentro da carregarDashboard()
-fetch(`${API}/relatorio/${mes}/${ano}`)
-    .then(r => r.json())
-    .then(dados => {
-        // FILTRO: Só deixa passar quem NÃO for false
-        // Isso remove quem está como 'false' e mantém quem está como 'true'
-        const apenasAtivos = dados.filter(f => f.ativo !== false);
-        
-        todosFuncionarios = apenasAtivos; 
-        renderizarFuncionarios(apenasAtivos);
+  fetch(`${API}/relatorio/${mes}/${ano}`)
+    .then((r) => r.json())
+    .then((dados) => {
+      // Salva a lista completa (ativos e inativos) para o filtro funcionar localmente
+      todosFuncionarios = dados;
+      // Aplica o filtro inicial (que mostrará apenas ativos por padrão)
+      filtrarFuncionarios();
     });
 }
 
@@ -143,7 +140,7 @@ function renderizarFuncionarios(funcionarios) {
   funcionarios.forEach(function (f) {
     let corSaldo = f.saldo_mes.startsWith("-")
       ? "vermelho"
-      : f.saldo_mes !== "00:00"
+      : f.saldo_mes !== "00:00" && f.saldo_mes !== "0:00"
         ? "verde"
         : "";
     let corFaltas = f.faltas > 0 ? "vermelho" : "";
@@ -151,6 +148,12 @@ function renderizarFuncionarios(funcionarios) {
     // Banco crítico: saldo negativo maior que 5h (300 min)
     const saldoMin = calcularSaldoMin(f.saldo_mes);
     const bancoCritico = saldoMin < -300;
+
+    const perfil = sessionStorage.getItem("perfil");
+    const podeEditar = (perfil === "admin");
+
+    // Helper para exibir vazio se for zero
+    const val = (v, zero) => (v === zero || !v ? "" : v);
 
     html += `
         <div class="card-funcionario ${bancoCritico ? "card-critico" : ""}"
@@ -163,19 +166,19 @@ function renderizarFuncionarios(funcionarios) {
             <div class="card-metricas">
                 <div class="metrica">
                     <p class="metrica-label">Saldo</p>
-                    <p class="metrica-valor ${corSaldo}">${f.saldo_mes || "00:00"}</p>
+                    <p class="metrica-valor ${corSaldo}">${val(f.saldo_mes, "00:00")}</p>
                 </div>
                 <div class="metrica">
                     <p class="metrica-label">Faltas</p>
-                    <p class="metrica-valor ${corFaltas}">${f.faltas}</p>
+                    <p class="metrica-valor ${corFaltas}">${val(f.faltas, 0)}</p>
                 </div>
                 <div class="metrica">
                     <p class="metrica-label">Dias</p>
-                    <p class="metrica-valor">${f.dias_trabalhados}</p>
+                    <p class="metrica-valor">${val(f.dias_trabalhados, 0)}</p>
                 </div>
            
            </div>
-           <button class="botao-editar" onclick="abrirModalEditar(${f.id}, '${f.nome}', '${f.tipo}'); event.stopPropagation()">Editar</button>
+           ${podeEditar ? `<button class="botao-editar" onclick="abrirModalEditar(${f.id}, '${f.nome}', '${f.tipo}'); event.stopPropagation()">Editar</button>` : ""}
         </div>`;
   });
   container.innerHTML = html;
@@ -187,11 +190,15 @@ function abrirModalEditar(id, nome, tipo) {
   document.getElementById("edit-id").value = id;
   document.getElementById("edit-nome").value = nome;
   document.getElementById("edit-tipo").value = tipo;
-  document.getElementById("modal-editar").style.display = "flex";
+  modal.style.display = "flex";
+  // Bloqueia o scroll do corpo enquanto o modal estiver aberto
+  document.body.style.overflow = "hidden";
 }
 
 function fecharModal() {
-  document.getElementById("modal-editar").style.display = "none";
+  const modal = document.getElementById("modal-editar");
+  if (modal) modal.style.display = "none";
+  document.body.style.overflow = "auto";
 }
 
 function salvarEdicao() {
@@ -248,11 +255,9 @@ function filtrarFuncionarios() {
     // 2. Filtro de Tipo
     const bateTipo = (tipo === "" || f.tipo === tipo);
     
-    // 3. Filtro de Status (A MÁGICA ESTÁ AQUI)
-    // Se 'mostrarInativos' for true, queremos f.ativo === false
-    // Se 'mostrarInativos' for false, queremos f.ativo === true
-    const statusDesejado = mostrarInativos ? false : true;
-    const bateStatus = (f.ativo === statusDesejado);
+    // 3. Filtro de Status
+    // Se 'mostrarInativos' for true, mostra todos. Se false, mostra apenas ativos.
+    const bateStatus = mostrarInativos || f.ativo !== false;
 
     return bateNome && bateTipo && bateStatus;
   });

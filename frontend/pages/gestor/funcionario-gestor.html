@@ -9,23 +9,59 @@
 </head>
 <body>
 
-<div class="topbar">
-    <span id="topbar-titulo">Funcionário</span>
-    <div style="display:flex;align-items:center;gap:10px">
-        <button class="botao-acao secundario"
-                onclick="window.location.href='relatorio-gestor.html'">
-            ← Voltar
-        </button>
-        <button class="botao-logout" onclick="sair()">Sair</button>
+<div class="pagina-dashboard">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h2 class="logo-nome">VISO</h2>
+            <p class="logo-sub">Gestão</p>
+        </div>
+        <nav class="menu">
+            <a class="menu-item" href="gestor.html">Dashboard</a>
+            <a class="menu-item active" href="relatorio-gestor.html">Relatórios</a>
+        </nav>
     </div>
-</div>
 
-<div class="conteudo">
-    <div class="toolbar">
-        <span id="toolbar-titulo">Registros</span>
-        <!-- Gestor só visualiza, sem botão de lançar ponto -->
+    <div class="conteudo">
+        <div class="topbar">
+            <span id="topbar-titulo">Ficha do Funcionário</span>
+            <div style="display:flex;align-items:center;gap:10px">
+                <button class="botao-logout" onclick="sair()">Sair</button>
+            </div>
+        </div>
+
+        <div class="conteudo-lista" style="padding: 24px 32px">
+            <div class="toolbar" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <span id="toolbar-titulo" style="font-family:'Playfair Display', serif; font-size:22px; font-weight:600">Carregando...</span>
+                  <p id="toolbar-subtitulo" style="font-size:12px; color:#5a6070; margin-top:2px;"></p>
+                </div>
+                <button class="botao-legenda" onclick="window.location.href='relatorio-gestor.html'">← Voltar para Relatório</button>
+            </div>
+
+            <!-- Cards de Indicadores Rápidos -->
+            <div class="cards" style="padding: 0; margin-bottom: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <div class="card">
+                    <p class="card-label">Saldo do Mês</p>
+                    <p class="card-valor" id="card-saldo">—</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Extras Acumuladas</p>
+                    <p class="card-valor verde" id="card-extras">—</p>
+                </div>
+                <div class="card">
+                    <p class="card-label">Faltas no Período</p>
+                    <p class="card-valor vermelho" id="card-faltas">—</p>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <div class="table-toolbar" style="padding: 15px 20px; background: rgba(0,0,0,0.05);">
+                    <span style="font-size:12px; font-weight:700; color:var(--ouro); text-transform:uppercase; letter-spacing:0.05em">Espelho de Ponto Detalhado</span>
+                </div>
+                <div id="tabela-registros"></div>
+            </div>
+        </div>
     </div>
-    <div id="tabela-registros"></div>
 </div>
 
 <script src="funcionario-gestor.js"></script>

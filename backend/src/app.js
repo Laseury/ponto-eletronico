@@ -7,6 +7,7 @@ const registrosRoutes    = require("../routes/registros.routes");   // novo
 const relatorioRoutes    = require("../routes/relatorio.routes");   // novo
 const resumoRoutes = require("../routes/resumo.routes");
 const logRoutes = require("../routes/log.routes");
+const iaRoutes = require("../routes/ia.routes");
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/registros",    registrosRoutes);   // novo
 app.use("/relatorio",    relatorioRoutes);   // novo
 app.use("/resumo", resumoRoutes);
 app.use("/logs", logRoutes);
+app.use("/ia", iaRoutes);
 // Rota catch-all para servir index.html em rotas não encontradas
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, "../../frontend/index.html"));

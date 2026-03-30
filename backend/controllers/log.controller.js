@@ -2,7 +2,7 @@ const pool = require("../db/connection");
 
 async function listarLogs(req, res) {
     try {
-        const { funcionario_id, mes, ano } = req.query;
+        const { funcionario_id, mes, ano, usuario, acao } = req.query;
 
         let query = `
             SELECT
@@ -16,7 +16,7 @@ async function listarLogs(req, res) {
                 l.valor_novo,
                 l.criado_em
             FROM log_registros l
-            JOIN funcionarios f ON f.id = l.funcionario_id
+            LEFT JOIN funcionarios f ON f.id = l.funcionario_id
             WHERE 1=1`;
 
         const params = [];
@@ -31,8 +31,16 @@ async function listarLogs(req, res) {
             params.push(ano);
             query += ` AND EXTRACT(YEAR FROM l.data_registro) = $${params.length}`;
         }
+        if (usuario) {
+            params.push(`%${usuario}%`);
+            query += ` AND l.usuario ILIKE $${params.length}`;
+        }
+        if (acao) {
+            params.push(acao);
+            query += ` AND l.acao = $${params.length}`;
+        }
 
-        query += " ORDER BY l.criado_em DESC LIMIT 200";
+        query += " ORDER BY l.criado_em DESC LIMIT 300";
 
         const resultado = await pool.query(query, params);
         res.json(resultado.rows);

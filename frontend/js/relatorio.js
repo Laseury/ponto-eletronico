@@ -1,4 +1,3 @@
-require("dotenv").config();
 const API = "http://localhost:3000";
 
 const MESES = [
@@ -7,8 +6,7 @@ const MESES = [
 ];
 
 function mesAtual() { return new Date().getMonth() + 1; }
-function anoAtual() { return new Date().getFullYear(); 
-}
+function anoAtual() { return new Date().getFullYear(); }
 
 function exportar(formato) {
     const mes       = parseInt(document.getElementById("sel-mes").value);

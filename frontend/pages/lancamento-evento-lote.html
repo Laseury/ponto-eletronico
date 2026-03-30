@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <title>VISO Hotel - Lançamento em Lote</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="pagina-dashboard">
+
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <h2 class="logo-nome">ViSO</h2>
+                <p class="logo-sub"></p>Ponto Eletrônico</p>
+            </div>
+            <nav class="menu">
+                <a class="menu-item" href="dashboard.html">Dashboard</a>
+                <a class="menu-item active" href="lancamento.html">Lançamentos</a>
+                <a class="menu-item" href="cadastro.html">Funcionários</a>
+                <a class="menu-item" href="relatorio.html">Relatórios</a>
+                <a class="menu-item" href="logs.html">Logs</a>
+            </nav>
+        </div>
+
+        <div class="conteudo">
+            <div class="topbar">
+                <p class="topbar-titulo">Lançamento de Eventos em Lote</p>
+                <a href="lancamento.html" style="color: #9399a6; font-size: 13px; text-decoration:none">← Voltar</a>
+            </div>
+
+            <div style="padding: 28px 32px">
+                <div class="form-card" style="max-width: 800px;">
+                    <p style="color: var(--ouro); font-weight: 600; margin-bottom: 20px;">1. Selecione o Funcionário</p>
+                    
+                    <div class="form-grupo" style="margin-bottom: 24px;">
+                        <select class="entrada" id="lote-funcionario-id">
+                            <option value="">Selecione o colaborador...</option>
+                        </select>
+                    </div>
+
+                    <p style="color: var(--ouro); font-weight: 600; margin-bottom: 20px;">2. Defina o Período e o Evento</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                        <div class="form-grupo">
+                            <label class="rotulo">Data Inicial</label>
+                            <input class="entrada" type="date" id="lote-data-inicio">
+                        </div>
+                        <div class="form-grupo">
+                            <label class="rotulo">Data Final</label>
+                            <input class="entrada" type="date" id="lote-data-fim">
+                        </div>
+                        <div class="form-grupo">
+                            <label class="rotulo">Evento</label>
+                            <select class="entrada" id="lote-evento" onchange="toggleNegativoManual()">
+                                <option value="">Selecione...</option>
+                                <option value="Férias">🏖️ Férias</option>
+                                <option value="Atestado">🏥 Atestado</option>
+                                <option value="Feriado">🎉 Feriado</option>
+                                <option value="Falta">❌ Falta</option>
+                                <option value="Folga Banco">📅 Folga Banco</option>
+                                <option value="DSR">📆 DSR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="campo-negativo-manual" style="display: none; margin-bottom: 24px;">
+                        <div class="form-grupo">
+                            <label class="rotulo">Horas Negativas (Opcional para Horistas)</label>
+                            <input class="entrada" type="time" id="lote-negativo-manual" value="08:00">
+                            <p style="font-size: 11px; color: #5a6070; margin-top: 4px;">Se vazio, usaremos -08:00 para Horistas e -07:20 para Mensalistas.</p>
+                        </div>
+                    </div>
+
+                    <div id="mensagem-lote"></div>
+
+                    <button class="botao-entrar" style="width:auto; padding: 12px 32px; margin-top: 8px;"
+                        onclick="lancarLote()">Lançar Eventos por Período</button>
+                    
+                    <p style="font-size: 11px; color: #5a6070; margin-top: 16px;">
+                        <b>Atenção:</b> Esta ação irá sobrescrever registros existentes no intervalo selecionado para o funcionário selecionado.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>guardarPagina("admin");</script>
+    <script src="../js/lote-eventos.js"></script>
+</body>
+
+</html>

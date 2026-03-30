@@ -1144,3 +1144,211 @@ body {
   padding: 2px 7px;
   white-space: nowrap;
 }
+
+/* ══════════════════════════════════════════
+   MODAIS (Overlay Fixo)
+   ══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--fundo-card);
+  border: 1px solid var(--ouro-suave);
+  box-shadow: var(--sombra);
+  border-radius: var(--raio);
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  position: relative;
+  border-top: 3px solid var(--ouro);
+  animation: modalEntrada 0.25s ease-out;
+}
+
+@keyframes modalEntrada {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-titulo {
+  font-family: 'Playfair Display', serif;
+  color: var(--ouro);
+  font-size: 22px;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.modal-botoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+.modal-content .caixa-nome,
+.modal-content .sel-mes-ano {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+/* ══════════════════════════════════════════
+   PÁGINA DE LANÇAMENTO (REORG HORIZONTAL)
+   ══════════════════════════════════════════ */
+.lancamento-horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.card-topo-lancamento {
+  background: var(--fundo-card);
+  border: 1px solid var(--borda);
+  border-top: 3px solid var(--ouro);
+  border-radius: var(--raio);
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr auto 0.6fr 1fr;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.turno-container-horizontal {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card-turno {
+  background: var(--fundo-card);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 24px;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.card-turno:hover {
+  border-color: var(--borda-hover);
+  transform: translateY(-2px);
+}
+
+.card-turno.ativo {
+  border-color: var(--ouro-suave);
+  background: linear-gradient(180deg, var(--fundo-card), rgba(253, 243, 231, 0.03));
+}
+
+.banner-descanso {
+  grid-column: span 3;
+  background: rgba(201, 168, 76, 0.04);
+  border: 1px dashed var(--ouro-suave);
+  border-radius: var(--raio);
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--ouro);
+  font-size: 18px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.secao-oculta {
+  display: none !important;
+}
+
+.botao-voltar {
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  color: var(--texto-sec);
+  font-size: 13px;
+  padding: 8px 16px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.botao-voltar:hover {
+  border-color: var(--ouro);
+  color: var(--ouro);
+}
+
+/* --- ANIMAÇÕES E LOADING --- */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner-ia {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.carregando {
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: waiter;
+}
+
+/* --- ESTILOS PARA TABELA DE REVISÃO IA --- */
+.input-revisao-ia {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 6px 4px;
+  width: 90px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.input-revisao-ia:hover, .input-revisao-ia:focus {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--ouro-suave);
+}
+
+.select-revisao-ia {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ouro);
+  font-size: 13px;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.select-revisao-ia:hover {
+  border-color: var(--ouro-suave);
+}
+
+.check-revisao-ia {
+  accent-color: var(--ouro);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
