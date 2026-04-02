@@ -1,4 +1,4 @@
-const pool = require("../db/connection");
+const prisma = require("../db/prisma");
 
 function minutosParaHorario(minutos) {
     if (minutos <= 0) return "00:00";
@@ -15,7 +15,7 @@ async function gerarRelatorio(req, res) {
 
         const mesInicioCiclo = mes <= 6 ? 1 : 7;
 
-        const resultado = await pool.query(`
+        const resultado = await prisma.$queryRaw`
             SELECT
                 f.id, f.nome, f.tipo, f.ativo,
                 COUNT(r.id) FILTER (WHERE r.evento IS NULL OR r.evento = '')       AS dias_trabalhados,
@@ -44,14 +44,14 @@ async function gerarRelatorio(req, res) {
             FROM funcionarios f
             LEFT JOIN registros_ponto r
                 ON r.funcionario_id = f.id
-                AND EXTRACT(MONTH FROM r.data) = $1
-                AND EXTRACT(YEAR FROM r.data)  = $2
+                AND EXTRACT(MONTH FROM r.data) = ${mes}
+                AND EXTRACT(YEAR FROM r.data)  = ${ano}
             WHERE f.ativo = TRUE
             GROUP BY f.id, f.nome, f.tipo, f.ativo
             ORDER BY f.nome
-        `, [mes, ano]);
+        `;
 
-        const bancResult = await pool.query(`
+        const bancResult = await prisma.$queryRaw`
             SELECT
                 r.funcionario_id,
                 SUM(CASE WHEN r.extras LIKE '+%:%'
@@ -63,17 +63,17 @@ async function gerarRelatorio(req, res) {
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END) AS banco_negativos_min
             FROM registros_ponto r
-            WHERE EXTRACT(YEAR FROM r.data)  = $1
-              AND EXTRACT(MONTH FROM r.data) >= $2
-              AND EXTRACT(MONTH FROM r.data) <= $3
+            WHERE EXTRACT(YEAR FROM r.data)  = ${ano}
+              AND EXTRACT(MONTH FROM r.data) >= ${mesInicioCiclo}
+              AND EXTRACT(MONTH FROM r.data) <= ${mes}
             GROUP BY r.funcionario_id
-        `, [ano, mesInicioCiclo, mes]);
+        `;
 
         const bancoMap = {};
-        bancResult.rows.forEach(function (row) {
+        bancResult.forEach(function (row) {
             bancoMap[row.funcionario_id] = {
-                extras:    parseInt(row.banco_extras_min),
-                negativos: parseInt(row.banco_negativos_min)
+                extras:    Number(row.banco_extras_min || 0),
+                negativos: Number(row.banco_negativos_min || 0)
             };
         });
 
@@ -82,11 +82,11 @@ async function gerarRelatorio(req, res) {
             return (min > 0 ? "+" : "-") + minutosParaHorario(Math.abs(min));
         }
 
-        const relatorio = resultado.rows.map(function (row) {
-            const extrasMin    = parseInt(row.total_extras_min)    || 0;
-            const negativosMin = parseInt(row.total_negativos_min) || 0;
-            const noturnoMin   = parseInt(row.total_noturno_min)   || 0;
-            const trabMin      = parseInt(row.total_trabalhado_min) || 0;
+        const relatorio = resultado.map(function (row) {
+            const extrasMin    = Number(row.total_extras_min || 0);
+            const negativosMin = Number(row.total_negativos_min || 0);
+            const noturnoMin   = Number(row.total_noturno_min || 0);
+            const trabMin      = Number(row.total_trabalhado_min || 0);
             const saldoMesMin  = extrasMin - negativosMin;
             const diurnoMin    = Math.max(0, trabMin - noturnoMin);
 
@@ -103,9 +103,9 @@ async function gerarRelatorio(req, res) {
                 nome:             row.nome,
                 tipo:             row.tipo,
                 ativo:            row.ativo,
-                dias_trabalhados: parseInt(row.dias_trabalhados),
-                dias_evento:      parseInt(row.dias_evento),
-                faltas:           parseInt(row.faltas),
+                dias_trabalhados: Number(row.dias_trabalhados || 0),
+                dias_evento:      Number(row.dias_evento || 0),
+                faltas:           Number(row.faltas || 0),
                 total_extras:     minutosParaHorario(extrasMin),
                 total_negativos:  minutosParaHorario(negativosMin),
                 saldo_mes:        formatarSaldo(saldoMesMin),

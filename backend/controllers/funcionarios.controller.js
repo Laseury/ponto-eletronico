@@ -1,18 +1,17 @@
-const pool = require("../db/connection");
+const prisma = require("../db/prisma");
 
 // Rota 1 - Retorna todos os funcionários
 async function listarFuncionarios(req, res) {
   try {
     const { todos } = req.query;
-    let query = "SELECT * FROM funcionarios WHERE ativo = true";
+    
+    const filter = todos === "1" ? {} : { ativo: true };
+    const result = await prisma.funcionario.findMany({
+      where: filter,
+      orderBy: { id: 'asc' }
+    });
 
-    if (todos === "1") {
-      query = "SELECT * FROM funcionarios";
-    }
-
-    const result = await pool.query(query);
-
-    res.json(result.rows);
+    res.json(result);
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }
@@ -21,13 +20,12 @@ async function listarFuncionarios(req, res) {
 async function buscarFuncionarioPorId(req, res) {
   try {
     const id = parseInt(req.params.id);
-    const resultado = await pool.query(
-      "SELECT * FROM funcionarios WHERE id = $1",
-      [id],
-    );
+    const resultado = await prisma.funcionario.findUnique({
+      where: { id: id }
+    });
 
-    if (resultado.rows.length > 0) {
-      res.json(resultado.rows[0]);
+    if (resultado) {
+      res.json(resultado);
     } else {
       res.status(404).json({ erro: "Funcionário não encontrado" });
     }
@@ -43,11 +41,12 @@ async function criarFuncionario(req, res) {
     if (!nome || !tipo) {
       return res.status(400).json({ erro: "Nome e tipo são obrigatórios" });
     }
-    const resultado = await pool.query(
-      "INSERT INTO funcionarios (nome, tipo) VALUES ($1, $2) RETURNING *",
-      [nome, tipo],
-    );
-    res.status(201).json(resultado.rows[0]);
+    
+    const resultado = await prisma.funcionario.create({
+      data: { nome, tipo }
+    });
+    
+    res.status(201).json(resultado);
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }
@@ -58,17 +57,17 @@ async function editarFuncionario(req, res) {
     const id = parseInt(req.params.id);
     const { nome, tipo } = req.body;
 
-    const resultado = await pool.query(
-      "UPDATE funcionarios SET nome = $1, tipo = $2 WHERE id = $3 RETURNING *",
-      [nome, tipo, id],
-    );
+    const resultado = await prisma.funcionario.update({
+      where: { id: id },
+      data: { nome, tipo }
+    });
 
-    if (resultado.rows.length > 0) {
-      res.json(resultado.rows[0]);
-    } else {
-      res.status(404).json({ erro: "Funcionário não encontrado" });
-    }
+    res.json(resultado);
   } catch (erro) {
+    // Código P2025 = Record to update not found
+    if (erro.code === 'P2025') {
+       return res.status(404).json({ erro: "Funcionário não encontrado" });
+    }
     res.status(500).json({ erro: erro.message });
   }
 }
@@ -76,15 +75,23 @@ async function editarFuncionario(req, res) {
 async function alternarAtivo(req, res) {
   try {
     const id = parseInt(req.params.id);
-    const atual = await pool.query("SELECT * FROM funcionarios WHERE id = $1", [
-      id,
-    ]);
-    const novoAtivo = !atual.rows[0].ativo;
-    const resultado = await pool.query(
-      "UPDATE funcionarios SET ativo = $1 WHERE id = $2 RETURNING *",
-      [novoAtivo, id],
-    );
-    res.json(resultado.rows[0]);
+    
+    const atual = await prisma.funcionario.findUnique({
+      where: { id: id }
+    });
+    
+    if (!atual) {
+       return res.status(404).json({ erro: "Funcionário não encontrado" });
+    }
+
+    const novoAtivo = !atual.ativo;
+    
+    const resultado = await prisma.funcionario.update({
+      where: { id: id },
+      data: { ativo: novoAtivo }
+    });
+    
+    res.json(resultado);
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }

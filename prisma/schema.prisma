@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Funcionario {
+  id              Int               @id @default(autoincrement())
+  nome            String            @db.VarChar(100)
+  tipo            String            @db.VarChar(50)
+  extras          String?           @default("00:00") @db.VarChar(10)
+  faltas          Int?              @default(0)
+  ativo           Boolean?          @default(true)
+  registros_ponto RegistroPonto[]
+  log_registros   LogRegistro[]
+
+  @@map("funcionarios")
+}
+
+model LogRegistro {
+  id             Int       @id @default(autoincrement())
+  funcionarioId  Int       @map("funcionario_id")
+  dataRegistro   DateTime  @map("data_registro") @db.Date
+  usuario        String    @db.VarChar(50)
+  acao           String    @db.VarChar(20)
+  campoAlterado  String?   @map("campo_alterado") @db.VarChar(20)
+  valorAnterior  String?   @map("valor_anterior") @db.VarChar(20)
+  valorNovo      String?   @map("valor_novo") @db.VarChar(20)
+  criadoEm       DateTime? @default(now()) @map("criado_em") @db.Timestamp(6)
+  funcionario    Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("log_registros")
+}
+
+model RegistroPonto {
+  id            Int         @id @default(autoincrement())
+  funcionarioId Int         @map("funcionario_id")
+  data          DateTime    @db.Date
+  e1            DateTime?   @db.Time(6)
+  s1            DateTime?   @db.Time(6)
+  e2            DateTime?   @db.Time(6)
+  s2            DateTime?   @db.Time(6)
+  e3            DateTime?   @db.Time(6)
+  s3            DateTime?   @db.Time(6)
+  total         String?     @db.VarChar(10)
+  extras        String?     @db.VarChar(10)
+  negativos     String?     @db.VarChar(10)
+  evento        String?     @db.VarChar(20)
+  noturno       String?     @db.VarChar(10)
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([funcionarioId, data])
+  @@map("registros_ponto")
+}

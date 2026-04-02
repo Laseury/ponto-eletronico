@@ -1,49 +1,66 @@
-const pool = require("../db/connection");
+const prisma = require("../db/prisma");
 
 async function listarLogs(req, res) {
     try {
         const { funcionario_id, mes, ano, usuario, acao } = req.query;
 
-        let query = `
-            SELECT
-                l.id,
-                f.nome AS funcionario,
-                l.data_registro,
-                l.usuario,
-                l.acao,
-                l.campo_alterado,
-                l.valor_anterior,
-                l.valor_novo,
-                l.criado_em
-            FROM log_registros l
-            LEFT JOIN funcionarios f ON f.id = l.funcionario_id
-            WHERE 1=1`;
-
-        const params = [];
-
+        const where = {};
+        
         if (funcionario_id) {
-            params.push(funcionario_id);
-            query += ` AND l.funcionario_id = $${params.length}`;
+            where.funcionarioId = parseInt(funcionario_id);
         }
+        
         if (mes && ano) {
-            params.push(mes);
-            query += ` AND EXTRACT(MONTH FROM l.data_registro) = $${params.length}`;
-            params.push(ano);
-            query += ` AND EXTRACT(YEAR FROM l.data_registro) = $${params.length}`;
+            // No PostgreSQL, filtrar por partes da data no Prisma de forma nativa é mais verboso
+            // ou pode ser feito convertendo p/ strings. Mas como temos filtros exatos de mes/ano,
+            // podemos definir um range de datas de >= inicio do mes e < inicio do prox mes.
+            const dataInicial = new Date(ano, mes - 1, 1);
+            const dataFinal = new Date(ano, mes, 1); // dia 1 do proximo mes
+
+            where.dataRegistro = {
+                gte: dataInicial,
+                lt: dataFinal
+            };
         }
+        
         if (usuario) {
-            params.push(`%${usuario}%`);
-            query += ` AND l.usuario ILIKE $${params.length}`;
+            where.usuario = {
+                contains: usuario,
+                mode: 'insensitive' // ILIKE
+            };
         }
+        
         if (acao) {
-            params.push(acao);
-            query += ` AND l.acao = $${params.length}`;
+            where.acao = acao;
         }
 
-        query += " ORDER BY l.criado_em DESC LIMIT 300";
+        const logs = await prisma.logRegistro.findMany({
+            where,
+            include: {
+                funcionario: {
+                    select: { nome: true }
+                }
+            },
+            orderBy: {
+                criadoEm: 'desc'
+            },
+            take: 300
+        });
 
-        const resultado = await pool.query(query, params);
-        res.json(resultado.rows);
+        // Mapear para o formato que a interface espera
+        const resultado = logs.map(l => ({
+            id: l.id,
+            funcionario: l.funcionario?.nome,
+            data_registro: l.dataRegistro,
+            usuario: l.usuario,
+            acao: l.acao,
+            campo_alterado: l.campoAlterado,
+            valor_anterior: l.valorAnterior,
+            valor_novo: l.valorNovo,
+            criado_em: l.criadoEm
+        }));
+
+        res.json(resultado);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     }
