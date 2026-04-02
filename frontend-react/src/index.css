@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  /* Default Light Mode Colors (Emerald focused) */
+  --color-brand-bg: #f8fafc;
+  --color-brand-surface: #ffffff;
+  --color-brand-border: #e2e8f0;
+  --color-brand-text: #064e3b;
+  --color-brand-muted: #64748b;
+  --color-brand-primary: #10b981;
+  --color-brand-accent: #059669;
+}
+
+/* Dark Mode Overrides (Verde Escuro) */
+.dark {
+  --color-brand-bg: #04120b;
+  --color-brand-surface: #061d12;
+  --color-brand-border: #0c2d1c;
+  --color-brand-text: #e1e9e5;
+  --color-brand-muted: #80968c;
+  --color-brand-primary: #12b886; 
+  --color-brand-accent: #63e6be;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-text transition-colors duration-300;
+  }
+}
