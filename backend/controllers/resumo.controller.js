@@ -13,11 +13,11 @@ async function gerarResumo(req, res) {
         const ano = parseInt(req.params.ano);
 
         // Query 1: Contar funcionários
-        const totalFuncionarios = await prisma.funcionario.count();
+        const totalFuncionarios = await prisma.Funcionario.count();
 
         // Query 2: Contar registros de hoje
         const hoje = new Date().toISOString().split('T')[0];
-        const lancadosHoje = await prisma.registroPonto.count({
+        const lancadosHoje = await prisma.RegistroPonto.count({
             where: {
                 data: {
                     equals: new Date(hoje)
@@ -26,7 +26,7 @@ async function gerarResumo(req, res) {
         });
 
         // Query 3: Buscar dados do mês
-        const registrosMes = await prisma.registroPonto.findMany({
+        const registrosMes = await prisma.RegistroPonto.findMany({
             where: {
                 AND: [
                     {
