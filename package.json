@@ -7,8 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node backend/src/server.js",
     "dev": "nodemon backend/src/server.js",
-    "build:frontend": "cd frontend-react && npm ci && npm run build",
-    "postinstall": "npm run build:frontend; prisma generate"
+    "build:frontend": "node build-frontend.js",
+    "prisma:generate": "prisma generate",
+    "postinstall": "npm run build:frontend && npm run prisma:generate"
   },
   "keywords": [],
   "author": "",
