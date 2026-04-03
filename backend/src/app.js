@@ -103,15 +103,17 @@ if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
     }));
     
     // SPA fallback - servir index.html para todas as rotas não encontradas
-    app.get('*', (req, res, next) => {
+    // Usar app.use em vez de app.get('*') para evitar erro com path-to-regexp
+    app.use((req, res, next) => {
         // Não fazer fallback para API routes
         if (req.path.startsWith('/api/') || req.path.startsWith('/funcionarios') || 
             req.path.startsWith('/registros') || req.path.startsWith('/relatorio') ||
             req.path.startsWith('/resumo') || req.path.startsWith('/logs') ||
-            req.path.startsWith('/ia')) {
+            req.path.startsWith('/ia') || req.path.startsWith('/debug/')) {
             return next();
         }
         
+        // Se chegou aqui e não é arquivo estático, servir index.html para SPA
         res.sendFile(indexPath, (err) => {
             if (err) {
                 console.error("Erro ao servir index.html:", err.message);
