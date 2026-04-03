@@ -12,53 +12,91 @@ async function gerarResumo(req, res) {
         const mes = parseInt(req.params.mes);
         const ano = parseInt(req.params.ano);
 
-        const resultado = await prisma.$queryRaw`
-            SELECT 
-                (SELECT COUNT(*) FROM funcionarios) AS total_funcionarios,
-                (SELECT COUNT(*) FROM registros_ponto WHERE data = CURRENT_DATE) AS lancados_hoje,
-                COALESCE(sub.total_faltas, 0) AS total_faltas,
-                COALESCE(sub.total_extras_min, 0) AS total_extras_min,
-                COALESCE(sub.total_negativos_min, 0) AS total_negativos_min,
-                COALESCE(sub.total_eventos, 0) AS total_eventos,
-                0 AS funcs_com_lacuna,
-                0 AS total_dias_lacuna
-            FROM (
-                SELECT 
-                    COUNT(id) FILTER (WHERE evento = 'Falta') AS total_faltas,
-                    SUM(CASE WHEN extras LIKE '+%:%' 
-                        THEN CAST(SPLIT_PART(REPLACE(extras,'+',''),':',1) AS INT)*60 
-                           + CAST(SPLIT_PART(REPLACE(extras,'+',''),':',2) AS INT) 
-                        ELSE 0 END) AS total_extras_min,
-                    SUM(CASE WHEN negativos LIKE '-%:%' 
-                        THEN CAST(SPLIT_PART(REPLACE(negativos,'-',''),':',1) AS INT)*60 
-                           + CAST(SPLIT_PART(REPLACE(negativos,'-',''),':',2) AS INT) 
-                        ELSE 0 END) AS total_negativos_min,
-                    COUNT(id) FILTER (WHERE evento IS NOT NULL AND evento != '') AS total_eventos
-                FROM registros_ponto
-                WHERE EXTRACT(MONTH FROM data) = ${mes}
-                  AND EXTRACT(YEAR FROM data)  = ${ano}
-            ) sub
-        `;
+        // Query 1: Contar funcionários
+        const totalFuncionarios = await prisma.funcionario.count();
 
-        // Prisma $queryRaw retorna um array
-        const row = resultado[0];
-        
-        // Prisma converte COUNT e SUM de PostgreSQL para BigInt, então precisamos converter para Number
-        const extrasMin    = Number(row.total_extras_min || 0);
-        const negativosMin = Number(row.total_negativos_min || 0);
+        // Query 2: Contar registros de hoje
+        const hoje = new Date().toISOString().split('T')[0];
+        const lancadosHoje = await prisma.registroPonto.count({
+            where: {
+                data: {
+                    equals: new Date(hoje)
+                }
+            }
+        });
+
+        // Query 3: Buscar dados do mês
+        const registrosMes = await prisma.registroPonto.findMany({
+            where: {
+                AND: [
+                    {
+                        data: {
+                            gte: new Date(`${ano}-${String(mes).padStart(2, '0')}-01`)
+                        }
+                    },
+                    {
+                        data: {
+                            lt: new Date(`${ano}-${String((mes % 12) + 1).padStart(2, '0')}-01`)
+                        }
+                    }
+                ]
+            },
+            select: {
+                evento: true,
+                extras: true,
+                negativos: true
+            }
+        });
+
+        // Processar dados
+        let totalFaltas = 0;
+        let totalExtrasMin = 0;
+        let totalNegativosMin = 0;
+        let totalEventos = 0;
+
+        registrosMes.forEach(reg => {
+            // Contar eventos
+            if (reg.evento && reg.evento.trim() !== '') {
+                totalEventos++;
+                if (reg.evento === 'Falta') {
+                    totalFaltas++;
+                }
+            }
+
+            // Processar extras (formato: +HH:MM)
+            if (reg.extras && reg.extras.startsWith('+')) {
+                const tempo = reg.extras.replace('+', '').split(':');
+                if (tempo.length === 2) {
+                    const horas = parseInt(tempo[0]) || 0;
+                    const mins = parseInt(tempo[1]) || 0;
+                    totalExtrasMin += (horas * 60) + mins;
+                }
+            }
+
+            // Processar negativos (formato: -HH:MM)
+            if (reg.negativos && reg.negativos.startsWith('-')) {
+                const tempo = reg.negativos.replace('-', '').split(':');
+                if (tempo.length === 2) {
+                    const horas = parseInt(tempo[0]) || 0;
+                    const mins = parseInt(tempo[1]) || 0;
+                    totalNegativosMin += (horas * 60) + mins;
+                }
+            }
+        });
 
         res.json({
-            total_funcionarios: Number(row.total_funcionarios || 0),
-            lancados_hoje:      Number(row.lancados_hoje || 0),
-            total_faltas:       Number(row.total_faltas || 0),
-            total_extras:       extrasMin    > 0 ? "+" + minutosParaHorario(extrasMin)    : "00:00",
-            total_negativos:    negativosMin > 0 ? "-" + minutosParaHorario(negativosMin) : "00:00",
-            total_eventos:      Number(row.total_eventos || 0),
-            funcs_com_lacuna:   0,
-            total_dias_lacuna:  0,
+            total_funcionarios: totalFuncionarios,
+            lancados_hoje: lancadosHoje,
+            total_faltas: totalFaltas,
+            total_extras: totalExtrasMin > 0 ? "+" + minutosParaHorario(totalExtrasMin) : "00:00",
+            total_negativos: totalNegativosMin > 0 ? "-" + minutosParaHorario(totalNegativosMin) : "00:00",
+            total_eventos: totalEventos,
+            funcs_com_lacuna: 0,
+            total_dias_lacuna: 0,
         });
     } catch (erro) {
         console.error("Erro dashboard resumo:", erro.message);
+        console.error("Stack:", erro.stack);
         res.status(500).json({ erro: "Erro ao carregar dados do painel" });
     }
 }
