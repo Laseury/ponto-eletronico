@@ -206,6 +206,8 @@ const Lancamento = () => {
     const [funcionarios, setFuncionarios] = useState([]);
     const [fId, setFId] = useState('');
     const [mesAno, setMesAno] = useState('');
+    const [mesSelect, setMesSelect] = useState('');
+    const [anoSelect, setAnoSelect] = useState('');
     const [dia, setDia] = useState('');
     const [evento, setEvento] = useState('');
     const [horarios, setHorarios] = useState({
@@ -218,7 +220,20 @@ const Lancamento = () => {
 
     useEffect(() => {
         axios.get('/funcionarios').then(res => setFuncionarios(res.data));
+        
+        // Inicializar com mês/ano atual
+        const agora = new Date();
+        const anoAtual = agora.getFullYear();
+        const mesAtual = String(agora.getMonth() + 1).padStart(2, '0');
+        setAnoSelect(String(anoAtual));
+        setMesSelect(mesAtual);
     }, []);
+
+    useEffect(() => {
+        if (mesSelect && anoSelect) {
+            setMesAno(`${anoSelect}-${mesSelect}`);
+        }
+    }, [mesSelect, anoSelect]);
 
     const handleLancar = async () => {
         if (!fId || !mesAno || !dia) {
@@ -334,17 +349,42 @@ const Lancamento = () => {
 
                     <div className="lg:col-span-1">
                         <label className="block text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Referência / IA</label>
-                        <div className="relative">
-                            <input 
-                                type="month" 
-                                value={mesAno}
-                                onChange={(e) => setMesAno(e.target.value)}
-                                className="w-full bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-4 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-brand-primary rounded-lg cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/40" onClick={() => fileInputRef.current.click()}>
-                                {procesingIA ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Zap size={16} className="text-white fill-white" />}
+                        <div className="grid grid-cols-2 gap-3">
+                            <select 
+                                value={mesSelect}
+                                onChange={(e) => setMesSelect(e.target.value)}
+                                className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-3 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
+                            >
+                                <option value="">Mês</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                            <div className="relative">
+                                <select 
+                                    value={anoSelect}
+                                    onChange={(e) => setAnoSelect(e.target.value)}
+                                    className="w-full bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-3 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
+                                >
+                                    <option value="">Ano</option>
+                                    {[2024, 2025, 2026, 2027, 2028].map(ano => (
+                                        <option key={ano} value={ano}>{ano}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-brand-primary rounded-lg cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/40" onClick={() => fileInputRef.current.click()}>
+                                    {procesingIA ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Zap size={16} className="text-white fill-white" />}
+                                </div>
+                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleProcessarIA} />
                             </div>
-                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleProcessarIA} />
                         </div>
                         <p className="text-[8px] text-brand-primary font-black uppercase tracking-[0.15em] mt-3 ml-2 italic flex items-center gap-1.5 opacity-60">
                             <Info size={10} /> Use o raio para extrair via IA
