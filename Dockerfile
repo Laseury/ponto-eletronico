@@ -7,16 +7,16 @@ WORKDIR /app
 COPY package*.json ./
 COPY build-frontend.js ./
 
-# Copiar frontend-react com seus package files
-COPY frontend-react/package*.json ./frontend-react/
+# Copiar todo o frontend-react (incluindo vite.config.js, index.html, src/)
+COPY frontend-react ./frontend-react
 
 # Instalar dependências do backend
-RUN npm ci
+RUN npm ci --omit=dev
 
 # Executar build do frontend (que também instala suas dependências)
 RUN node build-frontend.js
 
-# Copiar resto do código
+# Copiar resto da aplicação
 COPY . .
 
 # Gerar Prisma client
