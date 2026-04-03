@@ -2,6 +2,8 @@
 builder = "nixpacks"
 # Especificar Node.js 20.x LTS (compatível com Prisma 7.6.0)
 nodeVersion = "20"
+# Ignorar o build do frontend separado
+# Vamos fazer tudo no postinstall do backend
 
 [deploy]
 startCommand = "npm start"
