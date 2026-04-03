@@ -1,15 +1,20 @@
+# Railway deployment configuration for ponto-eletronico
+
 [build]
-builder = "nixpacks"
-# Especificar Node.js 20.x LTS (compatível com Prisma 7.6.0)
-nodeVersion = "20"
-# Ignorar o build do frontend separado
-# Vamos fazer tudo no postinstall do backend
+# Usar Dockerfile customizado para build otimizado
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+# Alternativamente, usar nixpacks com Node.js 20:
+# builder = "nixpacks"
+# nodeVersion = "20"
 
 [deploy]
 startCommand = "npm start"
 restartPolicyMaxRetries = 5
 restartPolicyWindowSeconds = 60
+healthchecks = { cpu = false, memory = false }
 
 [env]
-# Garante que npm usa a versão correta
-NPM_FORCE_INSTALL = "false"
+# Garantir que npm usa --ci em produção
+NPM_CONFIG_PRODUCTION = "true"

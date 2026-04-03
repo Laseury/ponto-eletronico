@@ -43,17 +43,57 @@ try {
     console.error("Stack:", error.stack);
 }
 
+// Debug endpoint - verificar status do build
+app.get("/debug/build-status", (req, res) => {
+    const distPath = path.join(__dirname, "../../frontend-react/dist");
+    const indexPath = path.join(distPath, "index.html");
+    
+    const status = {
+        distPath: distPath,
+        distExists: fs.existsSync(distPath),
+        indexExists: fs.existsSync(indexPath),
+        environment: process.env.NODE_ENV,
+        cwd: process.cwd(),
+        __dirname: __dirname,
+    };
+    
+    if (status.distExists) {
+        try {
+            status.distContents = fs.readdirSync(distPath);
+        } catch (err) {
+            status.distContentsError = err.message;
+        }
+    }
+    
+    res.json(status);
+});
+
 // Servir arquivos estáticos do frontend React (Build) - apenas se existir
 const distPath = path.join(__dirname, "../../frontend-react/dist");
-if (fs.existsSync(distPath)) {
+const indexPath = path.join(distPath, "index.html");
+
+console.log(`📂 Procurando frontend em: ${distPath}`);
+console.log(`📄 Procurando index.html em: ${indexPath}`);
+
+if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
+    console.log("✅ Frontend React encontrado! Servindo arquivos estáticos...");
     app.use(express.static(distPath));
     
     // Rota catch-all para servir index.html do React em rotas não encontradas (SPA fallback)
     app.use((req, res) => {
-        res.sendFile(path.join(distPath, "index.html"));
+        res.sendFile(indexPath, (err) => {
+            if (err) {
+                console.error("Erro ao servir index.html:", err);
+                res.status(500).json({ error: "Erro ao carregar frontend" });
+            }
+        });
     });
 } else {
-    console.log("⚠ Aviso: Frontend não está buildado em frontend-react/dist");
+    console.error("❌ Frontend NÃO encontrado!");
+    console.error(`   - dist existe: ${fs.existsSync(distPath)}`);
+    console.error(`   - index.html existe: ${fs.existsSync(indexPath)}`);
+    console.error(`   - __dirname: ${__dirname}`);
+    console.error(`   - cwd: ${process.cwd()}`);
 }
 
 // Tratamento de erro 404
