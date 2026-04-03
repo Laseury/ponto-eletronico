@@ -7,6 +7,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY build-frontend.js ./
 
+# Copiar prisma schema (necessário para postinstall)
+COPY prisma ./prisma
+
 # Copiar todo o frontend-react (incluindo vite.config.js, index.html, src/)
 COPY frontend-react ./frontend-react
 
