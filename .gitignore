@@ -17,7 +17,6 @@ dist/
 
 # Prisma
 /generated/prisma
-prisma/migrations/
 
 # IDE
 .vscode/
