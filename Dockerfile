@@ -3,8 +3,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar apenas package files primeiro (melhor cache)
+# Copiar apenas package files e build script primeiro (melhor cache)
 COPY package*.json ./
+COPY build-frontend.js ./
 
 # Copiar todo o frontend-react (incluindo vite.config.js, index.html, src/)
 COPY frontend-react ./frontend-react
