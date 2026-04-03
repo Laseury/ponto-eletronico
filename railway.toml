@@ -1,7 +1,13 @@
 [build]
 builder = "nixpacks"
+# Especificar Node.js 20.x LTS (compatível com Prisma 7.6.0)
+nodeVersion = "20"
 
 [deploy]
 startCommand = "npm start"
 restartPolicyMaxRetries = 5
 restartPolicyWindowSeconds = 60
+
+[env]
+# Garante que npm usa a versão correta
+NPM_FORCE_INSTALL = "false"
