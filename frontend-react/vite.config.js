@@ -46,9 +46,8 @@ export default defineConfig({
     }
   },
   build: {
-    // Otimizar build para produção
-    minify: 'terser',
-    sourcemap: false,
+    // Vite usa esbuild por padrão (mais rápido que terser)
+    // sourcemap: true, // Descomentar se precisar de source maps em produção
   },
   define: {
     // Definir variáveis globais para o app
