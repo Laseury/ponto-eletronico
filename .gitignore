@@ -1,5 +1,57 @@
+# Dependências
 node_modules/
-.env
-/generated/prisma
 
+# Variáveis de ambiente (CONFIDENCIAL)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+/dist
+/build
+*.tsbuildinfo
+dist/
+
+# Prisma
 /generated/prisma
+prisma/migrations/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dados sensíveis
+*.pem
+*.key
+*.crt
+
+# Cache e temporários
+.cache/
+.temp/
+tmp/
+temp/
+
+# Testes
+coverage/
+.nyc_output/
+
+# Arquivos de configuração pessoal
+.prettierrc.local
+.eslintrc.local

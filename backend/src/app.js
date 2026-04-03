@@ -3,13 +3,6 @@ const cors    = require("cors");
 const path    = require("path");
 const fs      = require("fs");
 
-const funcionariosRoutes = require("../routes/funcionarios.routes");
-const registrosRoutes    = require("../routes/registros.routes");   // novo
-const relatorioRoutes    = require("../routes/relatorio.routes");   // novo
-const resumoRoutes = require("../routes/resumo.routes");
-const logRoutes = require("../routes/log.routes");
-const iaRoutes = require("../routes/ia.routes");
-
 const app = express();
 
 app.use(cors());
@@ -17,16 +10,38 @@ app.use(express.json());
 
 // Health check
 app.get("/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// API Routes
-app.use("/funcionarios", funcionariosRoutes);
-app.use("/registros",    registrosRoutes);   // novo
-app.use("/relatorio",    relatorioRoutes);   // novo
-app.use("/resumo", resumoRoutes);
-app.use("/logs", logRoutes);
-app.use("/ia", iaRoutes);
+// API Status
+app.get("/api/status", (req, res) => {
+    res.json({ 
+        status: "ok",
+        environment: process.env.NODE_ENV || "development",
+        uptime: process.uptime()
+    });
+});
+
+try {
+    const funcionariosRoutes = require("../routes/funcionarios.routes");
+    const registrosRoutes    = require("../routes/registros.routes");
+    const relatorioRoutes    = require("../routes/relatorio.routes");
+    const resumoRoutes = require("../routes/resumo.routes");
+    const logRoutes = require("../routes/log.routes");
+    const iaRoutes = require("../routes/ia.routes");
+
+    app.use("/funcionarios", funcionariosRoutes);
+    app.use("/registros",    registrosRoutes);
+    app.use("/relatorio",    relatorioRoutes);
+    app.use("/resumo", resumoRoutes);
+    app.use("/logs", logRoutes);
+    app.use("/ia", iaRoutes);
+    
+    console.log("✓ Todas as rotas carregadas com sucesso");
+} catch (error) {
+    console.error("✗ Erro ao carregar rotas:", error.message);
+    console.error("Stack:", error.stack);
+}
 
 // Servir arquivos estáticos do frontend React (Build) - apenas se existir
 const distPath = path.join(__dirname, "../../frontend-react/dist");
@@ -38,24 +53,22 @@ if (fs.existsSync(distPath)) {
         res.sendFile(path.join(distPath, "index.html"));
     });
 } else {
-    // Fallback quando frontend não está buildado
-    app.use((req, res) => {
-        res.status(200).json({ 
-            message: "API rodando. Frontend não está disponível neste ambiente.",
-            version: "1.0.0"
-        });
-    });
+    console.log("⚠ Aviso: Frontend não está buildado em frontend-react/dist");
 }
 
 // Tratamento de erro 404
 app.use((req, res) => {
-    res.status(404).json({ error: "Rota não encontrada" });
+    res.status(404).json({ error: "Rota não encontrada", path: req.path });
 });
 
-// Erro geral
+// Erro geral (middleware com 4 parâmetros)
 app.use((err, req, res, next) => {
-    console.error("Erro:", err.message);
-    res.status(500).json({ error: "Erro interno do servidor" });
+    console.error("Erro na rota:", err.message);
+    console.error("Stack:", err.stack);
+    res.status(500).json({ 
+        error: "Erro interno do servidor", 
+        message: process.env.NODE_ENV === "development" ? err.message : undefined
+    });
 });
 
 module.exports = app;
