@@ -5,13 +5,13 @@ WORKDIR /app
 
 # Copiar apenas package files primeiro (melhor cache)
 COPY package*.json ./
-COPY build-frontend.js ./
 
 # Copiar todo o frontend-react (incluindo vite.config.js, index.html, src/)
 COPY frontend-react ./frontend-react
 
-# Instalar dependências do backend
-RUN npm ci --omit=dev
+# Instalar dependências do backend (com devDependencies para build)
+# NÃO usamos --omit=dev porque precisamos de prisma e outras ferramentas
+RUN npm ci
 
 # Executar build do frontend (que também instala suas dependências)
 RUN node build-frontend.js
