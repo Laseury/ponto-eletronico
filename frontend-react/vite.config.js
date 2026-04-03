@@ -9,13 +9,49 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    // Proxy apenas para development (quando Vite está rodando localmente)
     proxy: {
-      '/funcionarios': 'http://localhost:3000',
-      '/registros': 'http://localhost:3000',
-      '/relatorio': 'http://localhost:3000',
-      '/resumo': 'http://localhost:3000',
-      '/logs': 'http://localhost:3000',
-      '/ia': 'http://localhost:3000',
+      '/funcionarios': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/registros': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/relatorio': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/resumo': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/logs': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/ia': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     }
+  },
+  build: {
+    // Otimizar build para produção
+    minify: 'terser',
+    sourcemap: false,
+  },
+  define: {
+    // Definir variáveis globais para o app
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
   }
 })
