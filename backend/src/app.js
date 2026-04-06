@@ -112,7 +112,8 @@ if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
         if (req.path.startsWith('/api/') || req.path.startsWith('/funcionarios') || 
             req.path.startsWith('/registros') || req.path.startsWith('/relatorio') ||
             req.path.startsWith('/resumo') || req.path.startsWith('/logs') ||
-            req.path.startsWith('/ia') || req.path.startsWith('/debug/')) {
+            req.path.startsWith('/ia') || req.path.startsWith('/debug/') ||
+            req.path.startsWith('/auth')) {
             return next();
         }
         
