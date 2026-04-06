@@ -128,17 +128,24 @@ const Funcionario = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [relatorio, setRelatorio] = useState(null);
 
   const fetchFuncionarioData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     try {
-      const [funcRes, regRes] = await Promise.all([
+      const [funcRes, regRes, relRes] = await Promise.all([
         axios.get(`/funcionarios/${id}`),
-        axios.get(`/registros/${id}?mes=${mes}&ano=${ano}`)
+        axios.get(`/registros/${id}?mes=${mes}&ano=${ano}`),
+        axios.get(`/relatorio/${mes}/${ano}?valor_hora=0`)
       ]);
       setFuncionario(funcRes.data);
       setRegistros(regRes.data);
+      
+      if (relRes && relRes.data) {
+          const foundRel = relRes.data.find(r => String(r.id) === String(id));
+          setRelatorio(foundRel || null);
+      }
     } catch (error) {
       console.error('Erro ao buscar dados do funcionário:', error);
       Swal.fire('Erro!', 'Não foi possível carregar os dados.', 'error');
@@ -255,9 +262,10 @@ const Funcionario = () => {
         <div class="hdr"><h1>VISO HOTEL — FICHA DE PONTO</h1><p>Colaborador: ${funcionario?.nome} | Período: ${labelMes}</p></div>
         <div class="grid">
           <div class="card"><strong>Tipo:</strong><br>${funcionario?.tipo}</div>
-          <div class="card"><strong>Saldo:</strong><br>${analytics.saldo}</div>
-          <div class="card"><strong>Faltas:</strong><br>${analytics.totalFaltas}</div>
-          <div class="card"><strong>Total Horas:</strong><br>${analytics.totalNormal}</div>
+          <div class="card"><strong>Saldo Anterior:</strong><br>${relatorio?.saldo_anterior || '00:00'}</div>
+          <div class="card"><strong>Faltas no Mês:</strong><br>${analytics.totalFaltas}</div>
+          <div class="card"><strong>Saldo do Mês:</strong><br>${analytics.saldo}</div>
+          <div class="card"><strong>Banco Consolidado:</strong><br>${relatorio?.banco_horas || analytics.saldo}</div>
         </div>
         <table><thead><tr><th>Data</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>E3</th><th>S3</th><th>Total</th><th>Not.</th><th>Ext.</th><th>Neg.</th><th>Evento</th></tr></thead><tbody>${rowsHtml}</tbody></table>
       </body></html>
@@ -301,10 +309,11 @@ const Funcionario = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <InfoCard label="Tipo de Contrato" value={funcionario?.tipo} />
-        <InfoCard label="Faltas no Mês" value={analytics.totalFaltas} color={analytics.totalFaltas > 0 ? 'text-rose-500' : 'text-brand-muted opacity-40'} />
-        <InfoCard label="Saldo Consolidado" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
+        <InfoCard label="Saldo Anterior" value={relatorio?.saldo_anterior || '00:00'} color={(relatorio?.saldo_anterior && relatorio.saldo_anterior.includes('+')) ? 'text-brand-accent' : (relatorio?.saldo_anterior && relatorio.saldo_anterior.includes('-') ? 'text-rose-400' : 'text-brand-muted opacity-40')} />
+        <InfoCard label="Saldo do Mês" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
+        <InfoCard label="Banco Consolidado" value={relatorio?.banco_horas || analytics.saldo} color={(relatorio?.banco_horas && relatorio.banco_horas.includes('+')) ? 'text-brand-accent' : (relatorio?.banco_horas && relatorio.banco_horas.includes('-') ? 'text-rose-400' : 'text-brand-muted opacity-40')} />
       </div>
 
       <div className="bg-brand-surface border border-brand-border rounded-3xl overflow-hidden shadow-2xl">

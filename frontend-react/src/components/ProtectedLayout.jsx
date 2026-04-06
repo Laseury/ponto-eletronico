@@ -3,9 +3,30 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import { Bell, Search, Settings, HelpCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
+
+  const handleShowEventSummary = () => {
+    Swal.fire({
+      title: 'Resumo dos Eventos',
+      html: `
+        <div style="text-align: left; font-size: 14px; line-height: 1.6; margin-top: 10px;">
+          <p><strong>🏖️ Folga:</strong> Dia de descanso semanal padrão.</p>
+          <p><strong>❌ Falta:</strong> Ausência não justificada. Desconta horas do banco ou salário.</p>
+          <p><strong>🏥 Atestado:</strong> Ausência justificada por motivos de saúde.</p>
+          <p><strong>🏄 Férias:</strong> Período de férias regulamentares.</p>
+          <p><strong>📅 DSR:</strong> Descanso Semanal Remunerado.</p>
+          <p><strong>🎉 Feriado:</strong> Feriado (ponto facultativo ou nacional).</p>
+          <p><strong>🏦 Folga Banco:</strong> Descanso utilizando horas do banco acumulado.</p>
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonColor: '#10b981',
+      confirmButtonText: 'Entendi'
+    });
+  };
 
   if (loading) {
     return (
@@ -45,7 +66,11 @@ const ProtectedLayout = () => {
               <Bell size={20} />
               <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-brand-primary rounded-full border-2 border-brand-surface group-hover:scale-125 transition-transform shadow-lg"></span>
             </button>
-            <button className="p-2.5 text-brand-muted hover:text-brand-primary hover:bg-brand-surface rounded-xl transition-all border border-transparent hover:border-brand-border">
+            <button 
+              onClick={handleShowEventSummary}
+              className="p-2.5 text-brand-muted hover:text-brand-primary hover:bg-brand-surface rounded-xl transition-all border border-transparent hover:border-brand-border"
+              title="Resumo dos Eventos"
+            >
               <HelpCircle size={20} />
             </button>
             <button className="p-2.5 text-brand-muted hover:text-brand-primary hover:bg-brand-surface rounded-xl transition-all border border-transparent hover:border-brand-border">

@@ -217,6 +217,26 @@ const Lancamento = () => {
     const [procesingIA, setProcessingIA] = useState(false);
     const [registrosIA, setRegistrosIA] = useState(null);
     const [modalIAOpen, setModalIAOpen] = useState(false);
+    const [registrosCadastrados, setRegistrosCadastrados] = useState([]);
+
+    const fetchRegistrosCadastrados = async () => {
+        if (fId && mesSelect && anoSelect) {
+            try {
+                const res = await axios.get(`/registros/${fId}?mes=${mesSelect}&ano=${anoSelect}`);
+                // filtra apenas os que tem alguma hora trabalhada ou evento
+                setRegistrosCadastrados((res.data || []).filter(r => r.e1 || r.evento || r.extras || r.negativos));
+            } catch (error) {
+                console.error('Erro ao buscar registros:', error);
+                setRegistrosCadastrados([]);
+            }
+        } else {
+            setRegistrosCadastrados([]);
+        }
+    };
+
+    useEffect(() => {
+        fetchRegistrosCadastrados();
+    }, [fId, mesSelect, anoSelect]);
 
     useEffect(() => {
         axios.get('/funcionarios').then(res => setFuncionarios(res.data));
@@ -274,6 +294,7 @@ const Lancamento = () => {
             Swal.fire('Sucesso!', 'Apontamento registrado com sucesso.', 'success');
             // Reset dia para facilitar o próximo
             setDia('');
+            fetchRegistrosCadastrados();
         } catch (error) {
             Swal.fire('Erro!', 'Não foi possível salvar o registro.', 'error');
         }
@@ -355,19 +376,19 @@ const Lancamento = () => {
                                 onChange={(e) => setMesSelect(e.target.value)}
                                 className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-3 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
                             >
-                                <option value="">Mês</option>
-                                <option value="01">Janeiro</option>
-                                <option value="02">Fevereiro</option>
-                                <option value="03">Março</option>
-                                <option value="04">Abril</option>
-                                <option value="05">Maio</option>
-                                <option value="06">Junho</option>
-                                <option value="07">Julho</option>
-                                <option value="08">Agosto</option>
-                                <option value="09">Setembro</option>
-                                <option value="10">Outubro</option>
-                                <option value="11">Novembro</option>
-                                <option value="12">Dezembro</option>
+                                <option value="" className="bg-brand-surface">Mês</option>
+                                <option value="01" className="bg-brand-surface">Janeiro</option>
+                                <option value="02" className="bg-brand-surface">Fevereiro</option>
+                                <option value="03" className="bg-brand-surface">Março</option>
+                                <option value="04" className="bg-brand-surface">Abril</option>
+                                <option value="05" className="bg-brand-surface">Maio</option>
+                                <option value="06" className="bg-brand-surface">Junho</option>
+                                <option value="07" className="bg-brand-surface">Julho</option>
+                                <option value="08" className="bg-brand-surface">Agosto</option>
+                                <option value="09" className="bg-brand-surface">Setembro</option>
+                                <option value="10" className="bg-brand-surface">Outubro</option>
+                                <option value="11" className="bg-brand-surface">Novembro</option>
+                                <option value="12" className="bg-brand-surface">Dezembro</option>
                             </select>
                             <div className="relative">
                                 <select 
@@ -375,9 +396,9 @@ const Lancamento = () => {
                                     onChange={(e) => setAnoSelect(e.target.value)}
                                     className="w-full bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-3 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
                                 >
-                                    <option value="">Ano</option>
+                                    <option value="" className="bg-brand-surface">Ano</option>
                                     {[2024, 2025, 2026, 2027, 2028].map(ano => (
-                                        <option key={ano} value={ano}>{ano}</option>
+                                        <option key={ano} value={ano} className="bg-brand-surface">{ano}</option>
                                     ))}
                                 </select>
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-brand-primary rounded-lg cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/40" onClick={() => fileInputRef.current.click()}>
@@ -518,8 +539,75 @@ const Lancamento = () => {
                 onClose={() => setModalIAOpen(false)} 
                 registros={registrosIA} 
                 funcionarioId={fId}
-                onComplete={() => setDia('')}
+                onComplete={() => {
+                    setDia('');
+                    fetchRegistrosCadastrados();
+                }}
             />
+
+            {/* Registros já lançados */}
+            {fId && mesAno && (
+                <div className="bg-brand-surface border border-brand-border rounded-2xl p-8 shadow-2xl relative overflow-hidden group mt-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <Clock size={20} className="text-brand-primary" />
+                        <h3 className="text-xl font-black text-brand-text">Lançamentos em {mesSelect}/{anoSelect}</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-brand-border text-[10px] uppercase tracking-widest text-brand-muted opacity-60">
+                                    <th className="px-4 py-3 font-black text-center">Data</th>
+                                    <th className="px-4 py-3 font-black text-center">Entradas/Saídas</th>
+                                    <th className="px-4 py-3 font-black text-center">Eventos/Horas</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-border/30">
+                                {registrosCadastrados.length > 0 ? (
+                                    registrosCadastrados.map((r, idx) => {
+                                        const diaApenas = new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
+                                        const diaExtenso = new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '');
+                                        return (
+                                            <tr key={idx} className="hover:bg-brand-bg/50 transition-colors">
+                                                <td className="px-4 py-4 text-center">
+                                                    <p className="text-sm font-black text-brand-text mb-0.5">{diaApenas}</p>
+                                                    <p className="text-[8px] font-black text-brand-muted uppercase tracking-widest opacity-40">{diaExtenso}</p>
+                                                </td>
+                                                <td className="px-4 py-4 text-center">
+                                                    {r.evento && !r.e1 ? (
+                                                        <span className="text-xs font-black text-brand-muted opacity-50 italic">—</span>
+                                                    ) : (
+                                                        <div className="flex justify-center gap-2 items-center flex-wrap text-xs font-black text-brand-muted">
+                                                            {r.e1 && <span>{r.e1.substring(0,5)}/{r.s1?.substring(0,5)}</span>}
+                                                            {r.e2 && <span>| {r.e2.substring(0,5)}/{r.s2?.substring(0,5)}</span>}
+                                                            {r.e3 && <span>| {r.e3.substring(0,5)}/{r.s3?.substring(0,5)}</span>}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-4 text-center">
+                                                    <div className="flex justify-center items-center gap-2 flex-wrap">
+                                                        {r.evento && (
+                                                            <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-md border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>
+                                                        )}
+                                                        {r.total && (
+                                                            <span className="text-[10px] font-black uppercase text-brand-text bg-brand-bg px-2 py-0.5 rounded-md border border-brand-border">{r.total}h</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan="3" className="px-4 py-8 text-center text-brand-muted text-sm italic opacity-60">
+                                            Nenhum lançamento encontrado para os filtros selecionados.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

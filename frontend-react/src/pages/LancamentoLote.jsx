@@ -9,7 +9,8 @@ import {
   Search,
   Check,
   X,
-  Send
+  Send,
+  Clock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -18,8 +19,10 @@ const LancamentoLote = () => {
     const navigate = useNavigate();
     const [funcionarios, setFuncionarios] = useState([]);
     const [filtro, setFiltro] = useState('');
-    const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+    const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0]);
+    const [dataFim, setDataFim] = useState(new Date().toISOString().split('T')[0]);
     const [evento, setEvento] = useState('');
+    const [negativoManual, setNegativoManual] = useState('08:00');
     const [selecionados, setSelecionados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
@@ -51,14 +54,14 @@ const LancamentoLote = () => {
     };
 
     const handleLancarLote = async () => {
-        if (!data || !evento || selecionados.length === 0) {
-            Swal.fire('Atenção', 'Selecione a data, o evento e ao menos um funcionário.', 'warning');
+        if (!dataInicio || !dataFim || !evento || selecionados.length === 0) {
+            Swal.fire('Atenção', 'Selecione as datas, o evento e ao menos um funcionário.', 'warning');
             return;
         }
 
         const confirm = await Swal.fire({
             title: 'Confirmar Lançamento',
-            text: `Deseja lançar "${evento}" para ${selecionados.length} funcionário(s) no dia ${new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')}?`,
+            html: `Deseja lançar "${evento}" para ${selecionados.length} funcionário(s) entre <br><b>${new Date(dataInicio + 'T12:00:00').toLocaleDateString('pt-BR')}</b> e <b>${new Date(dataFim + 'T12:00:00').toLocaleDateString('pt-BR')}</b>?`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Sim, lançar',
@@ -69,16 +72,13 @@ const LancamentoLote = () => {
 
         setProcessing(true);
         try {
-            const promises = selecionados.map(id => 
-                axios.post('/registros', {
-                    funcionario_id: id,
-                    data: data,
-                    evento: evento,
-                    e1: null, s1: null, e2: null, s2: null, e3: null, s3: null
-                })
-            );
-
-            await Promise.all(promises);
+            await axios.post('/registros/lote-evento', {
+                funcionario_ids: selecionados,
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+                evento: evento,
+                negativos_manual: evento === 'Falta' ? negativoManual : null
+            });
             
             Swal.fire('Sucesso!', 'Lançamentos realizados com sucesso.', 'success');
             setSelecionados([]);
@@ -123,14 +123,25 @@ const LancamentoLote = () => {
                         </h2>
                         
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-[10px] font-black text-brand-muted uppercase tracking-widest mb-2 px-1 opacity-40">Data do Evento</label>
-                                <input 
-                                    type="date" 
-                                    value={data}
-                                    onChange={(e) => setData(e.target.value)}
-                                    className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-bold outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-brand-muted uppercase tracking-widest mb-2 px-1 opacity-40">Data Inicial</label>
+                                    <input 
+                                        type="date" 
+                                        value={dataInicio}
+                                        onChange={(e) => setDataInicio(e.target.value)}
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-bold outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-brand-muted uppercase tracking-widest mb-2 px-1 opacity-40">Data Final</label>
+                                    <input 
+                                        type="date" 
+                                        value={dataFim}
+                                        onChange={(e) => setDataFim(e.target.value)}
+                                        className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-bold outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -151,6 +162,20 @@ const LancamentoLote = () => {
                                 </select>
                             </div>
 
+                            {evento === 'Falta' && (
+                                <div className="space-y-3 pt-2">
+                                     <label className="flex items-center gap-2 text-[10px] font-black text-rose-500 uppercase tracking-widest px-1">
+                                        <Clock size={14} /> Horas de Falta (Opcional)
+                                    </label>
+                                    <input 
+                                        type="time" 
+                                        value={negativoManual}
+                                        onChange={(e) => setNegativoManual(e.target.value)}
+                                        className="w-full bg-brand-surface border border-rose-500/30 rounded-xl px-4 py-3 text-brand-text text-sm font-bold outline-none focus:ring-4 focus:ring-rose-500/20 transition-all shadow-inner text-center"
+                                    />
+                                </div>
+                            )}
+
                             <div className="pt-4">
                                 <button 
                                     onClick={handleLancarLote}
@@ -167,7 +192,7 @@ const LancamentoLote = () => {
                                     )}
                                 </button>
                                 <p className="mt-4 text-[9px] text-brand-muted font-black text-center uppercase tracking-widest opacity-40">
-                                    {selecionados.length} selecionados para o dia {new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                    {selecionados.length} selecionados no período
                                 </p>
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   UserPlus, 
@@ -17,6 +17,20 @@ const Cadastro = () => {
     const [nome, setNome] = useState('');
     const [tipo, setTipo] = useState('');
     const [loading, setLoading] = useState(false);
+    const [funcionarios, setFuncionarios] = useState([]);
+
+    const fetchFuncionarios = async () => {
+        try {
+            const response = await axios.get('/funcionarios');
+            setFuncionarios(response.data);
+        } catch (error) {
+            console.error('Erro ao buscar lista de funcionários:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchFuncionarios();
+    }, []);
 
     const handleCadastro = async (e) => {
         e.preventDefault();
@@ -42,6 +56,7 @@ const Cadastro = () => {
             
             setNome('');
             setTipo('');
+            fetchFuncionarios();
         } catch (error) {
             console.error('Erro ao cadastrar:', error);
             Swal.fire({
@@ -147,6 +162,39 @@ const Cadastro = () => {
                         <h4 className="text-brand-text font-black text-sm tracking-tight italic">Regimes de Trabalho</h4>
                         <p className="text-brand-muted text-xs mt-1.5 font-medium leading-relaxed opacity-50">O regime define o motor de cálculo para horas extras e adicional noturno.</p>
                     </div>
+                </div>
+            </div>
+
+            {/* Lista de Funcionários Cadastrados */}
+            <div className="bg-brand-surface border border-brand-border rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
+                <h3 className="text-xl font-black text-brand-text mb-6">Funcionários Cadastrados</h3>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-brand-border text-[10px] uppercase tracking-widest text-brand-muted opacity-60">
+                                <th className="px-4 py-3 font-black">ID</th>
+                                <th className="px-4 py-3 font-black">Nome Completo</th>
+                                <th className="px-4 py-3 font-black">Tipo de Contrato</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-brand-border/30">
+                            {funcionarios.length > 0 ? (
+                                funcionarios.map(f => (
+                                    <tr key={f.id} className="hover:bg-brand-bg/50 transition-colors">
+                                        <td className="px-4 py-4 text-xs font-bold text-brand-muted">{f.id}</td>
+                                        <td className="px-4 py-4 text-sm font-black text-brand-text">{f.nome}</td>
+                                        <td className="px-4 py-4 text-xs font-bold text-brand-primary">{f.tipo}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="3" className="px-4 py-8 text-center text-brand-muted text-sm italic opacity-60">
+                                        Nenhum funcionário cadastrado ainda.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

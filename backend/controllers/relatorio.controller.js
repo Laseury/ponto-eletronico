@@ -92,6 +92,7 @@ async function gerarRelatorio(req, res) {
 
             const banco    = bancoMap[row.id] || { extras: 0, negativos: 0 };
             const bancoMin = banco.extras - banco.negativos;
+            const saldoAnteriorMin = bancoMin - saldoMesMin;
 
             const horasNoturno = noturnoMin / 60;
             const valorNoturno = valorHora > 0
@@ -109,6 +110,7 @@ async function gerarRelatorio(req, res) {
                 total_extras:     minutosParaHorario(extrasMin),
                 total_negativos:  minutosParaHorario(negativosMin),
                 saldo_mes:        formatarSaldo(saldoMesMin),
+                saldo_anterior:   formatarSaldo(saldoAnteriorMin),
                 banco_horas:      formatarSaldo(bancoMin),
                 ciclo:            `${mesInicioCiclo <= 6 ? "Jan–Jun" : "Jul–Dez"} ${ano}`,
                 total_noturno:    minutosParaHorario(noturnoMin),
