@@ -6,7 +6,7 @@ import { Bell, Search, Settings, HelpCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const ProtectedLayout = () => {
-  const { user, loading, usuariosDb, updateProfile } = useAuth();
+  const { user, loading } = useAuth();
 
   const handleSettings = async () => {
     let htmlContent = `
@@ -14,9 +14,9 @@ const ProtectedLayout = () => {
         <button id="btn-meus-dados" style="padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s;">✏️ Alterar Meus Dados</button>
     `;
     
-    if (user?.usuario === 'admin') {
+    if (user?.perfil === 'Admin') {
       htmlContent += `
-        <button id="btn-gerenciar" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s;">👥 Gerenciar Acessos</button>
+        <button id="btn-gerenciar" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s;" onclick="alert('Gestão em breve')">👥 Gerenciar Acessos</button>
       `;
     }
     
@@ -55,53 +55,11 @@ const ProtectedLayout = () => {
           if (formValues) {
             const [newName, newPass] = formValues;
             if (newName && newPass) {
-              updateProfile(user.usuario, newName, newPass);
-              Swal.fire({ title: 'Salvo!', text: 'Seus dados foram atualizados.', icon: 'success', background: '#1e293b', color: '#f8fafc' });
-            } else {
-              Swal.fire({ title: 'Atenção', text: 'Preencha o nome e a nova senha.', icon: 'warning', background: '#1e293b', color: '#f8fafc' });
+              // Aqui no futuro pode chamar a API /auth/update
+              Swal.fire({ title: 'Atenção!', text: 'Atualização não implementada no backend ainda.', icon: 'info', background: '#1e293b', color: '#f8fafc' });
             }
           }
         };
-
-        if (user?.usuario === 'admin') {
-          document.getElementById('btn-gerenciar').onclick = () => {
-            Swal.close();
-            let tableRows = '';
-            Object.entries(usuariosDb).forEach(([k, v]) => {
-              tableRows += `
-                <tr style="border-bottom: 1px solid #334155;">
-                  <td style="padding: 12px; text-align: left; color: #94a3b8;">${k}</td>
-                  <td style="padding: 12px; text-align: left; color: #f8fafc; font-weight: bold;">${v.nome}</td>
-                  <td style="padding: 12px; text-align: center;"><code style="background: #0f172a; padding: 4px 8px; border-radius: 4px; color: #38bdf8;">${v.senha}</code></td>
-                </tr>
-              `;
-            });
-            Swal.fire({
-              title: 'Gestão de Acessos',
-              html: `
-                <div style="overflow-x: auto;">
-                  <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 15px;">
-                    <thead>
-                      <tr style="background: #0f172a; color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
-                        <th style="padding: 12px; text-align: left;">Login</th>
-                        <th style="padding: 12px; text-align: left;">Nome</th>
-                        <th style="padding: 12px; text-align: center;">Senha Atual</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${tableRows}
-                    </tbody>
-                  </table>
-                </div>
-              `,
-              background: '#1e293b',
-              color: '#f8fafc',
-              width: 600,
-              confirmButtonText: 'Fechar',
-              confirmButtonColor: '#3b82f6'
-            });
-          };
-        }
       }
     });
   };

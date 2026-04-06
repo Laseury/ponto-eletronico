@@ -56,11 +56,14 @@ const Sidebar = () => {
     Contador: [
       { to: '/dashboard-contador', icon: LayoutDashboard, label: 'Painel Contador' },
       { to: '/relatorios', icon: FileText, label: 'Relatórios Fiscais' },
+    ],
+    Funcionario: [
+      { to: '/funcionario', icon: History, label: 'Meu Ponto' }
     ]
   };
 
-  let currentMenu = menuItems[user?.cargo] || [];
-  if (user?.usuario !== 'admin') {
+  let currentMenu = menuItems[user?.perfil] || menuItems[user?.cargo] || [];
+  if (user?.perfil !== 'Admin' && user?.cargo !== 'Admin') {
     currentMenu = currentMenu.filter(item => item.to !== '/logs');
   }
 

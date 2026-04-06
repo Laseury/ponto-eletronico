@@ -11,6 +11,10 @@ export default defineConfig({
   server: {
     // Proxy apenas para development (quando Vite está rodando localmente)
     proxy: {
+      '/auth': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
       '/funcionarios': {
         target: 'http://localhost:3000',
         changeOrigin: true,

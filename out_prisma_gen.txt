@@ -1,0 +1,10 @@
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (v7.6.0) to .\node_modules\@prisma\client in 166ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+

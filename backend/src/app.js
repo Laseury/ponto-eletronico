@@ -48,13 +48,16 @@ try {
     const resumoRoutes = require("../routes/resumo.routes");
     const logRoutes = require("../routes/log.routes");
     const iaRoutes = require("../routes/ia.routes");
+    const authRoutes = require("../routes/auth.routes");
+    const { authMiddleware } = require("../middlewares/auth.middleware");
 
-    app.use("/funcionarios", funcionariosRoutes);
-    app.use("/registros",    registrosRoutes);
-    app.use("/relatorio",    relatorioRoutes);
-    app.use("/resumo", resumoRoutes);
-    app.use("/logs", logRoutes);
-    app.use("/ia", iaRoutes);
+    app.use("/auth", authRoutes);
+    app.use("/funcionarios", authMiddleware, funcionariosRoutes);
+    app.use("/registros",    authMiddleware, registrosRoutes);
+    app.use("/relatorio",    authMiddleware, relatorioRoutes);
+    app.use("/resumo",       authMiddleware, resumoRoutes);
+    app.use("/logs",         authMiddleware, logRoutes);
+    app.use("/ia",           authMiddleware, iaRoutes);
     
     console.log("✓ Todas as rotas carregadas com sucesso");
 } catch (error) {

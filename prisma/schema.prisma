@@ -15,6 +15,7 @@ model Funcionario {
   ativo           Boolean?          @default(true)
   registros_ponto RegistroPonto[]
   log_registros   LogRegistro[]
+  usuario         Usuario?
 
   @@map("funcionarios")
 }
@@ -53,4 +54,18 @@ model RegistroPonto {
 
   @@unique([funcionarioId, data])
   @@map("registros_ponto")
+}
+
+model Usuario {
+  id            Int          @id @default(autoincrement())
+  nome          String       @db.VarChar(100)
+  login         String       @unique @db.VarChar(50)
+  senha         String       @db.VarChar(255)
+  perfil        String       @default("Funcionario") @db.VarChar(20) // Admin, Gestor, Funcionario
+  funcionarioId Int?         @unique @map("funcionario_id")
+  criadoEm      DateTime?    @default(now()) @map("criado_em") @db.Timestamp(6)
+  
+  funcionario   Funcionario? @relation(fields: [funcionarioId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("usuarios")
 }
