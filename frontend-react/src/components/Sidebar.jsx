@@ -59,7 +59,10 @@ const Sidebar = () => {
     ]
   };
 
-  const currentMenu = menuItems[user?.cargo] || [];
+  let currentMenu = menuItems[user?.cargo] || [];
+  if (user?.usuario !== 'admin') {
+    currentMenu = currentMenu.filter(item => item.to !== '/logs');
+  }
 
   return (
     <aside className="w-72 bg-brand-surface border-r border-brand-border flex flex-col h-screen sticky top-0 transition-colors duration-300">

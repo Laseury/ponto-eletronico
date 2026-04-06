@@ -7,6 +7,22 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const defaultUsuarios = {
+    admin: { senha: '123', perfil: 'Admin', nome: 'Administrador' },
+    rh: { senha: 'rh123', perfil: 'Admin', nome: 'RH' },
+    gestor: { senha: 'gestor', perfil: 'Gestor', nome: 'Gestor' },
+    contador: { senha: 'cont', perfil: 'Contador', nome: 'Contador' },
+  };
+
+  const [usuariosDb, setUsuariosDb] = useState(() => {
+    const saved = localStorage.getItem('usuarios_db');
+    return saved ? JSON.parse(saved) : defaultUsuarios;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('usuarios_db', JSON.stringify(usuariosDb));
+  }, [usuariosDb]);
+
   useEffect(() => {
     // Verificar se existe um usuário no localStorage ao carregar
     const savedUser = localStorage.getItem('usuario_logado');
@@ -17,15 +33,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (usuario, senha) => {
-    // Usuários simulados (conforme o sistema original)
-    const USUARIOS = {
-      admin: { senha: '123', perfil: 'Admin', nome: 'Administrador' },
-      rh: { senha: 'rh123', perfil: 'Admin', nome: 'RH' },
-      gestor: { senha: 'gestor', perfil: 'Gestor', nome: 'Gestor' },
-      contador: { senha: 'cont', perfil: 'Contador', nome: 'Contador' },
-    };
-
-    const encontrado = USUARIOS[usuario];
+    const encontrado = usuariosDb[usuario];
 
     if (encontrado && encontrado.senha === senha) {
       const userData = {
@@ -63,8 +71,25 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/';
   };
 
+  const updateProfile = (usuarioKey, newName, newPassword) => {
+    setUsuariosDb(prev => {
+      const updated = { ...prev };
+      if (updated[usuarioKey]) {
+        updated[usuarioKey].nome = newName;
+        updated[usuarioKey].senha = newPassword;
+      }
+      return updated;
+    });
+
+    if (user && user.usuario === usuarioKey) {
+      const userData = { ...user, nome: newName };
+      localStorage.setItem('usuario_logado', JSON.stringify(userData));
+      setUser(userData);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, usuariosDb, updateProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   );
