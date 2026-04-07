@@ -298,6 +298,30 @@ const Funcionario = () => {
     }
   };
 
+  const handleViewComment = (dateStr) => {
+    const dayComments = comentarios.filter(c => c.dataReferencia?.substring(0, 10) === dateStr);
+    if (dayComments.length === 0) return;
+
+    const html = dayComments.map(c => `
+      <div style="text-align: left; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 10px; font-weight: 900; color: #10b981; text-transform: uppercase; letter-spacing: 1px;">${c.usuario?.nome || 'Sistema'}</div>
+        <div style="font-size: 13px; margin-top: 8px; color: #f8fafc; font-weight: 500;">${c.texto}</div>
+      </div>
+    `).join('');
+
+    Swal.fire({
+      title: 'Anotações do Dia',
+      html: `<div style="margin-top: 15px;">${html}</div>`,
+      background: '#061d12',
+      color: '#e1e9e5',
+      confirmButtonText: 'Fechar',
+      confirmButtonColor: '#10b981',
+      customClass: {
+        popup: 'rounded-[2rem] border border-brand-border'
+      }
+    });
+  };
+
   const generatePDF = () => {
     Swal.fire('Exportação', 'Gerando arquivo de impressão...', 'info');
     const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -480,10 +504,16 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{r.negativos || '—'}</td>
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
                         <td className="px-6 py-2 text-right">
-                           <div className="flex items-center justify-end gap-2">
-                             {comentarios.some(c => c.dataReferencia?.substring(0,10) === dateStr) && (
-                               <div title="Possui comentário" className="text-brand-primary"><MessageSquare size={14} /></div>
-                             )}
+                            <div className="flex items-center justify-end gap-2">
+                              {comentarios.some(c => c.dataReferencia?.substring(0,10) === dateStr) && (
+                                <button 
+                                  onClick={() => handleViewComment(dateStr)}
+                                  title="Ver comentários" 
+                                  className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"
+                                >
+                                  <MessageSquare size={14} />
+                                </button>
+                              )}
                              {canEdit && (
                                <button 
                                  onClick={() => {
@@ -558,21 +588,33 @@ const Funcionario = () => {
             ) : (
               comentarios.map(c => (
                 <div key={c.id} className="bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5 hover:border-brand-primary/20 transition-all group">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-brand-primary uppercase tracking-widest">{c.usuario?.nome || 'Sistema'}</span>
-                      <span className="text-[8px] text-brand-muted font-bold opacity-50">{new Date(c.criadoEm).toLocaleString('pt-BR')}</span>
+                  <div className="flex justify-between items-start mb-3 border-b border-brand-border/30 pb-2">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <User size={12} className="text-brand-primary" />
+                        <span className="text-[10px] font-black text-brand-text uppercase tracking-widest">{c.usuario?.nome || 'Sistema'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-50">
+                        <Clock size={10} className="text-brand-muted" />
+                        <span className="text-[9px] text-brand-muted font-bold tracking-tight">
+                          {new Date(c.criadoEm).toLocaleDateString('pt-BR')} às {new Date(c.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
                     {canEdit && (
-                      <button onClick={() => handleDeleteComment(c.id)} className="text-rose-500/0 group-hover:text-rose-500 transition-all p-1 hover:bg-rose-500/10 rounded-lg">
-                        <Trash2 size={14} />
+                      <button onClick={() => handleDeleteComment(c.id)} className="text-rose-500/0 group-hover:text-rose-500 transition-all p-2 hover:bg-rose-500/10 rounded-xl">
+                        <Trash2 size={16} />
                       </button>
                     )}
                   </div>
                   <p className="text-sm text-brand-text/80 leading-relaxed">{c.texto}</p>
                   {c.dataReferencia && (
                     <div className="mt-3 inline-flex items-center gap-2 px-2 py-1 bg-brand-surface border border-brand-border rounded-lg text-[8px] font-black text-brand-muted uppercase tracking-widest">
-                      <Calendar size={10} /> Ref: {new Date(c.dataReferencia + 'T12:00:00').toLocaleDateString('pt-BR')}
+                      <Calendar size={10} /> Ref: {(() => {
+                        const d = new Date(c.dataReferencia);
+                        const iso = d.toISOString().substring(0, 10);
+                        return iso.split('-').reverse().join('/');
+                      })()}
                     </div>
                   )}
                 </div>
