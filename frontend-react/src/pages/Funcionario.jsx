@@ -299,7 +299,11 @@ const Funcionario = () => {
   };
 
   const handleViewComment = (dateStr) => {
-    const dayComments = comentarios.filter(c => c.dataReferencia?.substring(0, 10) === dateStr);
+    const dayComments = comentarios.filter(c => {
+      if (!c.dataReferencia) return false;
+      const dStr = typeof c.dataReferencia === 'string' ? c.dataReferencia : c.dataReferencia.toISOString();
+      return dStr.substring(0, 10) === dateStr;
+    });
     if (dayComments.length === 0) return;
 
     const html = dayComments.map(c => `
@@ -505,7 +509,13 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
                         <td className="px-6 py-2 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              {comentarios.some(c => c.dataReferencia?.substring(0,10) === dateStr) && (
+                              {comentarios.some(c => {
+                                if (!c.dataReferencia) return false;
+                                try {
+                                  const dStr = typeof c.dataReferencia === 'string' ? c.dataReferencia : new Date(c.dataReferencia).toISOString();
+                                  return dStr.substring(0, 10) === dateStr;
+                                } catch (e) { return false; }
+                              }) && (
                                 <button 
                                   onClick={() => handleViewComment(dateStr)}
                                   title="Ver comentários" 
@@ -611,9 +621,13 @@ const Funcionario = () => {
                   {c.dataReferencia && (
                     <div className="mt-3 inline-flex items-center gap-2 px-2 py-1 bg-brand-surface border border-brand-border rounded-lg text-[8px] font-black text-brand-muted uppercase tracking-widest">
                       <Calendar size={10} /> Ref: {(() => {
-                        const d = new Date(c.dataReferencia);
-                        const iso = d.toISOString().substring(0, 10);
-                        return iso.split('-').reverse().join('/');
+                        try {
+                          const d = new Date(c.dataReferencia);
+                          if (isNaN(d.getTime())) return 'Data Inválida';
+                          return d.toLocaleDateString('pt-BR');
+                        } catch (e) {
+                          return 'Data Inválida';
+                        }
                       })()}
                     </div>
                   )}
