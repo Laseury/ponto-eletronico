@@ -14,7 +14,7 @@ async function runMigrations() {
         try {
             console.log("📦 Executando Prisma migrations...");
             const { execSync } = require("child_process");
-            execSync("npx prisma migrate deploy --skip-generate", { stdio: "inherit" });
+            execSync("npx prisma migrate deploy", { stdio: "inherit" });
             console.log("✓ Migrations executadas com sucesso");
         } catch (error) {
             console.warn("⚠ Aviso ao executar migrations:", error.message);
