@@ -4,7 +4,7 @@ const { authMiddleware, authorizeRoles, Role } = require("../middlewares/auth.mi
 const router = Router();
 
 router.post("/login", AuthController.login);
-router.post("/init", AuthController.initAdmin);
+router.get("/init", AuthController.initAdmin);
 router.post("/register", authMiddleware, authorizeRoles(Role.ADMIN), AuthController.register);
 
 module.exports = router;
