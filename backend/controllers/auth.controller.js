@@ -2,6 +2,25 @@ const prisma = require('../db/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+/**
+ * Corrige automaticamente a sequence do PostgreSQL para evitar o erro P2002 (id duplicado).
+ * Isso acontece quando registros são inseridos fora do fluxo normal (migrations, seeds, etc.).
+ */
+async function fixSequence(tableName) {
+    try {
+        await prisma.$executeRawUnsafe(`
+            SELECT setval(
+                pg_get_serial_sequence('"${tableName}"', 'id'),
+                COALESCE((SELECT MAX(id) FROM "${tableName}"), 0) + 1,
+                false
+            )
+        `);
+    } catch (err) {
+        // Não bloqueia o fluxo se falhar, apenas loga
+        console.warn(`[fixSequence] Aviso ao corrigir sequence de "${tableName}":`, err.message);
+    }
+}
+
 class AuthController {
     static async initAdmin(req, res) {
         try {
@@ -16,6 +35,7 @@ class AuthController {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash('admin123', salt);
 
+            await fixSequence('usuarios');
             await prisma.usuario.create({
                 data: {
                     nome: "Administrador Sistema",
@@ -89,6 +109,7 @@ class AuthController {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(senha, salt);
 
+            await fixSequence('usuarios');
             const usuario = await prisma.usuario.create({
                 data: {
                     nome,
