@@ -2,11 +2,12 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
-import { Bell, Search, Settings, HelpCircle } from 'lucide-react';
+import { Bell, Search, Settings, HelpCircle, Menu, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const ProtectedLayout = () => {
   const { user, loading, updateProfile } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const handleSettings = async () => {
     let htmlContent = `
@@ -149,19 +150,27 @@ const ProtectedLayout = () => {
   return (
     <div className="flex min-h-screen bg-brand-bg font-sans text-brand-text transition-colors duration-300">
       {/* Barra Lateral Dinâmica */}
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Área de Conteúdo Principal */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top Header Barra de Busca/Ações */}
-        <header className="h-20 bg-brand-surface/80 backdrop-blur-md border-b border-brand-border px-8 flex items-center justify-between sticky top-0 z-10 transition-colors duration-300">
-          <div className="flex items-center gap-4 bg-brand-bg/50 px-5 py-2.5 rounded-2xl border border-brand-border w-96 max-w-full shadow-inner group focus-within:border-brand-primary/30 transition-all">
-            <Search size={18} className="text-brand-muted group-focus-within:text-brand-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Buscar funcionários, relatórios ou logs..." 
-              className="bg-transparent border-none focus:outline-none text-sm text-brand-text placeholder:text-brand-muted/50 w-full font-medium"
-            />
+        <header className="h-20 lg:h-20 bg-brand-surface/80 backdrop-blur-md border-b border-brand-border px-4 lg:px-8 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 text-brand-muted hover:text-brand-primary"
+            >
+              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <div className="hidden md:flex items-center gap-4 bg-brand-bg/50 px-5 py-2.5 rounded-2xl border border-brand-border w-96 max-w-full shadow-inner group focus-within:border-brand-primary/30 transition-all">
+              <Search size={18} className="text-brand-muted group-focus-within:text-brand-primary transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Buscar funcionários, relatórios ou logs..." 
+                className="bg-transparent border-none focus:outline-none text-sm text-brand-text placeholder:text-brand-muted/50 w-full font-medium"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -171,7 +180,7 @@ const ProtectedLayout = () => {
             </button>
             <button 
               onClick={handleShowEventSummary}
-              className="p-2.5 text-brand-muted hover:text-brand-primary hover:bg-brand-surface rounded-xl transition-all border border-transparent hover:border-brand-border"
+              className="hidden sm:flex p-2.5 text-brand-muted hover:text-brand-primary hover:bg-brand-surface rounded-xl transition-all border border-transparent hover:border-brand-border"
               title="Resumo dos Eventos"
             >
               <HelpCircle size={20} />
@@ -186,8 +195,7 @@ const ProtectedLayout = () => {
             
             <div className="h-8 w-[1px] bg-brand-border mx-3 opacity-50"></div>
             
-            {/* Status do Servidor/Sistema */}
-            <div className="flex items-center gap-2.5 px-5 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full shadow-lg shadow-brand-accent/5">
+            <div className="hidden lg:flex items-center gap-2.5 px-5 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full shadow-lg shadow-brand-accent/5">
               <div className="w-2.5 h-2.5 bg-brand-accent rounded-full shadow-[0_0_12px_rgba(34,197,94,0.6)] animate-pulse"></div>
               <span className="text-[10px] font-black text-brand-accent uppercase tracking-widest">SISTEMA OK</span>
             </div>
@@ -195,7 +203,7 @@ const ProtectedLayout = () => {
         </header>
 
         {/* Content Container com Scroll Suave */}
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

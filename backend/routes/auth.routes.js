@@ -5,7 +5,7 @@ const router = Router();
 
 router.post("/login", AuthController.login);
 router.get("/init", AuthController.initAdmin);
-router.post("/register", authMiddleware, authorizeRoles(Role.ADMIN, Role.RH), AuthController.register);
-router.get("/users", authMiddleware, authorizeRoles(Role.ADMIN, Role.RH), AuthController.getUsers);
+router.post("/register", authMiddleware, authorizeRoles(Role.ADMIN), AuthController.register);
+router.get("/users", authMiddleware, authorizeRoles(Role.ADMIN), AuthController.getUsers);
 
 module.exports = router;

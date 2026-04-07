@@ -9,7 +9,12 @@ import {
   Edit2,
   Moon,
   Sun,
-  X
+  X,
+  MessageSquare,
+  PlusCircle,
+  History,
+  Trash2,
+  Save
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '../context/AuthContext';
@@ -129,6 +134,14 @@ const Funcionario = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [relatorio, setRelatorio] = useState(null);
+  const [comentarios, setComentarios] = useState([]);
+  const [ajustes, setAjustes] = useState([]);
+  const [comentarioModalOpen, setComentarioModalOpen] = useState(false);
+  const [ajusteModalOpen, setAjusteModalOpen] = useState(false);
+  const [commentData, setCommentData] = useState({ texto: '', tipo: 'GERAL', data_referencia: null });
+  const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '' });
+
+  const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador'].includes(user?.perfil), [user]);
 
   const fetchFuncionarioData = useCallback(async () => {
     if (!id) return;
@@ -146,6 +159,13 @@ const Funcionario = () => {
           const foundRel = relRes.data.find(r => String(r.id) === String(id));
           setRelatorio(foundRel || null);
       }
+
+      const [comRes, ajuRes] = await Promise.all([
+        axios.get(`/comentarios/${id}`),
+        axios.get(`/ajustes/${id}`)
+      ]);
+      setComentarios(comRes.data);
+      setAjustes(ajuRes.data);
     } catch (error) {
       console.error('Erro ao buscar dados do funcionário:', error);
       Swal.fire('Erro!', 'Não foi possível carregar os dados.', 'error');
@@ -224,6 +244,60 @@ const Funcionario = () => {
     }
   };
 
+  const handleAddComment = async () => {
+    if (!commentData.texto) return;
+    try {
+      await axios.post('/comentarios', {
+        funcionario_id: id,
+        ...commentData
+      });
+      setComentarioModalOpen(false);
+      setCommentData({ texto: '', tipo: 'GERAL', data_referencia: null });
+      fetchFuncionarioData();
+      Swal.fire({ title: 'Sucesso!', text: 'Comentário adicionado.', icon: 'success', timer: 1000, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire('Erro!', 'Não foi possível salvar o comentário.', 'error');
+    }
+  };
+
+  const handleDeleteComment = async (comId) => {
+    const res = await Swal.fire({
+      title: 'Excluir comentário?',
+      text: 'Esta ação não pode ser desfeita.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir',
+      cancelButtonText: 'Cancelar'
+    });
+    if (res.isConfirmed) {
+      try {
+        await axios.delete(`/comentarios/${comId}`);
+        fetchFuncionarioData();
+        Swal.fire('Excluído!', 'O comentário foi removido.', 'success');
+      } catch (error) {
+        Swal.fire('Erro!', 'Não foi possível excluir.', 'error');
+      }
+    }
+  };
+
+  const handleAddAjuste = async () => {
+    if (!ajusteData.motivo || ajusteData.valor === '+00:00' || ajusteData.valor === '-00:00') {
+        return Swal.fire('Atenção', 'Informe um valor válido e o motivo.', 'warning');
+    }
+    try {
+      await axios.post('/ajustes', {
+        funcionario_id: id,
+        ...ajusteData
+      });
+      setAjusteModalOpen(false);
+      setAjusteData({ valor: '+00:00', motivo: '' });
+      fetchFuncionarioData();
+      Swal.fire({ title: 'Sucesso!', text: 'Ajuste de saldo realizado.', icon: 'success', timer: 1000, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire('Erro!', 'Não foi possível realizar o ajuste.', 'error');
+    }
+  };
+
   const generatePDF = () => {
     Swal.fire('Exportação', 'Gerando arquivo de impressão...', 'info');
     const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -275,6 +349,28 @@ const Funcionario = () => {
     win.onload = () => win.print();
   };
 
+  const handleToggleAtivo = async () => {
+    const action = funcionario?.ativo !== false ? 'inativar' : 'ativar';
+    const res = await Swal.fire({
+      title: `Confirmar ${action}?`,
+      text: `Deseja realmente ${action} este colaborador?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sim',
+      cancelButtonText: 'Não'
+    });
+
+    if (res.isConfirmed) {
+      try {
+        await axios.patch(`/funcionarios/${id}/ativo`);
+        fetchFuncionarioData();
+        Swal.fire('Sucesso!', `Colaborador ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso.`, 'success');
+      } catch (error) {
+        Swal.fire('Erro!', 'Não foi possível alterar o status.', 'error');
+      }
+    }
+  };
+
   if (!id) return <div className="text-white text-2xl font-black p-10">ID não fornecido.</div>;
 
   return (
@@ -303,9 +399,26 @@ const Funcionario = () => {
               {[2024, 2025, 2026].map(a => (<option key={a} value={a} className="bg-brand-surface">{a}</option>))}
             </select>
           </div>
+          {canEdit && (
+            <button 
+              onClick={handleToggleAtivo}
+              className={`flex items-center gap-2 font-black py-3 px-6 rounded-xl shadow-lg transition-all text-[9px] uppercase tracking-widest ${funcionario?.ativo !== false ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'}`}
+            >
+              {funcionario?.ativo !== false ? <X size={18} /> : <Save size={18} />}
+              {funcionario?.ativo !== false ? 'Inativar' : 'Ativar'}
+            </button>
+          )}
           <button onClick={generatePDF} className="flex items-center gap-2 bg-brand-accent hover:bg-brand-accent/90 text-white font-black py-3 px-6 rounded-xl shadow-lg shadow-brand-accent/20 transition-all text-[9px] uppercase tracking-widest">
             <FileDown size={18} /> Exportar
           </button>
+          {canEdit && (
+            <button 
+              onClick={() => setAjusteModalOpen(true)}
+              className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-white font-black py-3 px-6 rounded-xl shadow-lg shadow-brand-primary/20 transition-all text-[9px] uppercase tracking-widest"
+            >
+              <PlusCircle size={18} /> Ajustar Saldo
+            </button>
+          )}
         </div>
       </div>
 
@@ -366,7 +479,25 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{r.extras || '—'}</td>
                         <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{r.negativos || '—'}</td>
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
-                        <td className="px-6 py-2 text-right"><button onClick={() => handleEdit(r)} className="p-2 text-brand-muted hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"><Edit2 size={14} /></button></td>
+                        <td className="px-6 py-2 text-right">
+                           <div className="flex items-center justify-end gap-2">
+                             {comentarios.some(c => c.dataReferencia?.substring(0,10) === dateStr) && (
+                               <div title="Possui comentário" className="text-brand-primary"><MessageSquare size={14} /></div>
+                             )}
+                             {canEdit && (
+                               <button 
+                                 onClick={() => {
+                                   setCommentData({ texto: '', tipo: 'DIARIO', data_referencia: dateStr });
+                                   setComentarioModalOpen(true);
+                                 }}
+                                 className="p-2 text-brand-muted hover:text-brand-primary transition-all"
+                               >
+                                 <PlusCircle size={14} />
+                               </button>
+                             )}
+                             <button onClick={() => handleEdit(r)} className="p-2 text-brand-muted hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"><Edit2 size={14} /></button>
+                           </div>
+                         </td>
                       </tr>
                     );
                   })
@@ -403,7 +534,160 @@ const Funcionario = () => {
         )}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="bg-brand-surface border border-brand-border rounded-[3rem] p-8 shadow-xl">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] flex items-center gap-3 opacity-60">
+              <MessageSquare size={20} className="text-brand-primary" /> Histórico de Comentários
+            </h3>
+            {canEdit && (
+              <button 
+                onClick={() => {
+                  setCommentData({ texto: '', tipo: 'GERAL', data_referencia: null });
+                  setComentarioModalOpen(true);
+                }}
+                className="text-brand-primary hover:text-brand-primary/80 transition-all"
+              >
+                <PlusCircle size={20} />
+              </button>
+            )}
+          </div>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {comentarios.length === 0 ? (
+              <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-40">Nenhum comentário registrado.</p>
+            ) : (
+              comentarios.map(c => (
+                <div key={c.id} className="bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5 hover:border-brand-primary/20 transition-all group">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-brand-primary uppercase tracking-widest">{c.usuario?.nome || 'Sistema'}</span>
+                      <span className="text-[8px] text-brand-muted font-bold opacity-50">{new Date(c.criadoEm).toLocaleString('pt-BR')}</span>
+                    </div>
+                    {canEdit && (
+                      <button onClick={() => handleDeleteComment(c.id)} className="text-rose-500/0 group-hover:text-rose-500 transition-all p-1 hover:bg-rose-500/10 rounded-lg">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-sm text-brand-text/80 leading-relaxed">{c.texto}</p>
+                  {c.dataReferencia && (
+                    <div className="mt-3 inline-flex items-center gap-2 px-2 py-1 bg-brand-surface border border-brand-border rounded-lg text-[8px] font-black text-brand-muted uppercase tracking-widest">
+                      <Calendar size={10} /> Ref: {new Date(c.dataReferencia + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="bg-brand-surface border border-brand-border rounded-[3rem] p-8 shadow-xl">
+          <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-8 flex items-center gap-3 opacity-60">
+            <History size={20} className="text-brand-primary" /> Histórico de Ajustes de Saldo
+          </h3>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {ajustes.length === 0 ? (
+              <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-40">Nenhum ajuste de saldo registrado.</p>
+            ) : (
+              ajustes.map(a => (
+                <div key={a.id} className="flex items-center justify-between bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5">
+                  <div className="flex items-center gap-5">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs ${a.valor.startsWith('+') ? 'bg-brand-accent/10 text-brand-accent' : 'bg-rose-500/10 text-rose-500'}`}>
+                      {a.valor}
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60 mb-1">{a.usuario?.nome} em {new Date(a.data).toLocaleDateString('pt-BR')}</p>
+                      <p className="text-sm font-black text-brand-text italic">{a.motivo}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
       <EditRecordModal isOpen={modalOpen} onClose={() => setModalOpen(false)} record={selectedRecord} onSave={handleSaveRecord} />
+
+      {/* Modal de Comentário */}
+      {comentarioModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-brand-bg/90 backdrop-blur-md">
+          <div className="bg-brand-surface border border-brand-border w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-brand-border flex justify-between items-center">
+              <h3 className="text-lg font-black text-brand-text flex items-center gap-3 italic">
+                <MessageSquare className="text-brand-primary" size={20} /> 
+                {commentData.data_referencia ? `Comentar Dia ${new Date(commentData.data_referencia+'T12:00:00').toLocaleDateString('pt-BR')}` : 'Adicionar Comentário'}
+              </h3>
+              <button onClick={() => setComentarioModalOpen(false)} className="p-2 hover:bg-brand-bg rounded-lg text-brand-muted"><X size={20} /></button>
+            </div>
+            <div className="p-8 space-y-6">
+              <textarea 
+                placeholder="Escreva seu comentário aqui..."
+                value={commentData.texto}
+                onChange={(e) => setCommentData({...commentData, texto: e.target.value})}
+                className="w-full h-40 bg-brand-bg border border-brand-border rounded-2xl p-5 text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner resize-none font-bold"
+              />
+            </div>
+            <div className="p-8 bg-brand-bg/40 flex gap-4">
+              <button onClick={() => setComentarioModalOpen(false)} className="flex-1 py-5 bg-brand-bg text-brand-muted font-black rounded-2xl border border-brand-border transition-all uppercase text-[10px] tracking-widest">Cancelar</button>
+              <button onClick={handleAddComment} className="flex-1 py-5 bg-brand-primary text-white font-black rounded-2xl shadow-xl transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
+                <Save size={14} /> Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Ajuste de Saldo */}
+      {ajusteModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-brand-bg/90 backdrop-blur-md">
+          <div className="bg-brand-surface border border-brand-border w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-brand-border flex justify-between items-center">
+              <h3 className="text-lg font-black text-brand-text flex items-center gap-3 italic">
+                <PlusCircle className="text-brand-primary" size={20} /> Ajustar Saldo Anterior
+              </h3>
+              <button onClick={() => setAjusteModalOpen(false)} className="p-2 hover:bg-brand-bg rounded-lg text-brand-muted"><X size={20} /></button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div>
+                <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60 text-center">Valor do Ajuste (HH:mm)</label>
+                <div className="flex items-center gap-4">
+                  <select 
+                    value={ajusteData.valor.substring(0,1)}
+                    onChange={(e) => setAjusteData({...ajusteData, valor: e.target.value + ajusteData.valor.substring(1)})}
+                    className="bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text font-black"
+                  >
+                    <option value="+">+</option>
+                    <option value="-">-</option>
+                  </select>
+                  <input 
+                    type="time" 
+                    value={ajusteData.valor.substring(1)}
+                    onChange={(e) => setAjusteData({...ajusteData, valor: ajusteData.valor.substring(0,1) + e.target.value})}
+                    className="flex-1 bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 text-brand-text text-xl font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all text-center shadow-inner"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60">Motivo do Ajuste</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: Pagamento de horas extras"
+                  value={ajusteData.motivo}
+                  onChange={(e) => setAjusteData({...ajusteData, motivo: e.target.value})}
+                  className="w-full bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all font-bold shadow-inner"
+                />
+              </div>
+            </div>
+            <div className="p-8 bg-brand-bg/40 flex gap-4">
+              <button onClick={() => setAjusteModalOpen(false)} className="flex-1 py-5 bg-brand-bg text-brand-muted font-black rounded-2xl border border-brand-border transition-all uppercase text-[10px] tracking-widest">Cancelar</button>
+              <button onClick={handleAddAjuste} className="flex-1 py-5 bg-brand-accent text-white font-black rounded-2xl shadow-xl transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
+                <Save size={14} /> Aplicar Ajuste
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -69,12 +69,49 @@ async function gerarRelatorio(req, res) {
             GROUP BY r.funcionario_id
         `;
 
+        const ajustesResult = await prisma.$queryRaw`
+            SELECT
+                a.funcionario_id,
+                SUM(CASE WHEN a.valor LIKE '+%:%'
+                    THEN CAST(SPLIT_PART(REPLACE(a.valor,'+',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(a.valor,'+',''),':',2) AS INT)
+                    ELSE 0 END) AS ajustes_pos_min,
+                SUM(CASE WHEN a.valor LIKE '-%:%'
+                    THEN CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',2) AS INT)
+                    ELSE 0 END) AS ajustes_neg_min
+            FROM ajustes_saldo a
+            WHERE EXTRACT(YEAR FROM a.data)  = ${ano}
+              AND EXTRACT(MONTH FROM a.data) >= ${mesInicioCiclo}
+              AND EXTRACT(MONTH FROM a.data) <= ${mes}
+            GROUP BY a.funcionario_id
+        `;
+
+        const ajustesMap = {};
+        ajustesResult.forEach(function (row) {
+            ajustesMap[row.funcionario_id] = {
+                pos: Number(row.ajustes_pos_min || 0),
+                neg: Number(row.ajustes_neg_min || 0)
+            };
+        });
+
         const bancoMap = {};
         bancResult.forEach(function (row) {
+            const aj = ajustesMap[row.funcionario_id] || { pos: 0, neg: 0 };
             bancoMap[row.funcionario_id] = {
-                extras:    Number(row.banco_extras_min || 0),
-                negativos: Number(row.banco_negativos_min || 0)
+                extras:    Number(row.banco_extras_min || 0) + aj.pos,
+                negativos: Number(row.banco_negativos_min || 0) + aj.neg
             };
+        });
+
+        // Garantir que funcionários que só tem ajustes (sem registros de ponto no período) também apareçam no bancoMap
+        Object.keys(ajustesMap).forEach(fId => {
+            if (!bancoMap[fId]) {
+                bancoMap[fId] = {
+                    extras: ajustesMap[fId].pos,
+                    negativos: ajustesMap[fId].neg
+                };
+            }
         });
 
         function formatarSaldo(min) {

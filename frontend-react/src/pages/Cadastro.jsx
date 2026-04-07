@@ -18,10 +18,12 @@ const Cadastro = () => {
     const [tipo, setTipo] = useState('');
     const [loading, setLoading] = useState(false);
     const [funcionarios, setFuncionarios] = useState([]);
+    const [mostrarInativos, setMostrarInativos] = useState(false);
 
     const fetchFuncionarios = async () => {
         try {
-            const response = await axios.get('/funcionarios');
+            const url = mostrarInativos ? '/funcionarios?todos=1' : '/funcionarios';
+            const response = await axios.get(url);
             setFuncionarios(response.data);
         } catch (error) {
             console.error('Erro ao buscar lista de funcionários:', error);
@@ -30,7 +32,7 @@ const Cadastro = () => {
 
     useEffect(() => {
         fetchFuncionarios();
-    }, []);
+    }, [mostrarInativos]);
 
     const handleCadastro = async (e) => {
         e.preventDefault();
@@ -167,7 +169,18 @@ const Cadastro = () => {
 
             {/* Lista de Funcionários Cadastrados */}
             <div className="bg-brand-surface border border-brand-border rounded-2xl p-8 shadow-2xl relative overflow-hidden group">
-                <h3 className="text-xl font-black text-brand-text mb-6">Funcionários Cadastrados</h3>
+                <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-xl font-black text-brand-text">Gestão de Colaboradores</h3>
+                    <div className="flex items-center gap-3 bg-brand-bg/50 px-4 py-2 rounded-xl border border-brand-border">
+                        <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Exibir Inativos</span>
+                        <button 
+                            onClick={() => setMostrarInativos(!mostrarInativos)}
+                            className={`w-10 h-5 rounded-full p-1 transition-colors duration-300 ${mostrarInativos ? 'bg-brand-primary' : 'bg-brand-muted/30'}`}
+                        >
+                            <div className={`w-3 h-3 bg-white rounded-full transition-transform duration-300 ${mostrarInativos ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -175,6 +188,8 @@ const Cadastro = () => {
                                 <th className="px-4 py-3 font-black">ID</th>
                                 <th className="px-4 py-3 font-black">Nome Completo</th>
                                 <th className="px-4 py-3 font-black">Tipo de Contrato</th>
+                                <th className="px-4 py-3 font-black text-center">Status</th>
+                                <th className="px-4 py-3 font-black text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-brand-border/30">
@@ -184,6 +199,19 @@ const Cadastro = () => {
                                         <td className="px-4 py-4 text-xs font-bold text-brand-muted">{f.id}</td>
                                         <td className="px-4 py-4 text-sm font-black text-brand-text">{f.nome}</td>
                                         <td className="px-4 py-4 text-xs font-bold text-brand-primary">{f.tipo}</td>
+                                        <td className="px-4 py-4 text-center">
+                                            <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-full border tracking-widest ${f.ativo !== false ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                                                {f.ativo !== false ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 text-right">
+                                            <button 
+                                                onClick={() => navigate(`/funcionario?id=${f.id}`)}
+                                                className="text-[10px] font-black text-brand-primary hover:text-brand-accent uppercase tracking-widest"
+                                            >
+                                                Ver Detalhes
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             ) : (

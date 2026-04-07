@@ -49,6 +49,8 @@ try {
     const logRoutes = require("../routes/log.routes");
     const iaRoutes = require("../routes/ia.routes");
     const authRoutes = require("../routes/auth.routes");
+    const comentariosRoutes = require("../routes/comentarios.routes");
+    const ajustesRoutes = require("../routes/ajustes.routes");
     const { authMiddleware, authorizeRoles, Role } = require("../middlewares/auth.middleware");
 
     app.use("/auth", authRoutes);
@@ -58,6 +60,8 @@ try {
     app.use("/resumo",       authMiddleware, resumoRoutes);
     app.use("/logs",         authMiddleware, authorizeRoles(Role.ADMIN), logRoutes);
     app.use("/ia",           authMiddleware, iaRoutes);
+    app.use("/comentarios",  authMiddleware, comentariosRoutes);
+    app.use("/ajustes",     authMiddleware, ajustesRoutes);
     
     console.log("✓ Todas as rotas carregadas com sucesso");
 } catch (error) {

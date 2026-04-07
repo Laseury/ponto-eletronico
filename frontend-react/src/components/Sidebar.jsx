@@ -36,7 +36,7 @@ const SidebarLink = ({ to, icon: Icon, label }) => (
   </NavLink>
 );
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -58,7 +58,6 @@ const Sidebar = () => {
       { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
       { to: '/eventos-lote', icon: FileStack, label: 'Eventos em Lote' },
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
-      { to: '/usuarios', icon: Shield, label: 'Gestão de Acessos' },
     ],
     Gestor: [
       { to: '/dashboard-gestor', icon: LayoutDashboard, label: 'Meu Painel' },
@@ -77,7 +76,21 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="w-72 bg-brand-surface border-r border-brand-border flex flex-col h-screen sticky top-0 transition-colors duration-300">
+    <>
+      {/* Overlay para mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-brand-bg/80 backdrop-blur-sm z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      <aside className={`
+        fixed lg:sticky top-0 left-0 z-50
+        w-72 bg-brand-surface border-r border-brand-border flex flex-col h-screen 
+        transition-all duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
       {/* Header / Logo */}
       <div className="p-6 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -129,6 +142,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
+    </>
   );
 };
 
