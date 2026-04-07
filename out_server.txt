@@ -58,3 +58,5 @@ constructor() {
 
 ✅ SERVIDOR PRONTO PARA REQUISIÇÕES
 
+
+📋 SIGINT recebido, encerrando gracefully...

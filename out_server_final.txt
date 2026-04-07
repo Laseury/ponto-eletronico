@@ -1,0 +1,19 @@
+[dotenv@17.3.1] injecting env (7) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+✓ Todas as rotas carregadas com sucesso
+📂 Procurando frontend em: C:\ponto-eletronico\ponto-eletronico\frontend-react\dist
+✅ Frontend React encontrado! Servindo arquivos estáticos...
+
+============================================
+🚀 INICIANDO SERVIDOR
+============================================
+
+🔗 Testando conexão com banco de dados...
+✓ Conexão com banco de dados OK
+✓ Servidor escutando na porta 3000
+✓ Environment: development
+✓ Database URL: Configurado
+
+✅ SERVIDOR PRONTO PARA REQUISIÇÕES
+
