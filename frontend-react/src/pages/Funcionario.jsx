@@ -143,6 +143,20 @@ const Funcionario = () => {
 
   const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador'].includes(user?.perfil), [user]);
 
+  const formatDateSafe = (date, includeTime = false) => {
+    if (!date) return '—';
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '—';
+      if (includeTime) {
+        return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+      }
+      return d.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return '—';
+    }
+  };
+
   const fetchFuncionarioData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
@@ -607,7 +621,7 @@ const Funcionario = () => {
                       <div className="flex items-center gap-2 opacity-50">
                         <Clock size={10} className="text-brand-muted" />
                         <span className="text-[9px] text-brand-muted font-bold tracking-tight">
-                          {new Date(c.criadoEm).toLocaleDateString('pt-BR')} às {new Date(c.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {formatDateSafe(c.criadoEm, true)}
                         </span>
                       </div>
                     </div>
@@ -620,15 +634,7 @@ const Funcionario = () => {
                   <p className="text-sm text-brand-text/80 leading-relaxed">{c.texto}</p>
                   {c.dataReferencia && (
                     <div className="mt-3 inline-flex items-center gap-2 px-2 py-1 bg-brand-surface border border-brand-border rounded-lg text-[8px] font-black text-brand-muted uppercase tracking-widest">
-                      <Calendar size={10} /> Ref: {(() => {
-                        try {
-                          const d = new Date(c.dataReferencia);
-                          if (isNaN(d.getTime())) return 'Data Inválida';
-                          return d.toLocaleDateString('pt-BR');
-                        } catch (e) {
-                          return 'Data Inválida';
-                        }
-                      })()}
+                      <Calendar size={10} /> Ref: {formatDateSafe(c.dataReferencia)}
                     </div>
                   )}
                 </div>
@@ -652,7 +658,7 @@ const Funcionario = () => {
                       {a.valor}
                     </div>
                     <div>
-                      <p className="text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60 mb-1">{a.usuario?.nome} em {new Date(a.data).toLocaleDateString('pt-BR')}</p>
+                      <p className="text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60 mb-1">{a.usuario?.nome} em {formatDateSafe(a.data)}</p>
                       <p className="text-sm font-black text-brand-text italic">{a.motivo}</p>
                     </div>
                   </div>
@@ -672,7 +678,7 @@ const Funcionario = () => {
             <div className="p-6 border-b border-brand-border flex justify-between items-center">
               <h3 className="text-lg font-black text-brand-text flex items-center gap-3 italic">
                 <MessageSquare className="text-brand-primary" size={20} /> 
-                {commentData.data_referencia ? `Comentar Dia ${new Date(commentData.data_referencia+'T12:00:00').toLocaleDateString('pt-BR')}` : 'Adicionar Comentário'}
+                {commentData.data_referencia ? `Comentar Dia ${formatDateSafe(commentData.data_referencia)}` : 'Adicionar Comentário'}
               </h3>
               <button onClick={() => setComentarioModalOpen(false)} className="p-2 hover:bg-brand-bg rounded-lg text-brand-muted"><X size={20} /></button>
             </div>
