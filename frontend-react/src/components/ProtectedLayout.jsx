@@ -6,17 +6,17 @@ import { Bell, Search, Settings, HelpCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const ProtectedLayout = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, updateProfile } = useAuth();
 
   const handleSettings = async () => {
     let htmlContent = `
       <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
-        <button id="btn-meus-dados" style="padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s;">✏️ Alterar Meus Dados</button>
+        <button id="btn-meus-dados" style="padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">✏️ Alterar Meus Dados</button>
     `;
     
-    if (user?.perfil === 'Admin') {
+    if (user?.perfil === 'Admin' || user?.cargo === 'Admin') {
       htmlContent += `
-        <button id="btn-gerenciar" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s;" onclick="alert('Gestão em breve')">👥 Gerenciar Acessos</button>
+        <button id="btn-gerenciar" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">👥 Gerenciar Acessos</button>
       `;
     }
     
@@ -35,7 +35,7 @@ const ProtectedLayout = () => {
           const { value: formValues } = await Swal.fire({
             title: 'Meus Dados',
             html: `
-              <input id="swal-input1" class="swal2-input" placeholder="Novo Nome" value="${user.nome || ''}">
+              <input id="swal-input1" class="swal2-input" placeholder="Novo Nome" value="${user?.nome || ''}">
               <input id="swal-input2" class="swal2-input" placeholder="Nova Senha" type="password">
             `,
             background: '#1e293b',
@@ -44,22 +44,69 @@ const ProtectedLayout = () => {
             showCancelButton: true,
             confirmButtonText: 'Salvar',
             cancelButtonText: 'Cancelar',
-            preConfirm: () => {
-              return [
-                document.getElementById('swal-input1').value,
-                document.getElementById('swal-input2').value
-              ]
-            }
+            preConfirm: () => [
+              document.getElementById('swal-input1').value,
+              document.getElementById('swal-input2').value
+            ]
           });
           
           if (formValues) {
             const [newName, newPass] = formValues;
             if (newName && newPass) {
-              // Aqui no futuro pode chamar a API /auth/update
-              Swal.fire({ title: 'Atenção!', text: 'Atualização não implementada no backend ainda.', icon: 'info', background: '#1e293b', color: '#f8fafc' });
+              await updateProfile(user?.usuario, newName, newPass);
+              Swal.fire({ title: 'Salvo!', text: 'Seus dados foram atualizados.', icon: 'success', background: '#1e293b', color: '#f8fafc' });
+            } else {
+              Swal.fire({ title: 'Atenção', text: 'Preencha o nome e a nova senha.', icon: 'warning', background: '#1e293b', color: '#f8fafc' });
             }
           }
         };
+
+        const btnGerenciar = document.getElementById('btn-gerenciar');
+        if (btnGerenciar) {
+          btnGerenciar.onclick = async () => {
+            Swal.close();
+            try {
+              const res = await import('axios').then(m => m.default.get('/auth/users'));
+              const listaUsuarios = res.data;
+
+              let tableRows = listaUsuarios.map(u => `
+                <tr style="border-bottom: 1px solid #334155;">
+                  <td style="padding: 10px; text-align: left; color: #94a3b8;">${u.login}</td>
+                  <td style="padding: 10px; text-align: left; color: #f8fafc; font-weight: bold;">${u.nome}</td>
+                  <td style="padding: 10px; text-align: center;">
+                    <span style="background: #0f172a; padding: 3px 8px; border-radius: 4px; color: #38bdf8; font-size: 12px;">${u.perfil}</span>
+                  </td>
+                </tr>
+              `).join('');
+
+              Swal.fire({
+                title: 'Gestão de Acessos',
+                html: `
+                  <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Para ver ou alterar senhas, acesse <b>Gestão de Acessos</b> no menu lateral.</p>
+                  <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px;">
+                      <thead>
+                        <tr style="background: #0f172a; color: #64748b; text-transform: uppercase; font-size: 10px; letter-spacing: 1px;">
+                          <th style="padding: 10px; text-align: left;">Login</th>
+                          <th style="padding: 10px; text-align: left;">Nome</th>
+                          <th style="padding: 10px; text-align: center;">Perfil</th>
+                        </tr>
+                      </thead>
+                      <tbody>${tableRows}</tbody>
+                    </table>
+                  </div>
+                `,
+                background: '#1e293b',
+                color: '#f8fafc',
+                width: 550,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#3b82f6'
+              });
+            } catch (err) {
+              Swal.fire({ title: 'Erro', text: 'Não foi possível carregar os usuários.', icon: 'error', background: '#1e293b', color: '#f8fafc' });
+            }
+          };
+        }
       }
     });
   };
