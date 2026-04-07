@@ -61,7 +61,7 @@ model Usuario {
   nome          String       @db.VarChar(100)
   login         String       @unique @db.VarChar(50)
   senha         String       @db.VarChar(255)
-  perfil        String       @default("Funcionario") @db.VarChar(20) // Admin, Gestor, Funcionario
+  perfil        String       @default("RH") @db.VarChar(20) // Admin, RH, Gestor, Contador
   funcionarioId Int?         @unique @map("funcionario_id")
   criadoEm      DateTime?    @default(now()) @map("criado_em") @db.Timestamp(6)
   

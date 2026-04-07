@@ -49,14 +49,14 @@ try {
     const logRoutes = require("../routes/log.routes");
     const iaRoutes = require("../routes/ia.routes");
     const authRoutes = require("../routes/auth.routes");
-    const { authMiddleware } = require("../middlewares/auth.middleware");
+    const { authMiddleware, authorizeRoles, Role } = require("../middlewares/auth.middleware");
 
     app.use("/auth", authRoutes);
-    app.use("/funcionarios", authMiddleware, funcionariosRoutes);
+    app.use("/funcionarios", authMiddleware, authorizeRoles(Role.ADMIN, Role.RH, Role.GESTOR, Role.CONTADOR), funcionariosRoutes);
     app.use("/registros",    authMiddleware, registrosRoutes);
-    app.use("/relatorio",    authMiddleware, relatorioRoutes);
+    app.use("/relatorio",    authMiddleware, authorizeRoles(Role.ADMIN, Role.RH, Role.GESTOR, Role.CONTADOR), relatorioRoutes);
     app.use("/resumo",       authMiddleware, resumoRoutes);
-    app.use("/logs",         authMiddleware, logRoutes);
+    app.use("/logs",         authMiddleware, authorizeRoles(Role.ADMIN), logRoutes);
     app.use("/ia",           authMiddleware, iaRoutes);
     
     console.log("✓ Todas as rotas carregadas com sucesso");

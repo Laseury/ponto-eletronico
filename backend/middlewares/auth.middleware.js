@@ -19,6 +19,7 @@ const authMiddleware = (req, res, next) => {
 
 const Role = {
     ADMIN: "Admin",
+    RH: "RH",
     GESTOR: "Gestor",
     CONTADOR: "Contador",
     FUNCIONARIO: "Funcionario"

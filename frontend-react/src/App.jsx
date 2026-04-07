@@ -10,6 +10,7 @@ import LancamentoLote from './pages/LancamentoLote';
 import LancamentoEventoLote from './pages/LancamentoEventoLote';
 import Relatorio from './pages/Relatorio';
 import Logs from './pages/Logs';
+import Usuarios from './pages/Usuarios';
 import GestorDashboard from './pages/gestor/GestorDashboard';
 import RelatorioGestor from './pages/gestor/RelatorioGestor';
 import Contador from './pages/contador/Contador';
@@ -53,6 +54,7 @@ function App() {
             <Route path="/eventos-lote" element={<LancamentoEventoLote />} />
             <Route path="/relatorios" element={<Relatorio />} />
             <Route path="/logs" element={<Logs />} />
+            <Route path="/usuarios" element={<Usuarios />} />
             
             {/* Rotas de Gestor */}
             <Route path="/dashboard-gestor" element={<GestorDashboard />} />

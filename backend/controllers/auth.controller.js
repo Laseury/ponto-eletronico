@@ -76,6 +76,11 @@ class AuthController {
         try {
             const { nome, login, senha, perfil, funcionarioId } = req.body;
 
+            // RH não pode criar Admin
+            if (req.user.perfil === 'RH' && perfil === 'Admin') {
+                return res.status(403).json({ error: "RH não tem permissão para criar administradores." });
+            }
+
             const existe = await prisma.usuario.findUnique({ where: { login } });
             if (existe) {
                 return res.status(400).json({ error: "Login já cadastrado." });
@@ -100,6 +105,30 @@ class AuthController {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: "Erro ao criar usuário" });
+        }
+    }
+
+    static async getUsers(req, res) {
+        try {
+            const users = await prisma.usuario.findMany({
+                include: {
+                    funcionario: {
+                        select: { nome: true }
+                    }
+                },
+                orderBy: { criadoEm: 'desc' }
+            });
+
+            const usersFormatted = users.map(u => {
+                const userObj = { ...u };
+                delete userObj.senha;
+                return userObj;
+            });
+
+            return res.json(usersFormatted);
+        } catch (error) {
+            console.error("Erro ao listar usuários:", error);
+            return res.status(500).json({ error: "Erro ao buscar usuários" });
         }
     }
 }

@@ -12,7 +12,8 @@ import {
   LogOut,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -46,7 +47,17 @@ const Sidebar = () => {
       { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
       { to: '/eventos-lote', icon: FileStack, label: 'Eventos em Lote' },
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
+      { to: '/usuarios', icon: Shield, label: 'Gestão de Acessos' },
       { to: '/logs', icon: History, label: 'Logs do Sistema' },
+    ],
+    RH: [
+      { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/funcionarios', icon: Users, label: 'Funcionários' },
+      { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
+      { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
+      { to: '/eventos-lote', icon: FileStack, label: 'Eventos em Lote' },
+      { to: '/relatorios', icon: FileText, label: 'Relatórios' },
+      { to: '/usuarios', icon: Shield, label: 'Gestão de Acessos' },
     ],
     Gestor: [
       { to: '/dashboard-gestor', icon: LayoutDashboard, label: 'Meu Painel' },
@@ -57,9 +68,6 @@ const Sidebar = () => {
       { to: '/dashboard-contador', icon: LayoutDashboard, label: 'Painel Contador' },
       { to: '/relatorios', icon: FileText, label: 'Relatórios Fiscais' },
     ],
-    Funcionario: [
-      { to: '/funcionario', icon: History, label: 'Meu Ponto' }
-    ]
   };
 
   let currentMenu = menuItems[user?.perfil] || menuItems[user?.cargo] || [];
