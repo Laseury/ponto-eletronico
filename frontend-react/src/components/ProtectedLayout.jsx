@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import { Bell, Search, Settings, HelpCircle, Menu, X } from 'lucide-react';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const ProtectedLayout = () => {
   const { user, loading, updateProfile } = useAuth();
@@ -23,24 +24,20 @@ const ProtectedLayout = () => {
     
     htmlContent += `</div>`;
 
-    Swal.fire({
+    swalTheme({
       title: 'Configurações',
       html: htmlContent,
       showConfirmButton: false,
       showCloseButton: true,
-      background: '#1e293b',
-      color: '#f8fafc',
       didOpen: () => {
         document.getElementById('btn-meus-dados').onclick = async () => {
           Swal.close();
-          const { value: formValues } = await Swal.fire({
+          const { value: formValues } = await swalTheme({
             title: 'Meus Dados',
             html: `
               <input id="swal-input1" class="swal2-input" placeholder="Novo Nome" value="${user?.nome || ''}">
               <input id="swal-input2" class="swal2-input" placeholder="Nova Senha" type="password">
             `,
-            background: '#1e293b',
-            color: '#f8fafc',
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Salvar',
@@ -55,9 +52,9 @@ const ProtectedLayout = () => {
             const [newName, newPass] = formValues;
             if (newName && newPass) {
               await updateProfile(user?.usuario, newName, newPass);
-              Swal.fire({ title: 'Salvo!', text: 'Seus dados foram atualizados.', icon: 'success', background: '#1e293b', color: '#f8fafc' });
+              swalTheme({ title: 'Salvo!', text: 'Seus dados foram atualizados.', icon: 'success' });
             } else {
-              Swal.fire({ title: 'Atenção', text: 'Preencha o nome e a nova senha.', icon: 'warning', background: '#1e293b', color: '#f8fafc' });
+              swalTheme({ title: 'Atenção', text: 'Preencha o nome e a nova senha.', icon: 'warning' });
             }
           }
         };
@@ -80,7 +77,7 @@ const ProtectedLayout = () => {
                 </tr>
               `).join('');
 
-              Swal.fire({
+              swalTheme({
                 title: 'Gestão de Acessos',
                 html: `
                   <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Para ver ou alterar senhas, acesse <b>Gestão de Acessos</b> no menu lateral.</p>
@@ -97,14 +94,11 @@ const ProtectedLayout = () => {
                     </table>
                   </div>
                 `,
-                background: '#1e293b',
-                color: '#f8fafc',
                 width: 550,
-                confirmButtonText: 'Fechar',
-                confirmButtonColor: '#3b82f6'
+                confirmButtonText: 'Fechar'
               });
             } catch (err) {
-              Swal.fire({ title: 'Erro', text: 'Não foi possível carregar os usuários.', icon: 'error', background: '#1e293b', color: '#f8fafc' });
+              swalTheme({ title: 'Erro', text: 'Não foi possível carregar os usuários.', icon: 'error' });
             }
           };
         }
@@ -113,7 +107,7 @@ const ProtectedLayout = () => {
   };
 
   const handleShowEventSummary = () => {
-    Swal.fire({
+    swalTheme({
       title: 'Resumo dos Eventos',
       html: `
         <div style="text-align: left; font-size: 14px; line-height: 1.6; margin-top: 10px;">
@@ -127,7 +121,6 @@ const ProtectedLayout = () => {
         </div>
       `,
       icon: 'info',
-      confirmButtonColor: '#10b981',
       confirmButtonText: 'Entendi'
     });
   };

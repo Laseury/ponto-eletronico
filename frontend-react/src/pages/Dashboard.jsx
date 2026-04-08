@@ -12,8 +12,8 @@ import {
   TrendingUp,
   UserX
 } from 'lucide-react';
-import Swal from 'sweetalert2';
 import { useAuth } from '../context/AuthContext';
+import swalTheme from '../utils/swalTheme';
 
 const DashboardCard = ({ label, value, icon: Icon, color, trend }) => (
   <div className="bg-brand-surface border border-brand-border rounded-2xl p-4 hover:border-brand-primary/30 transition-all group shadow-md">
@@ -63,11 +63,10 @@ const Dashboard = () => {
       setFuncionarios(relatorioRes.data || []);
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error.response?.data || error.message);
-      Swal.fire({
+      swalTheme({
         title: 'Erro de Sincronização',
         text: 'Não foi possível carregar os dados completos do painel. Verifique a conexão com o servidor.',
-        icon: 'error',
-        confirmButtonColor: '#10b981'
+        icon: 'error'
       });
     } finally {
       setLoading(false);
@@ -86,23 +85,21 @@ const Dashboard = () => {
   });
 
   const handleInativar = (id, nome) => {
-    Swal.fire({
+    swalTheme({
       title: 'Tem certeza?',
       text: `Deseja inativar o funcionário ${nome}?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Sim, inativar!',
       cancelButtonText: 'Cancelar'
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await axios.patch(`/funcionarios/${id}/ativo`);
-          Swal.fire('Inativado!', 'Funcionário inativado com sucesso.', 'success');
+          swalTheme({ title: 'Inativado!', text: 'Funcionário inativado com sucesso.', icon: 'success' });
           fetchDashboardData();
         } catch (error) {
-          Swal.fire('Erro!', 'Não foi possível inativar o funcionário.', 'error');
+          swalTheme({ title: 'Erro!', text: 'Não foi possível inativar o funcionário.', icon: 'error' });
         }
       }
     });
@@ -115,14 +112,14 @@ const Dashboard = () => {
   };
 
   const saveQuickEdit = async () => {
-    if (!editNome) return Swal.fire('Erro', 'Nome é obrigatório', 'error');
+    if (!editNome) return swalTheme({ title: 'Erro', text: 'Nome é obrigatório', icon: 'error' });
     try {
       await axios.put(`/funcionarios/${editingFunc.id}`, { nome: editNome, tipo: editTipo });
-      Swal.fire('Sucesso', 'Funcionário atualizado!', 'success');
+      swalTheme({ title: 'Sucesso', text: 'Funcionário atualizado!', icon: 'success' });
       setEditingFunc(null);
       fetchDashboardData();
     } catch (error) {
-      Swal.fire('Erro', 'Não foi possível salvar.', 'error');
+      swalTheme({ title: 'Erro', text: 'Não foi possível salvar.', icon: 'error' });
     }
   };
 

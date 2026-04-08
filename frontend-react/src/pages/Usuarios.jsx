@@ -13,6 +13,7 @@ import {
   Fingerprint
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const Usuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -40,12 +41,10 @@ const Usuarios = () => {
             setFuncionarios(resFuncs.data);
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
-            Swal.fire({
+            swalTheme({
                 title: 'Erro!',
                 text: 'Não foi possível carregar a lista de usuários.',
-                icon: 'error',
-                background: '#1e293b',
-                color: '#f8fafc'
+                icon: 'error'
             });
         } finally {
             setLoading(false);
@@ -65,7 +64,7 @@ const Usuarios = () => {
         e.preventDefault();
         
         if (!formData.nome || !formData.login || !formData.senha) {
-            Swal.fire({ title: 'Atenção', text: 'Preencha todos os campos obrigatórios.', icon: 'warning', background: '#1e293b', color: '#f8fafc' });
+            swalTheme({ title: 'Atenção', text: 'Preencha todos os campos obrigatórios.', icon: 'warning' });
             return;
         }
 
@@ -76,12 +75,10 @@ const Usuarios = () => {
                 funcionarioId: formData.funcionarioId ? parseInt(formData.funcionarioId) : null
             });
             
-            Swal.fire({
+            swalTheme({
                 title: 'Sucesso!',
                 text: 'Usuário cadastrado com sucesso.',
-                icon: 'success',
-                background: '#1e293b',
-                color: '#f8fafc'
+                icon: 'success'
             });
             
             setFormData({ nome: '', login: '', senha: '', perfil: 'Funcionario', funcionarioId: '' });
@@ -89,7 +86,7 @@ const Usuarios = () => {
             fetchData();
         } catch (error) {
             const msg = error.response?.data?.error || 'Erro ao realizar cadastro.';
-            Swal.fire({ title: 'Erro!', text: msg, icon: 'error', background: '#1e293b', color: '#f8fafc' });
+            swalTheme({ title: 'Erro!', text: msg, icon: 'error' });
         } finally {
             setLoading(false);
         }

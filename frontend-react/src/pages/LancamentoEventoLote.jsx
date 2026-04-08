@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 import { useAuth } from '../context/AuthContext';
 
 const LancamentoEventoLote = () => {
@@ -42,11 +43,10 @@ const LancamentoEventoLote = () => {
     const handleLancar = async (e) => {
         e.preventDefault();
         if (!fId || !dataInicio || !dataFim || !evento) {
-            Swal.fire('Campos Incompletos', 'Por favor, preencha todos os campos obrigatórios.', 'warning');
-            return;
+            return swalTheme({ title: 'Atenção', text: 'Preencha todos os campos.', icon: 'warning' });
         }
 
-        const confirm = await Swal.fire({
+        const confirm = await swalTheme({
             title: 'Confirmar Lançamento por Período',
             html: `Deseja lançar <b>${evento}</b> para este colaborador entre <b>${new Date(dataInicio + 'T12:00:00').toLocaleDateString('pt-BR')}</b> e <b>${new Date(dataFim + 'T12:00:00').toLocaleDateString('pt-BR')}</b>?`,
             icon: 'question',
@@ -61,21 +61,21 @@ const LancamentoEventoLote = () => {
 
         setProcessing(true);
         try {
-            await axios.post('/registros/lote-evento', {
-                funcionario_ids: [parseInt(fId)],
-                data_inicio: dataInicio,
-                data_fim: dataFim,
-                evento: evento,
+            await axios.post('/registros/evento-lote', { 
+                funcionario_id: fId, 
+                dataInicio, 
+                dataFim, 
+                evento,
                 negativos_manual: evento === 'Falta' ? negativoManual : null
             }, {
                 headers: { 'x-usuario': user?.usuario || 'admin' }
             });
 
-            Swal.fire('Sucesso!', 'Os eventos foram lançados no período selecionado.', 'success');
-            navigate('/lancamento');
+            swalTheme({ title: 'Sucesso!', text: 'Evento lançado com sucesso.', icon: 'success' });
+            navigate('/dashboard');
         } catch (error) {
             const errorMsg = error.response?.data?.erro || 'Não foi possível completar o lançamento.';
-            Swal.fire('Erro!', errorMsg, 'error');
+            swalTheme({ title: 'Erro!', text: errorMsg, icon: 'error' });
         } finally {
             setProcessing(false);
         }

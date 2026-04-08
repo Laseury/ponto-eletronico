@@ -18,6 +18,7 @@ import {
   Users
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 import { useAuth } from '../context/AuthContext';
 
 const InfoCard = ({ label, value, color }) => (
@@ -147,7 +148,14 @@ const Funcionario = () => {
   const formatDateSafe = (date, includeTime = false) => {
     if (!date) return '—';
     try {
-      const d = new Date(date);
+      let d;
+      // Trata strings de data puras (YYYY-MM-DD) forçando meio-dia para evitar deslocamento de fuso
+      if (typeof date === 'string' && date.length === 10 && !date.includes('T')) {
+        d = new Date(date + 'T12:00:00');
+      } else {
+        d = new Date(date);
+      }
+
       if (isNaN(d.getTime())) return '—';
       if (includeTime) {
         return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -182,8 +190,8 @@ const Funcionario = () => {
       setComentarios(comRes.data);
       setAjustes(ajuRes.data);
     } catch (error) {
-      console.error('Erro ao buscar dados do funcionário:', error);
-      Swal.fire('Erro!', 'Não foi possível carregar os dados.', 'error');
+      console.error('Erro ao carregar dados:', error);
+      swalTheme({ title: 'Erro!', text: 'Não foi possível carregar os dados.', icon: 'error' });
     } finally {
       setLoading(false);
     }
@@ -244,7 +252,7 @@ const Funcionario = () => {
 
   const handleSaveRecord = async (formData) => {
     try {
-      await axios.post('/registros', {
+      await axios.put(`/registros/${selectedRecord.id}`, {
         funcionario_id: id,
         data: selectedRecord.data.substring(0, 10),
         ...formData
@@ -253,9 +261,9 @@ const Funcionario = () => {
       });
       setModalOpen(false);
       fetchFuncionarioData();
-      Swal.fire({ title: 'Sucesso!', text: 'Registro atualizado.', icon: 'success', timer: 1000, showConfirmButton: false });
+      swalTheme({ title: 'Sucesso!', text: 'Registro atualizado.', icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
-      Swal.fire('Erro!', 'Não foi possível salvar as alterações.', 'error');
+      swalTheme({ title: 'Erro!', text: 'Não foi possível salvar as alterações.', icon: 'error' });
     }
   };
 
@@ -269,14 +277,14 @@ const Funcionario = () => {
       setComentarioModalOpen(false);
       setCommentData({ texto: '', tipo: 'GERAL', data_referencia: null });
       fetchFuncionarioData();
-      Swal.fire({ title: 'Sucesso!', text: 'Comentário adicionado.', icon: 'success', timer: 1000, showConfirmButton: false });
+      swalTheme({ title: 'Sucesso!', text: 'Comentário adicionado.', icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
-      Swal.fire('Erro!', 'Não foi possível salvar o comentário.', 'error');
+      swalTheme({ title: 'Erro!', text: 'Não foi possível salvar o comentário.', icon: 'error' });
     }
   };
 
   const handleDeleteComment = async (comId) => {
-    const res = await Swal.fire({
+    const res = await swalTheme({
       title: 'Excluir comentário?',
       text: 'Esta ação não pode ser desfeita.',
       icon: 'warning',
@@ -288,16 +296,16 @@ const Funcionario = () => {
       try {
         await axios.delete(`/comentarios/${comId}`);
         fetchFuncionarioData();
-        Swal.fire('Excluído!', 'O comentário foi removido.', 'success');
+        swalTheme({ title: 'Excluído!', text: 'O comentário foi removido.', icon: 'success' });
       } catch (error) {
-        Swal.fire('Erro!', 'Não foi possível excluir.', 'error');
+        swalTheme({ title: 'Erro!', text: 'Não foi possível excluir.', icon: 'error' });
       }
     }
   };
 
   const handleAddAjuste = async () => {
-    if (!ajusteData.motivo || ajusteData.valor === '+00:00' || ajusteData.valor === '-00:00') {
-        return Swal.fire('Atenção', 'Informe um valor válido e o motivo.', 'warning');
+    if (!ajusteData.valor || !ajusteData.motivo) {
+        return swalTheme({ title: 'Atenção', text: 'Informe um valor válido e o motivo.', icon: 'warning' });
     }
     try {
       await axios.post('/ajustes', {
@@ -307,9 +315,9 @@ const Funcionario = () => {
       setAjusteModalOpen(false);
       setAjusteData({ valor: '+00:00', motivo: '' });
       fetchFuncionarioData();
-      Swal.fire({ title: 'Sucesso!', text: 'Ajuste de saldo realizado.', icon: 'success', timer: 1000, showConfirmButton: false });
+      swalTheme({ title: 'Sucesso!', text: 'Ajuste de saldo realizado.', icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
-      Swal.fire('Erro!', 'Não foi possível realizar o ajuste.', 'error');
+      swalTheme({ title: 'Erro!', text: 'Não foi possível realizar o ajuste.', icon: 'error' });
     }
   };
 
@@ -328,73 +336,71 @@ const Funcionario = () => {
       </div>
     `).join('');
 
-    Swal.fire({
+    swalTheme({
       title: 'Anotações do Dia',
       html: `<div style="margin-top: 15px;">${html}</div>`,
-      background: '#061d12',
-      color: '#e1e9e5',
       confirmButtonText: 'Fechar',
-      confirmButtonColor: '#10b981',
-      customClass: {
-        popup: 'rounded-[2rem] border border-brand-border'
-      }
     });
   };
 
   const generatePDF = () => {
-    Swal.fire('Exportação', 'Gerando arquivo de impressão...', 'info');
-    const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    const labelMes = MESES[mes - 1] + " " + ano;
-    let rowsHtml = '';
-    const daysInMonth = new Date(ano, mes, 0).getDate();
-    const mapa = {};
-    registros.forEach(r => mapa[r.data.substring(0, 10)] = r);
-    for (let d = 1; d <= daysInMonth; d++) {
-      const chave = `${ano}-${mes.toString().padStart(2, '0')}-${d.toString().padStart(2,'0')}`;
-      const r = mapa[chave] || {};
-      rowsHtml += `
-        <tr>
-          <td>${d.toString().padStart(2,'0')}/${mes.toString().padStart(2,'0')}/${ano}</td>
-          <td>${r.e1?.substring(0,5) || '' }</td><td>${r.s1?.substring(0,5) || '' }</td>
-          <td>${r.e2?.substring(0,5) || '' }</td><td>${r.s2?.substring(0,5) || '' }</td>
-          <td>${r.e3?.substring(0,5) || '' }</td><td>${r.s3?.substring(0,5) || '' }</td>
-          <td>${r.total || ''}</td>
-          <td>${r.noturno?.substring(0,5) || ''}</td>
-          <td style="color: #2e7d32">${r.extras || ''}</td>
-          <td style="color: #d32f2f">${r.negativos || ''}</td>
-          <td>${r.evento || ''}</td>
-        </tr>
+    try {
+      swalTheme({ title: 'Exportação', text: 'Gerando arquivo de impressão...', icon: 'info', timer: 2000, showConfirmButton: false });
+      const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      const labelMes = MESES[mes - 1] + " " + ano;
+      let rowsHtml = '';
+      const daysInMonth = new Date(ano, mes, 0).getDate();
+      const mapa = {};
+      registros.forEach(r => mapa[r.data.substring(0, 10)] = r);
+      for (let d = 1; d <= daysInMonth; d++) {
+        const chave = `${ano}-${mes.toString().padStart(2, '0')}-${d.toString().padStart(2,'0')}`;
+        const r = mapa[chave] || {};
+        rowsHtml += `
+          <tr>
+            <td>${d.toString().padStart(2,'0')}/${mes.toString().padStart(2,'0')}/${ano}</td>
+            <td>${r.e1?.substring(0,5) || '' }</td><td>${r.s1?.substring(0,5) || '' }</td>
+            <td>${r.e2?.substring(0,5) || '' }</td><td>${r.s2?.substring(0,5) || '' }</td>
+            <td>${r.e3?.substring(0,5) || '' }</td><td>${r.s3?.substring(0,5) || '' }</td>
+            <td>${r.total || ''}</td>
+            <td>${r.noturno?.substring(0,5) || ''}</td>
+            <td style="color: #2e7d32">${r.extras || ''}</td>
+            <td style="color: #d32f2f">${r.negativos || ''}</td>
+            <td>${r.evento || ''}</td>
+          </tr>
+        `;
+      }
+      const htmlContent = `
+        <html><head><style>
+          body { font-family: sans-serif; font-size: 10px; color: #333; margin: 20px; }
+          .hdr { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+          .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+          .card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9; }
+          table { width: 100%; border-collapse: collapse; }
+          th { background: #333; color: #fff; padding: 5px; font-size: 9px; }
+          td { border: 1px solid #ddd; padding: 4px; text-align: center; }
+        </style></head><body>
+          <div class="hdr"><h1>VISO HOTEL — FICHA DE PONTO</h1><p>Colaborador: ${funcionario?.nome} | Período: ${labelMes}</p></div>
+          <div class="grid">
+            <div class="card"><strong>Tipo:</strong><br>${funcionario?.tipo}</div>
+            <div class="card"><strong>Saldo Anterior:</strong><br>${relatorio?.saldo_anterior || '00:00'}</div>
+            <div class="card"><strong>Faltas no Mês:</strong><br>${analytics.totalFaltas}</div>
+            <div class="card"><strong>Saldo do Mês:</strong><br>${analytics.saldo}</div>
+            <div class="card"><strong>Banco Consolidado:</strong><br>${relatorio?.banco_horas || analytics.saldo}</div>
+          </div>
+          <table><thead><tr><th>Data</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>E3</th><th>S3</th><th>Total</th><th>Not.</th><th>Ext.</th><th>Neg.</th><th>Evento</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+        </body></html>
       `;
+      const win = window.open('', '_blank');
+      win.document.write(htmlContent); win.document.close();
+      win.onload = () => win.print();
+    } catch (error) {
+      swalTheme({ title: 'Erro!', text: 'Ocorreu um problema ao gerar o PDF.', icon: 'error' });
     }
-    const htmlContent = `
-      <html><head><style>
-        body { font-family: sans-serif; font-size: 10px; color: #333; margin: 20px; }
-        .hdr { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #333; color: #fff; padding: 5px; font-size: 9px; }
-        td { border: 1px solid #ddd; padding: 4px; text-align: center; }
-      </style></head><body>
-        <div class="hdr"><h1>VISO HOTEL — FICHA DE PONTO</h1><p>Colaborador: ${funcionario?.nome} | Período: ${labelMes}</p></div>
-        <div class="grid">
-          <div class="card"><strong>Tipo:</strong><br>${funcionario?.tipo}</div>
-          <div class="card"><strong>Saldo Anterior:</strong><br>${relatorio?.saldo_anterior || '00:00'}</div>
-          <div class="card"><strong>Faltas no Mês:</strong><br>${analytics.totalFaltas}</div>
-          <div class="card"><strong>Saldo do Mês:</strong><br>${analytics.saldo}</div>
-          <div class="card"><strong>Banco Consolidado:</strong><br>${relatorio?.banco_horas || analytics.saldo}</div>
-        </div>
-        <table><thead><tr><th>Data</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>E3</th><th>S3</th><th>Total</th><th>Not.</th><th>Ext.</th><th>Neg.</th><th>Evento</th></tr></thead><tbody>${rowsHtml}</tbody></table>
-      </body></html>
-    `;
-    const win = window.open('', '_blank');
-    win.document.write(htmlContent); win.document.close();
-    win.onload = () => win.print();
   };
 
   const handleToggleAtivo = async () => {
     const action = funcionario?.ativo !== false ? 'inativar' : 'ativar';
-    const res = await Swal.fire({
+    const res = await swalTheme({
       title: `Confirmar ${action}?`,
       text: `Deseja realmente ${action} este colaborador?`,
       icon: 'question',
@@ -407,9 +413,9 @@ const Funcionario = () => {
       try {
         await axios.patch(`/funcionarios/${id}/ativo`);
         fetchFuncionarioData();
-        Swal.fire('Sucesso!', `Colaborador ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso.`, 'success');
+        swalTheme({ title: 'Sucesso!', text: `Colaborador ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso.`, icon: 'success' });
       } catch (error) {
-        Swal.fire('Erro!', 'Não foi possível alterar o status.', 'error');
+        swalTheme({ title: 'Erro!', text: 'Não foi possível alterar o status.', icon: 'error' });
       }
     }
   };
@@ -581,9 +587,14 @@ const Funcionario = () => {
                 <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl"><p className="text-[10px] font-black text-amber-500 uppercase mb-2 flex items-center gap-2"><Sun size={12} /> Diurnas</p><p className="text-xl font-black text-brand-text">{analytics.diurno}</p></div>
                 <div className="bg-brand-accent/10 border border-brand-accent/20 p-4 rounded-2xl"><p className="text-[10px] font-black text-brand-accent uppercase mb-2">Fator Legal</p><p className="text-xl font-black text-brand-text">{analytics.noturnoComFator}</p></div>
               </div>
-              <div className="flex items-center justify-between px-8 py-6 bg-brand-bg/60 rounded-[2rem] border border-brand-border shadow-2xl">
-                <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Base p/ Pagamento (Diário + Not. Fator)</span>
-                <span className="text-2xl font-black text-brand-text">{analytics.noturnoComFator}</span>
+              <div className="flex flex-col gap-4 px-8 py-6 bg-brand-bg/60 rounded-[2rem] border border-brand-border shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Base p/ Pagamento (Diário + Not. Fator)</span>
+                  <span className="text-2xl font-black text-brand-text">{analytics.noturnoComFator}</span>
+                </div>
+                <div className="mt-2 text-[8px] font-black text-brand-muted/40 uppercase tracking-[0.1em] border-t border-brand-border pt-4 text-center leading-relaxed">
+                  * Fator Legal (1.1428): Coeficiente que converte horas cronológicas em horas noturnas de 52m30s para fins de pagamento (Art. 73 CLT).
+                </div>
               </div>
            </div>
         )}

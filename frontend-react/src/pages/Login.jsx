@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import swalTheme from '../utils/swalTheme';
 
 const Login = () => {
   const [usuario, setUsuario] = useState('');

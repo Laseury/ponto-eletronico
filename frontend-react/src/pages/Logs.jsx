@@ -11,7 +11,9 @@ import {
   History,
   ArrowRight
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const Logs = () => {
     const [logs, setLogs] = useState([]);
@@ -33,7 +35,7 @@ const Logs = () => {
             setLogs(res.data);
         } catch (error) {
             console.error('Erro ao buscar logs:', error);
-            Swal.fire('Erro', 'Não foi possível carregar os logs de auditoria.', 'error');
+            swalTheme({ title: 'Erro', text: 'Não foi possível carregar os logs de auditoria.', icon: 'error' });
         } finally {
             setLoading(false);
         }

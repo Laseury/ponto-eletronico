@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const LancamentoLote = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ const LancamentoLote = () => {
                 setLoading(false);
             })
             .catch(() => {
-                Swal.fire('Erro', 'Não foi possível carregar a lista de funcionários.', 'error');
+                swalTheme({ title: 'Erro', text: 'Não foi possível carregar a lista de funcionários.', icon: 'error' });
                 setLoading(false);
             });
     }, []);
@@ -55,11 +56,11 @@ const LancamentoLote = () => {
 
     const handleLancarLote = async () => {
         if (!dataInicio || !dataFim || !evento || selecionados.length === 0) {
-            Swal.fire('Atenção', 'Selecione as datas, o evento e ao menos um funcionário.', 'warning');
+            swalTheme({ title: 'Atenção', text: 'Selecione as datas, o evento e ao menos um funcionário.', icon: 'warning' });
             return;
         }
 
-        const confirm = await Swal.fire({
+        const confirm = await swalTheme({
             title: 'Confirmar Lançamento',
             html: `Deseja lançar "${evento}" para ${selecionados.length} funcionário(s) entre <br><b>${new Date(dataInicio + 'T12:00:00').toLocaleDateString('pt-BR')}</b> e <b>${new Date(dataFim + 'T12:00:00').toLocaleDateString('pt-BR')}</b>?`,
             icon: 'question',
@@ -80,10 +81,10 @@ const LancamentoLote = () => {
                 negativos_manual: evento === 'Falta' ? negativoManual : null
             });
             
-            Swal.fire('Sucesso!', 'Lançamentos realizados com sucesso.', 'success');
+            swalTheme({ title: 'Sucesso!', text: 'Lançamentos realizados com sucesso.', icon: 'success' });
             setSelecionados([]);
         } catch (error) {
-            Swal.fire('Erro!', 'Ocorreu um erro ao processar alguns lançamentos.', 'error');
+            swalTheme({ title: 'Erro!', text: 'Ocorreu um erro ao processar alguns lançamentos.', icon: 'error' });
         } finally {
             setProcessing(false);
         }

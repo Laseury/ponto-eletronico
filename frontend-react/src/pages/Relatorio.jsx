@@ -10,10 +10,12 @@ import {
   AlertCircle,
   ExternalLink,
   Filter,
-  CheckCircle2
+  CheckCircle2,
+  FileText
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const Relatorio = () => {
     const navigate = useNavigate();
@@ -31,7 +33,7 @@ const Relatorio = () => {
             const res = await axios.get(`/relatorio/${mes}/${ano}?valor_hora=${vh}`);
             setDados(res.data);
         } catch (error) {
-            Swal.fire('Erro', 'Não foi possível carregar o relatório mensal.', 'error');
+            swalTheme({ title: 'Erro', text: 'Não foi possível carregar o relatório mensal.', icon: 'error' });
         } finally {
             setLoading(false);
         }

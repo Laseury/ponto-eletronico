@@ -13,7 +13,9 @@ import {
   Info,
   ExternalLink
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 import { useAuth } from '../context/AuthContext';
 
 const RevisaoIAModal = ({ isOpen, onClose, registros, funcionarioId, onComplete }) => {
@@ -74,7 +76,7 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, funcionarioId, onComplete 
     }
     
     setSaving(false);
-    Swal.fire('Concluído!', 'Os registros revisados foram salvos.', 'success');
+    swalTheme({ title: 'Concluído!', text: 'Os registros revisados foram salvos.', icon: 'success' });
     setTimeout(() => {
       onComplete();
       onClose();
@@ -201,6 +203,7 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, funcionarioId, onComplete 
 
 const Lancamento = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const fileInputRef = useRef();
     
     const [funcionarios, setFuncionarios] = useState([]);
@@ -226,8 +229,8 @@ const Lancamento = () => {
                 // filtra apenas os que tem alguma hora trabalhada ou evento
                 setRegistrosCadastrados((res.data || []).filter(r => r.e1 || r.evento || r.extras || r.negativos));
             } catch (error) {
-                console.error('Erro ao buscar registros:', error);
-                setRegistrosCadastrados([]);
+                console.error('Erro ao carregar dados:', error);
+                swalTheme({ title: 'Erro!', text: 'Não foi possível carregar os dados.', icon: 'error' });
             }
         } else {
             setRegistrosCadastrados([]);
@@ -239,7 +242,9 @@ const Lancamento = () => {
     }, [fId, mesSelect, anoSelect]);
 
     useEffect(() => {
-        axios.get('/funcionarios').then(res => setFuncionarios(res.data));
+        axios.get('/funcionarios')
+            .then(res => setFuncionarios(res.data))
+            .catch(() => swalTheme({ title: 'Erro', text: 'Não foi possível carregar a lista de funcionários.', icon: 'error' }));
         
         // Inicializar com mês/ano atual
         const agora = new Date();
@@ -257,7 +262,12 @@ const Lancamento = () => {
 
     const handleLancar = async () => {
         if (!fId || !mesAno || !dia) {
-            Swal.fire('Ops!', 'Preencha o funcionário, mês e dia.', 'warning');
+            swalTheme({ title: 'Ops!', text: 'Preencha o funcionário, mês e dia.', icon: 'warning' });
+            return;
+        }
+
+        if (!horarios.e1 && !evento) {
+            swalTheme({ title: 'Atenção', text: 'Preencha ao menos a primeira entrada ou selecione um evento.', icon: 'warning' });
             return;
         }
 
@@ -268,7 +278,7 @@ const Lancamento = () => {
             const checkRes = await axios.get(`/registros/verificar?funcionario_id=${fId}&data=${dataCompleta}`);
             
             if (checkRes.data.existe) {
-                const result = await Swal.fire({
+                const result = await swalTheme({
                     title: 'Registro Existente!',
                     text: `Já existe um apontamento para o dia ${dia}. Deseja sobrescrever?`,
                     icon: 'question',
@@ -291,12 +301,12 @@ const Lancamento = () => {
                 headers: { 'x-usuario': user?.usuario || 'anonimo' }
             });
 
-            Swal.fire('Sucesso!', 'Apontamento registrado com sucesso.', 'success');
+            swalTheme({ title: 'Sucesso!', text: 'Apontamento registrado com sucesso.', icon: 'success' });
             // Reset dia para facilitar o próximo
             setDia('');
             fetchRegistrosCadastrados();
         } catch (error) {
-            Swal.fire('Erro!', 'Não foi possível salvar o registro.', 'error');
+            swalTheme({ title: 'Erro!', text: 'Não foi possível salvar o registro.', icon: 'error' });
         }
     };
 
@@ -305,9 +315,7 @@ const Lancamento = () => {
         if (!file) return;
 
         if (!fId || !mesAno) {
-            Swal.fire('Atenção!', 'Selecione o funcionário e o mês antes de carregar o arquivo.', 'warning');
-            e.target.value = '';
-            return;
+            return swalTheme({ title: 'Atenção!', text: 'Selecione o funcionário e o mês antes de carregar o arquivo.', icon: 'warning' });
         }
 
         const formData = new FormData();
@@ -321,7 +329,8 @@ const Lancamento = () => {
             setRegistrosIA(res.data.registros || []);
             setModalIAOpen(true);
         } catch (error) {
-            Swal.fire('Erro IA', 'Não conseguimos analisar este arquivo. Verifique a qualidade e tente novamente.', 'error');
+            console.error("Erro IA:", error);
+            swalTheme({ title: 'Erro IA', text: 'Não conseguimos analisar este arquivo. Verifique a qualidade e tente novamente.', icon: 'error' });
         } finally {
             setProcessingIA(false);
             e.target.value = '';

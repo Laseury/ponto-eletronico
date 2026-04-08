@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const AuthContext = createContext();
 
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
 
       setUser(normalizedUser);
 
-      Swal.fire({
+      swalTheme({
         title: 'Bem-vindo!',
         text: `Olá, ${userData.nome}`,
         icon: 'success',
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error(error);
-      Swal.fire({
+      swalTheme({
         title: 'Erro!',
         text: error.response?.data?.error || 'Usuário ou senha inválidos!',
         icon: 'error'

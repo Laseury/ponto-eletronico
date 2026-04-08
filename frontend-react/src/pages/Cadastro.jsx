@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import swalTheme from '../utils/swalTheme';
 
 const Cadastro = () => {
     const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Cadastro = () => {
     const handleCadastro = async (e) => {
         e.preventDefault();
         if (!nome || !tipo) {
-            Swal.fire({
+            swalTheme({
                 title: 'Campos Incompletos',
                 text: 'Por favor, preencha o nome e o tipo de contrato.',
                 icon: 'warning'
@@ -49,7 +50,7 @@ const Cadastro = () => {
         try {
             const response = await axios.post('/funcionarios', { nome, tipo });
             
-            Swal.fire({
+            swalTheme({
                 title: 'Sucesso!',
                 text: `Funcionário ${response.data.nome} cadastrado com sucesso.`,
                 icon: 'success',
@@ -61,7 +62,7 @@ const Cadastro = () => {
             fetchFuncionarios();
         } catch (error) {
             console.error('Erro ao cadastrar:', error);
-            Swal.fire({
+            swalTheme({
                 title: 'Erro!',
                 text: 'Não foi possível salvar o cadastro.',
                 icon: 'error'
