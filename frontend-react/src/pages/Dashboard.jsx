@@ -80,7 +80,7 @@ const Dashboard = () => {
   const funcionariosFiltrados = funcionarios.filter(f => {
     const bateNome = f.nome.toLowerCase().includes(filtroNome.toLowerCase());
     const bateTipo = !filtroTipo || f.tipo === filtroTipo;
-    const bateStatus = mostrarInativos || f.ativo !== false;
+    const bateStatus = (f.ativo !== false) === !mostrarInativos;
     return bateNome && bateTipo && bateStatus;
   });
 
@@ -206,12 +206,12 @@ const Dashboard = () => {
               onClick={() => setMostrarInativos(!mostrarInativos)}
               className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl border transition-all text-sm font-black uppercase tracking-[0.1em] shadow-lg ${
                 mostrarInativos 
-                  ? 'bg-brand-primary border-brand-primary text-white shadow-brand-primary/40' 
+                  ? 'bg-rose-500 border-rose-500 text-white shadow-rose-500/40' 
                   : 'bg-brand-bg border-brand-border text-brand-muted hover:text-brand-text hover:bg-brand-surface'
               }`}
             >
               <UserX size={18} /> 
-              {mostrarInativos ? 'Ativos' : 'Inativos'}
+              {mostrarInativos ? 'Ver Ativos' : 'Ver Inativos'}
             </button>
           </div>
         </div>

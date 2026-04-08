@@ -25,7 +25,7 @@ async function criarComentario(req, res) {
         });
 
         // Registrar Log de Auditoria
-        await prisma.LogRegistro.create({
+        await prisma.logRegistro.create({
           data: {
             funcionarioId: parseInt(funcionario_id),
             usuario: req.user?.login || "Sistema",
@@ -99,7 +99,7 @@ async function excluirComentario(req, res) {
         });
 
         // Registrar Log de Auditoria
-        await prisma.LogRegistro.create({
+        await prisma.logRegistro.create({
           data: {
             funcionarioId: comentario.funcionarioId,
             usuario: req.user?.login || "Sistema",

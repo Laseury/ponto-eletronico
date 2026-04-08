@@ -87,7 +87,7 @@ async function alternarAtivo(req, res) {
     const novoAtivo = !atual.ativo;
     
     // Registrar Log de Auditoria
-    await prisma.LogRegistro.create({
+    await prisma.logRegistro.create({
       data: {
         funcionarioId: id,
         usuario: req.user?.login || "Sistema",
