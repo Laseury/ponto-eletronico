@@ -149,11 +149,14 @@ const Funcionario = () => {
     if (!date) return '—';
     try {
       let d;
-      // Trata strings de data puras (YYYY-MM-DD) forçando meio-dia para evitar deslocamento de fuso
-      if (typeof date === 'string' && date.length === 10 && !date.includes('T')) {
-        d = new Date(date + 'T12:00:00');
+      const dateStr = typeof date === 'string' ? date : new Date(date).toISOString();
+      
+      if (!includeTime) {
+        // Para datas puras, pegamos apenas YYYY-MM-DD e forçamos meio-dia para evitar deslocamento de fuso
+        const pureDate = dateStr.substring(0, 10);
+        d = new Date(pureDate + 'T12:00:00');
       } else {
-        d = new Date(date);
+        d = new Date(dateStr);
       }
 
       if (isNaN(d.getTime())) return '—';
