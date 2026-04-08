@@ -133,6 +133,7 @@ const Logs = () => {
                         <option value="">Todas as Ações</option>
                         <option value="criacao">Criação</option>
                         <option value="edicao">Edição</option>
+                        <option value="exclusao">Exclusão</option>
                     </select>
                 </div>
 

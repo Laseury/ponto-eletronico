@@ -24,6 +24,18 @@ async function criarComentario(req, res) {
             }
         });
 
+        // Registrar Log de Auditoria
+        await prisma.LogRegistro.create({
+          data: {
+            funcionarioId: parseInt(funcionario_id),
+            usuario: req.user?.login || "Sistema",
+            acao: "criacao",
+            campoAlterado: "comentario",
+            valorNovo: texto.substring(0, 50) + (texto.length > 50 ? "..." : ""),
+            dataRegistro: data_referencia ? new Date(data_referencia) : null
+          }
+        });
+
         res.status(201).json(comentario);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
@@ -84,6 +96,18 @@ async function excluirComentario(req, res) {
 
         await prisma.comentario.delete({
             where: { id: parseInt(id) }
+        });
+
+        // Registrar Log de Auditoria
+        await prisma.LogRegistro.create({
+          data: {
+            funcionarioId: comentario.funcionarioId,
+            usuario: req.user?.login || "Sistema",
+            acao: "exclusao",
+            campoAlterado: "comentario",
+            valorAnterior: comentario.texto.substring(0, 50) + (comentario.texto.length > 50 ? "..." : ""),
+            dataRegistro: comentario.dataReferencia
+          }
         });
 
         res.json({ mensagem: "Comentário excluído com sucesso" });

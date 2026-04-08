@@ -17,7 +17,7 @@ async function listarLogs(req, res) {
             const dataInicial = new Date(ano, mes - 1, 1);
             const dataFinal = new Date(ano, mes, 1); // dia 1 do proximo mes
 
-            where.dataRegistro = {
+            where.criadoEm = {
                 gte: dataInicial,
                 lt: dataFinal
             };

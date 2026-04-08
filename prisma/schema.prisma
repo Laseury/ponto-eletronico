@@ -25,7 +25,7 @@ model Funcionario {
 model LogRegistro {
   id             Int       @id @default(autoincrement())
   funcionarioId  Int       @map("funcionario_id")
-  dataRegistro   DateTime  @map("data_registro") @db.Date
+  dataRegistro   DateTime? @map("data_registro") @db.Date
   usuario        String    @db.VarChar(50)
   acao           String    @db.VarChar(20)
   campoAlterado  String?   @map("campo_alterado") @db.VarChar(20)

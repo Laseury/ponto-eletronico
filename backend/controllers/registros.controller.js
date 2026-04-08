@@ -270,6 +270,18 @@ async function salvarEventoLote(req, res) {
                             noturno: '00:00'
                         }
                     });
+
+                    // Registrar Log de Auditoria para cada dia do lote
+                    await tx.logRegistro.create({
+                        data: {
+                            funcionarioId: f_id,
+                            dataRegistro: new Date(curr),
+                            usuario: usuario,
+                            acao: "edicao",
+                            campoAlterado: "evento",
+                            valorNovo: evento
+                        }
+                    });
                     
                     // Incrementa dia
                     curr.setDate(curr.getDate() + 1);
@@ -285,12 +297,16 @@ async function salvarEventoLote(req, res) {
 
 // Auxiliar para LOGS
 async function registrarLog(funcionario_id, data, usuario, registro, foiCriacao) {
+    // Para simplificar, registramos uma ação de edição de registro de ponto.
+    // Em sistemas mais complexos, compararíamos o registro antigo com o novo para capturar o campo exato.
     await prisma.logRegistro.create({
         data: {
             funcionarioId: funcionario_id,
             dataRegistro: new Date(data),
             usuario: usuario,
-            acao: foiCriacao ? "criacao" : "edicao"
+            acao: foiCriacao ? "criacao" : "edicao",
+            campoAlterado: "dia",
+            valorNovo: registro.evento || "Horários"
         }
     });
 }
