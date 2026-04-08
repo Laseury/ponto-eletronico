@@ -14,7 +14,8 @@ import {
   PlusCircle,
   History,
   Trash2,
-  Save
+  Save,
+  Users
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '../context/AuthContext';
@@ -615,7 +616,7 @@ const Funcionario = () => {
                   <div className="flex justify-between items-start mb-3 border-b border-brand-border/30 pb-2">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        <User size={12} className="text-brand-primary" />
+                        <Users size={12} className="text-brand-primary" />
                         <span className="text-[10px] font-black text-brand-text uppercase tracking-widest">{c.usuario?.nome || 'Sistema'}</span>
                       </div>
                       <div className="flex items-center gap-2 opacity-50">

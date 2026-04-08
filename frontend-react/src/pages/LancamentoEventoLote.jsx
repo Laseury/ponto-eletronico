@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   CalendarRange, 
-  User, 
+  Users, 
   ArrowLeft, 
   Save, 
   AlertCircle,
@@ -110,7 +110,7 @@ const LancamentoEventoLote = () => {
                 <form onSubmit={handleLancar} className="space-y-8 relative z-10">
                     <div className="space-y-4">
                         <label className="flex items-center gap-2 text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-40">
-                            <User size={14} className="text-brand-primary" /> 1. Colaborador
+                            <Users size={14} className="text-brand-primary" /> 1. Colaborador
                         </label>
                         <select 
                             value={fId}

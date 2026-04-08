@@ -4,7 +4,7 @@ import {
   Activity, 
   Search, 
   Filter, 
-  User, 
+  Users, 
   Clock, 
   Calendar, 
   AlertCircle,
@@ -184,7 +184,7 @@ const Logs = () => {
                                     </td>
                                     <td className="px-6 py-6">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-brand-primary/20 rounded-xl flex items-center justify-center text-brand-primary border border-brand-primary/20 shadow-lg shadow-brand-primary/10"><User size={14}/></div>
+                                            <div className="w-8 h-8 bg-brand-primary/20 rounded-xl flex items-center justify-center text-brand-primary border border-brand-primary/20 shadow-lg shadow-brand-primary/10"><Users size={14}/></div>
                                             <span className="text-base font-black text-brand-text italic tracking-tight">{l.usuario}</span>
                                         </div>
                                     </td>

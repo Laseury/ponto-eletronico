@@ -110,9 +110,8 @@ if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
     }));
     
     // SPA fallback - servir index.html para todas as rotas não encontradas
-    // Usar app.use em vez de app.get('*') para evitar erro com path-to-regexp
     app.use((req, res, next) => {
-        // Não fazer fallback para API routes
+        // 1. Não fazer fallback para API routes
         if (req.path.startsWith('/api/') || req.path.startsWith('/funcionarios') || 
             req.path.startsWith('/registros') || req.path.startsWith('/relatorio') ||
             req.path.startsWith('/resumo') || req.path.startsWith('/logs') ||
@@ -120,8 +119,14 @@ if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
             req.path.startsWith('/auth')) {
             return next();
         }
+
+        // 2. Não fazer fallback para arquivos estáticos (evitar erro de MIME type)
+        // Ajuste crítico: Ignora arquivos com extensão ou caminho /assets/ que não existem para evitar MIME type error
+        if (req.path.includes('.') || req.path.startsWith('/assets/')) {
+            return next();
+        }
         
-        // Se chegou aqui e não é arquivo estático, servir index.html para SPA
+        // 3. Se chegou aqui e é uma rota de navegação (SPA), servir index.html
         res.sendFile(indexPath, (err) => {
             if (err) {
                 console.error("Erro ao servir index.html:", err.message);

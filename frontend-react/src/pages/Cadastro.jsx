@@ -4,7 +4,7 @@ import {
   UserPlus, 
   ArrowLeft, 
   Save, 
-  User, 
+  Users, 
   Briefcase,
   CheckCircle2,
   AlertCircle
@@ -100,7 +100,7 @@ const Cadastro = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <label className="flex items-center gap-2 text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-40">
-                                <User size={14} className="text-brand-primary" /> Nome Completo
+                                <Users size={14} className="text-brand-primary" /> Nome Completo
                             </label>
                             <input 
                                 type="text" 

@@ -10,7 +10,7 @@ import {
   CheckCircle2, 
   AlertCircle,
   Key,
-  User,
+  Users,
   Fingerprint
 } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -141,7 +141,7 @@ const Usuarios = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-50 flex items-center gap-2">
-                                    <User size={12} className="text-brand-primary" /> Nome Completo
+                                    <Users size={12} className="text-brand-primary" /> Nome Completo
                                 </label>
                                 <input 
                                     type="text" 
