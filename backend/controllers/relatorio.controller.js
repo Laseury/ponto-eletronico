@@ -36,11 +36,16 @@ async function gerarRelatorio(req, res) {
                     ELSE 0 END
                 ) AS total_noturno_min,
                 SUM(
-                    CASE WHEN r.total LIKE '%:%'
+                    CASE WHEN r.total LIKE '%:%' AND (r.evento IS NULL OR r.evento != 'Feriado')
                     THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 +
                          CAST(SPLIT_PART(r.total,':',2) AS INT)
                     ELSE 0 END
-                ) AS total_trabalhado_min
+                ) AS total_trabalhado_min,
+                SUM(
+                    CASE WHEN r.evento = 'Feriado'
+                    THEN CASE WHEN f.tipo LIKE 'Horista%' THEN 480 ELSE 440 END
+                    ELSE 0 END
+                ) AS total_feriado_min
             FROM funcionarios f
             LEFT JOIN registros_ponto r
                 ON r.funcionario_id = f.id
@@ -151,7 +156,8 @@ async function gerarRelatorio(req, res) {
                 ciclo:            `${mesInicioCiclo <= 6 ? "Jan–Jun" : "Jul–Dez"} ${ano}`,
                 total_noturno:    minutosParaHorario(noturnoMin),
                 total_diurno:     minutosParaHorario(diurnoMin),
-                valor_noturno:    valorNoturno
+                valor_noturno:    valorNoturno,
+                total_feriados:   minutosParaHorario(Number(row.total_feriado_min || 0))
             };
         });
 

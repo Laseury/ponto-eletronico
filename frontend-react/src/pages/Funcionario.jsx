@@ -205,7 +205,7 @@ const Funcionario = () => {
   }, [fetchFuncionarioData]);
 
   const analytics = useMemo(() => {
-    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0 };
+    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0 };
     const min = (h) => {
       if (!h) return 0;
       const [hh, mm] = h.split(':').map(Number);
@@ -223,7 +223,11 @@ const Funcionario = () => {
       if (r.extras?.startsWith('+')) stats.extras += min(r.extras.replace('+', ''));
       if (r.negativos?.startsWith('-')) stats.negativos += min(r.negativos.replace('-', ''));
       if (r.evento === 'Falta') stats.faltas++;
-      if (r.total) stats.trabalhado += min(r.total);
+      if (r.evento === 'Feriado') {
+        const carga = funcionario?.tipo?.startsWith('Horista') ? 480 : 440;
+        stats.feriados += carga;
+      }
+      if (r.total && r.evento !== 'Feriado') stats.trabalhado += min(r.total);
       if (r.noturno) stats.noturno += min(r.noturno);
       stats.noturnoPuro += calcNoturnoPuro(r.e1, r.s1);
       stats.noturnoPuro += calcNoturnoPuro(r.e2, r.s2);
@@ -244,7 +248,8 @@ const Funcionario = () => {
       saldoMin: saldo,
       noturno: fmt(stats.noturno),
       diurno: fmt(Math.max(0, stats.trabalhado - stats.noturno)),
-      noturnoComFator: fmt(Math.round(stats.noturnoPuro * (60 / 52.5)))
+      noturnoComFator: fmt(Math.round(stats.noturnoPuro * (60 / 52.5))),
+      totalFeriados: fmt(stats.feriados)
     };
   }, [registros]);
 
@@ -578,6 +583,7 @@ const Funcionario = () => {
            <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 flex items-center gap-3 opacity-60"><Clock size={20} className="text-brand-primary" /> Detalhamento</h3>
            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <MiniCard label="Normais" value={analytics.totalNormal} />
+              <MiniCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" />
               <MiniCard label="Extras" value={analytics.totalExtras} color="text-emerald-400" />
               <MiniCard label="Negativas" value={analytics.totalNegativos} color="text-rose-400" />
            </div>

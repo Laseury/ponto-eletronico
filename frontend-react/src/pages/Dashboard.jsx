@@ -160,10 +160,11 @@ const Dashboard = () => {
       </div>
 
       {/* Grid de Cards de Resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         <DashboardCard label="Funcionários" value={resumo.total_funcionarios} icon={Users} color="bg-brand-primary" />
         <DashboardCard label="Lançados Hoje" value={resumo.lancados_hoje} icon={CalendarCheck} color="bg-brand-accent" trend="Alta" />
         <DashboardCard label="Extras Mês" value={resumo.total_extras} icon={Clock} color="bg-brand-primary" />
+        <DashboardCard label="Feriados Mês" value={resumo.total_feriados} icon={CalendarCheck} color="bg-emerald-500" />
         <DashboardCard label="Faltas Mês" value={resumo.total_faltas} icon={AlertTriangle} color="bg-orange-500" />
         <DashboardCard label="Func. c/ Lacuna" value={resumo.funcs_com_lacuna} icon={Search} color="bg-rose-500" />
         <DashboardCard label="Dias s/ Reg." value={resumo.total_dias_lacuna} icon={AlertTriangle} color="bg-amber-500" />

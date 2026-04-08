@@ -40,7 +40,10 @@ async function gerarResumo(req, res) {
             select: {
                 evento: true,
                 extras: true,
-                negativos: true
+                negativos: true,
+                funcionario: {
+                    select: { tipo: true }
+                }
             }
         });
 
@@ -49,6 +52,7 @@ async function gerarResumo(req, res) {
         let totalExtrasMin = 0;
         let totalNegativosMin = 0;
         let totalEventos = 0;
+        let totalFeriadosMin = 0;
 
         registrosMes.forEach(reg => {
             // Contar eventos
@@ -56,6 +60,10 @@ async function gerarResumo(req, res) {
                 totalEventos++;
                 if (reg.evento === 'Falta') {
                     totalFaltas++;
+                }
+                if (reg.evento === 'Feriado') {
+                    const carga = reg.funcionario?.tipo?.startsWith('Horista') ? 480 : 440;
+                    totalFeriadosMin += carga;
                 }
             }
 
@@ -86,6 +94,7 @@ async function gerarResumo(req, res) {
             total_faltas: totalFaltas,
             total_extras: totalExtrasMin > 0 ? "+" + minutosParaHorario(totalExtrasMin) : "00:00",
             total_negativos: totalNegativosMin > 0 ? "-" + minutosParaHorario(totalNegativosMin) : "00:00",
+            total_feriados: minutosParaHorario(totalFeriadosMin),
             total_eventos: totalEventos,
             funcs_com_lacuna: 0,
             total_dias_lacuna: 0,

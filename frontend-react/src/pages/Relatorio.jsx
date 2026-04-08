@@ -50,9 +50,9 @@ const Relatorio = () => {
     const exportCSV = () => {
         if (dadosFiltrados.length === 0) return;
         
-        const headers = ["Nome", "Tipo", "Dias Trab.", "Faltas", "Extras", "Negativos", "Saldo", "Banco", "Noturno", "Valor Noturno"];
+        const headers = ["Nome", "Tipo", "Dias Trab.", "Faltas", "Feriados", "Extras", "Negativos", "Saldo", "Banco", "Noturno", "Valor Noturno"];
         const rows = dadosFiltrados.map(f => [
-            f.nome, f.tipo, f.dias_trabalhados, f.faltas, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno
+            f.nome, f.tipo, f.dias_trabalhados, f.faltas, f.total_feriados, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno
         ]);
 
         const csvContent = [headers, ...rows].map(e => e.join(";")).join("\n");
@@ -166,6 +166,7 @@ const Relatorio = () => {
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60">Tipo</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60 text-center">Dias</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60 text-center">Faltas</th>
+                                <th className="px-6 py-5 text-[9px] font-black text-emerald-500/80 uppercase tracking-[0.25em] opacity-60 text-center">Feriados</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-accent/80 uppercase tracking-[0.25em] opacity-60 text-center">Extras</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-rose-500/80 uppercase tracking-[0.25em] opacity-60 text-center">Neg.</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60 text-center">Saldo</th>
@@ -215,6 +216,7 @@ const Relatorio = () => {
                                         </td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-text bg-brand-bg/20">{f.dias_trabalhados}</td>
                                         <td className={`px-6 py-4 text-center text-xs font-black ${f.faltas > 0 ? 'text-rose-500 underline decoration-rose-500/30' : 'text-brand-muted opacity-30'}`}>{f.faltas || 0}</td>
+                                        <td className={`px-6 py-4 text-center text-xs font-black text-emerald-500 bg-emerald-500/5`}>{f.total_feriados || '00:00'}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-accent bg-brand-accent/5">{f.total_extras}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-rose-400 bg-rose-500/5">{f.total_negativos}</td>
                                         <td className={`px-6 py-4 text-center text-sm font-black ${corSaldo}`}>{f.saldo_mes}</td>
