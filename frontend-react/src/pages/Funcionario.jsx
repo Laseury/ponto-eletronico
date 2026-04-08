@@ -418,7 +418,8 @@ const Funcionario = () => {
         fetchFuncionarioData();
         swalTheme({ title: 'Sucesso!', text: `Colaborador ${action === 'inativar' ? 'inativado' : 'ativado'} com sucesso.`, icon: 'success' });
       } catch (error) {
-        swalTheme({ title: 'Erro!', text: 'Não foi possível alterar o status.', icon: 'error' });
+        const msg = error.response?.data?.erro || error.message;
+        swalTheme({ title: 'Erro!', text: `Não foi possível alterar o status: ${msg}`, icon: 'error' });
       }
     }
   };

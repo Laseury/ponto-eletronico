@@ -95,7 +95,7 @@ async function alternarAtivo(req, res) {
         campoAlterado: "ativo",
         valorAnterior: atual.ativo ? "Ativo" : "Inativo",
         valorNovo: novoAtivo ? "Ativo" : "Inativo",
-        dataRegistro: null // Ação geral, não ligada a um dia de ponto
+        dataRegistro: new Date() // Ação geral, usando data atual como referência técnica
       }
     });
 

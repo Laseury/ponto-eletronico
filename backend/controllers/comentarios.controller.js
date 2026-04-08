@@ -32,7 +32,7 @@ async function criarComentario(req, res) {
             acao: "criacao",
             campoAlterado: "comentario",
             valorNovo: texto.substring(0, 50) + (texto.length > 50 ? "..." : ""),
-            dataRegistro: data_referencia ? new Date(data_referencia) : null
+            dataRegistro: data_referencia ? new Date(data_referencia) : new Date()
           }
         });
 
@@ -106,7 +106,7 @@ async function excluirComentario(req, res) {
             acao: "exclusao",
             campoAlterado: "comentario",
             valorAnterior: comentario.texto.substring(0, 50) + (comentario.texto.length > 50 ? "..." : ""),
-            dataRegistro: comentario.dataReferencia
+            dataRegistro: comentario.dataReferencia || new Date()
           }
         });
 
