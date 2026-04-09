@@ -9,31 +9,34 @@ async function criarComentario(req, res) {
             return res.status(400).json({ erro: "Texto, tipo e funcionário são obrigatórios" });
         }
 
-        const comentario = await prisma.comentario.create({
-            data: {
-                texto,
-                tipo,
-                dataReferencia: data_referencia ? new Date(data_referencia) : null,
-                funcionarioId: parseInt(funcionario_id),
-                usuarioId: usuario_id
-            },
-            include: {
-                usuario: {
-                    select: { nome: true }
+        const { comentario, log } = await prisma.$transaction(async (tx) => {
+            const c = await tx.comentario.create({
+                data: {
+                    texto,
+                    tipo,
+                    dataReferencia: data_referencia ? new Date(data_referencia) : null,
+                    funcionarioId: parseInt(funcionario_id),
+                    usuarioId: usuario_id
+                },
+                include: {
+                    usuario: {
+                        select: { nome: true }
+                    }
                 }
-            }
-        });
+            });
 
-        // Registrar Log de Auditoria
-        await prisma.logRegistro.create({
-          data: {
-            funcionarioId: parseInt(funcionario_id),
-            usuario: req.user?.login || "Sistema",
-            acao: "criacao",
-            campoAlterado: "comentario",
-            valorNovo: texto.substring(0, 50) + (texto.length > 50 ? "..." : ""),
-            dataRegistro: data_referencia ? new Date(data_referencia) : new Date()
-          }
+            const l = await tx.logRegistro.create({
+                data: {
+                    funcionarioId: parseInt(funcionario_id),
+                    usuario: req.user?.login || "Sistema",
+                    acao: "criacao",
+                    campoAlterado: "comentario",
+                    valorNovo: texto.substring(0, 100) + (texto.length > 100 ? "..." : ""),
+                    dataRegistro: data_referencia ? new Date(data_referencia) : new Date()
+                }
+            });
+
+            return { comentario: c, log: l };
         });
 
         res.status(201).json(comentario);
@@ -94,20 +97,22 @@ async function excluirComentario(req, res) {
             return res.status(403).json({ erro: "Sem permissão para excluir este comentário" });
         }
 
-        await prisma.comentario.delete({
-            where: { id: parseInt(id) }
-        });
+        await prisma.$transaction(async (tx) => {
+            await tx.comentario.delete({
+                where: { id: parseInt(id) }
+            });
 
-        // Registrar Log de Auditoria
-        await prisma.logRegistro.create({
-          data: {
-            funcionarioId: comentario.funcionarioId,
-            usuario: req.user?.login || "Sistema",
-            acao: "exclusao",
-            campoAlterado: "comentario",
-            valorAnterior: comentario.texto.substring(0, 50) + (comentario.texto.length > 50 ? "..." : ""),
-            dataRegistro: comentario.dataReferencia || new Date()
-          }
+            // Registrar Log de Auditoria
+            await tx.logRegistro.create({
+                data: {
+                    funcionarioId: comentario.funcionarioId,
+                    usuario: req.user?.login || "Sistema",
+                    acao: "exclusao",
+                    campoAlterado: "comentario",
+                    valorAnterior: comentario.texto.substring(0, 100) + (comentario.texto.length > 100 ? "..." : ""),
+                    dataRegistro: comentario.dataReferencia || new Date()
+                }
+            });
         });
 
         res.json({ mensagem: "Comentário excluído com sucesso" });

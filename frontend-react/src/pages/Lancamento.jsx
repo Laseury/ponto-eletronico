@@ -413,7 +413,7 @@ const Lancamento = () => {
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-brand-primary rounded-lg cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/40" onClick={() => fileInputRef.current.click()}>
                                     {procesingIA ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Zap size={16} className="text-white fill-white" />}
                                 </div>
-                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleProcessarIA} />
+                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf,.xlsx,.xls" onChange={handleProcessarIA} />
                             </div>
                         </div>
                         <p className="text-[8px] text-brand-primary font-black uppercase tracking-[0.15em] mt-3 ml-2 italic flex items-center gap-1.5 opacity-60">

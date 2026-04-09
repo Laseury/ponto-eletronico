@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const pdfParse             = require("pdf-parse");
 const xlsx                 = require("xlsx");
+const prisma               = require("../db/prisma");
 require("dotenv").config();
 
 // Inicializa a IA na versão padrão configurada
@@ -68,9 +69,20 @@ async function extrairComIA(buffer, mimetype, mesAno) {
     throw ultimoErro;
 }
 
-function processarExcel(buffer) {
+function processarExcel(buffer, nomeFuncionario) {
     const workbook = xlsx.read(buffer, { type: "buffer" });
-    return xlsx.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+    
+    // Busca aba que contém o nome do funcionário (case-insensitive)
+    const targetSheet = workbook.SheetNames.find(name => 
+        name.toLowerCase().includes(nomeFuncionario.toLowerCase())
+    );
+
+    if (!targetSheet) {
+        throw new Error(`Aba para o funcionário "${nomeFuncionario}" não encontrada no Excel.`);
+    }
+
+    console.log(`>>> [XLSX] Processando aba encontrada: ${targetSheet}`);
+    return xlsx.utils.sheet_to_csv(workbook.Sheets[targetSheet]);
 }
 
 async function importarFolha(req, res) {
@@ -87,13 +99,46 @@ async function importarFolha(req, res) {
         if (mimetype.startsWith("image/") || ["jpg", "jpeg", "png"].includes(ext)) {
             resultadoFinal = await extrairComIA(buffer, mimetype, mesAno);
         } else {
-            // Fallback para PDF/Excel
-            const dataText = mimetype === "application/pdf" ? (await pdfParse(buffer)).text : processarExcel(buffer);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-            const prompt = `Extraia JSON de folha de ponto deste texto. MÊS E ANO PADRÃO OBRIGATÓRIO: ${mesAno}\nTexto: ${dataText}`;
+            // Busca nome do funcionário no Banco
+            const func = await prisma.funcionario.findUnique({
+                where: { id: parseInt(funcionario_id) },
+                select: { nome: true }
+            });
+
+            if (!func) return res.status(404).json({ erro: "Funcionário não encontrado no sistema." });
+
+            const dataText = mimetype === "application/pdf" 
+                ? (await pdfParse(buffer)).text 
+                : processarExcel(buffer, func.nome);
+
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const prompt = `Analise os dados extraídos desta folha de ponto e retorne os registros em JSON.
+            MÊS/ANO DE REFERÊNCIA: ${mesAno}
+            
+            Regras de extração:
+            1. Formate a data como YYYY-MM-DD.
+            2. Identifique os horários e coloque na ordem: e1, s1, e2, s2, e3, s3.
+            3. Se for um evento (Férias, Feriado, Atestado, Falta), coloque no campo 'evento'.
+            4. Retorne APENAS o JSON puro.
+            
+            Texto extraído:
+            ${dataText}`;
+
             const result = await model.generateContent(prompt);
             const text = result.response.text();
-            resultadoFinal = JSON.parse(text.replace(/```json/g, "").replace(/```/g, "").trim());
+            const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
+            resultadoFinal = JSON.parse(jsonStr);
+
+            // Garantir datas corretas se a IA falhar na concatenação do ano
+            if (mesAno && resultadoFinal.registros) {
+                resultadoFinal.registros.forEach(r => {
+                    if (r.data && r.data.includes("-")) {
+                        const parts = r.data.split("-");
+                        const dia = parts.pop().padStart(2, "0");
+                        r.data = `${mesAno}-${dia}`;
+                    }
+                });
+            }
         }
 
         res.json(resultadoFinal);

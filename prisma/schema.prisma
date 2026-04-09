@@ -28,9 +28,9 @@ model LogRegistro {
   dataRegistro   DateTime? @map("data_registro") @db.Date
   usuario        String    @db.VarChar(50)
   acao           String    @db.VarChar(20)
-  campoAlterado  String?   @map("campo_alterado") @db.VarChar(20)
-  valorAnterior  String?   @map("valor_anterior") @db.VarChar(20)
-  valorNovo      String?   @map("valor_novo") @db.VarChar(20)
+  campoAlterado  String?   @map("campo_alterado") @db.VarChar(50)
+  valorAnterior  String?   @map("valor_anterior") @db.VarChar(255)
+  valorNovo      String?   @map("valor_novo") @db.VarChar(255)
   criadoEm       DateTime? @default(now()) @map("criado_em") @db.Timestamp(6)
   funcionario    Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
