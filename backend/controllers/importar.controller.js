@@ -62,7 +62,7 @@ async function extrairComIA(buffer, mimetype, mesAno) {
             
             // Se for erro de cota (429), partimos para o próximo.
             if (e.message.includes("429")) {
-                console.log(">>> [IA] Cota excedida no " + MODELO + ". Tentando próximo...");
+                console.log(">>> [IA] Cota excedida no " + MODELO + ". Tentando próximo modelo...");
             }
         }
     }
