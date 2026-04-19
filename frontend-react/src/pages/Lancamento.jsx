@@ -348,12 +348,20 @@ const Lancamento = () => {
                     <p className="text-brand-muted font-bold mt-0.5 text-sm opacity-60">Manual ou Inteligente via IA.</p>
                 </div>
                 
-                <button 
-                  onClick={() => window.location.href = '/eventos-lote'}
-                  className="flex items-center gap-2 px-5 py-3 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest text-brand-muted hover:text-brand-primary hover:border-brand-primary transition-all shadow-lg"
-                >
-                    <Calendar size={14} /> Eventos em Lote
-                </button>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => window.location.href = '/lancamento-horas'}
+                    className="flex items-center gap-2 px-5 py-3 bg-brand-primary/10 border border-brand-primary/30 rounded-xl text-[9px] font-black uppercase tracking-widest text-brand-primary hover:bg-brand-primary/20 hover:border-brand-primary/50 transition-all shadow-lg"
+                  >
+                      <Clock size={14} /> Lançar Horas do Mês
+                  </button>
+                  <button 
+                    onClick={() => window.location.href = '/eventos-lote'}
+                    className="flex items-center gap-2 px-5 py-3 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest text-brand-muted hover:text-brand-primary hover:border-brand-primary transition-all shadow-lg"
+                  >
+                      <Calendar size={14} /> Eventos em Lote
+                  </button>
+                </div>
             </div>
 
             <div className="bg-brand-surface border border-brand-border rounded-3xl p-8 shadow-2xl relative overflow-hidden group">

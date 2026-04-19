@@ -8,6 +8,7 @@ import Lancamento from './pages/Lancamento';
 import Cadastro from './pages/Cadastro';
 import LancamentoLote from './pages/LancamentoLote';
 import LancamentoEventoLote from './pages/LancamentoEventoLote';
+import LancamentoHoras from './pages/LancamentoHoras';
 import Relatorio from './pages/Relatorio';
 import Logs from './pages/Logs';
 import Usuarios from './pages/Usuarios';
@@ -52,6 +53,7 @@ function App() {
             <Route path="/funcionarios" element={<Cadastro />} />
             <Route path="/lancamento-lote" element={<LancamentoLote />} />
             <Route path="/eventos-lote" element={<LancamentoEventoLote />} />
+            <Route path="/lancamento-horas" element={<LancamentoHoras />} />
             <Route path="/relatorios" element={<Relatorio />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/usuarios" element={<Usuarios />} />
