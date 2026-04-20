@@ -7,7 +7,7 @@ import Funcionario from './pages/Funcionario';
 import Lancamento from './pages/Lancamento';
 import Cadastro from './pages/Cadastro';
 import LancamentoLote from './pages/LancamentoLote';
-import LancamentoEventoLote from './pages/LancamentoEventoLote';
+
 import LancamentoHoras from './pages/LancamentoHoras';
 import Relatorio from './pages/Relatorio';
 import Logs from './pages/Logs';
@@ -52,7 +52,7 @@ function App() {
             <Route path="/lancamento" element={<Lancamento />} />
             <Route path="/funcionarios" element={<Cadastro />} />
             <Route path="/lancamento-lote" element={<LancamentoLote />} />
-            <Route path="/eventos-lote" element={<LancamentoEventoLote />} />
+
             <Route path="/lancamento-horas" element={<LancamentoHoras />} />
             <Route path="/relatorios" element={<Relatorio />} />
             <Route path="/logs" element={<Logs />} />

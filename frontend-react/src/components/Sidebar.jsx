@@ -46,7 +46,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       { to: '/funcionarios', icon: Users, label: 'Funcionários' },
       { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
       { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
-      { to: '/eventos-lote', icon: FileStack, label: 'Eventos em Lote' },
+
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
       { to: '/usuarios', icon: ShieldCheck, label: 'Gestão de Acessos' },
       { to: '/logs', icon: History, label: 'Logs do Sistema' },
@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       { to: '/funcionarios', icon: Users, label: 'Funcionários' },
       { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
       { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
-      { to: '/eventos-lote', icon: FileStack, label: 'Eventos em Lote' },
+
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
     ],
     Gestor: [

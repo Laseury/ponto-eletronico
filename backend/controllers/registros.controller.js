@@ -207,93 +207,7 @@ async function salvarRegistro(req, res) {
     }
 }
 
-// ── Rota Nova — Lançamento em Lote —————————————————————————————————————————
-async function salvarEventoLote(req, res) {
-    try {
-        const { funcionario_ids, data_inicio, data_fim, evento, negativos_manual } = req.body;
-        const usuario = req.headers["x-usuario"] || "ia_batch";
 
-        if (!funcionario_ids || !data_inicio || !data_fim || !evento) {
-            return res.status(400).json({ erro: "Parâmetros insuficientes para lote." });
-        }
-
-        const inicio = new Date(data_inicio);
-        const fim = new Date(data_fim);
-
-        // Usar Transação Prisma
-        await prisma.$transaction(async (tx) => {
-            for (const fIdStr of funcionario_ids) {
-                const f_id = parseInt(fIdStr);
-                const func = await tx.funcionario.findUnique({
-                    where: { id: f_id },
-                    select: { tipo: true }
-                });
-                
-                if (!func) continue;
-
-                const ehHorista = func.tipo === "Horista" || func.tipo === "Horista Noturno";
-                const cargaMinutos = ehHorista ? 480 : 440;
-
-                let curr = new Date(inicio);
-                while (curr <= fim) {
-                    let negMin = 0;
-                    if (evento === "Falta") {
-                        negMin = !ehHorista ? 440 : (negativos_manual ? calcularMinutos(negativos_manual) : 480);
-                    } else if (evento === "Folga Banco") {
-                        negMin = cargaMinutos;
-                    }
-
-                    const extras = "00:00";
-                    const negativos = negMin > 0 ? "-" + minutosParaHorario(negMin) : "00:00";
-
-                    await tx.registroPonto.upsert({
-                        where: {
-                            funcionarioId_data: {
-                                funcionarioId: f_id,
-                                data: new Date(curr)
-                            }
-                        },
-                        update: {
-                            evento,
-                            extras,
-                            negativos,
-                            total: null,
-                            noturno: '00:00'
-                        },
-                        create: {
-                            funcionarioId: f_id,
-                            data: new Date(curr),
-                            evento,
-                            extras,
-                            negativos,
-                            total: null,
-                            noturno: '00:00'
-                        }
-                    });
-
-                    // Registrar Log de Auditoria para cada dia do lote
-                    await tx.logRegistro.create({
-                        data: {
-                            funcionarioId: f_id,
-                            dataRegistro: new Date(curr),
-                            usuario: usuario,
-                            acao: "edicao",
-                            campoAlterado: "evento",
-                            valorNovo: evento
-                        }
-                    });
-                    
-                    // Incrementa dia
-                    curr.setDate(curr.getDate() + 1);
-                }
-            }
-        });
-
-        res.json({ mensagem: "Eventos lançados com sucesso em lote." });
-    } catch (e) {
-        res.status(500).json({ erro: e.message });
-    }
-}
 
 // Auxiliar para LOGS
 async function registrarLog(funcionario_id, data, usuario, registro, foiCriacao) {
@@ -334,4 +248,4 @@ async function verificarRegistro(req, res) {
     }
 }
 
-module.exports = { listarRegistros, salvarRegistro, verificarRegistro, salvarEventoLote };
+module.exports = { listarRegistros, salvarRegistro, verificarRegistro };

@@ -169,8 +169,12 @@ const LancamentoHoras = () => {
     if (!t) return '';
     const trimmed = t.trim();
     if (!trimmed) return '';
-    if (trimmed.length > 5 && trimmed.includes(':')) {
-        return trimmed.substring(0, 5);
+    const parts = trimmed.split(':');
+    if (parts.length >= 2) {
+        let h = parts[0];
+        let m = parts[1];
+        if (h.length === 1) h = '0' + h;
+        return `${h}:${m}`;
     }
     return trimmed;
   };
@@ -219,12 +223,12 @@ const LancamentoHoras = () => {
                 if (temDado) {
                   newGrid[gridIndex] = {
                     ...newGrid[gridIndex],
-                    e1: e1.length === 4 ? `0${e1}` : e1,
-                    s1: s1.length === 4 ? `0${s1}` : s1,
-                    e2: e2.length === 4 ? `0${e2}` : e2,
-                    s2: s2.length === 4 ? `0${s2}` : s2,
-                    e3: e3.length === 4 ? `0${e3}` : e3,
-                    s3: s3.length === 4 ? `0${s3}` : s3,
+                    e1: e1,
+                    s1: s1,
+                    e2: e2,
+                    s2: s2,
+                    e3: e3,
+                    s3: s3,
                     modified: true,
                     status: 'modificado'
                   };

@@ -355,23 +355,10 @@ const Lancamento = () => {
                   >
                       <Clock size={14} /> Lançar Horas do Mês
                   </button>
-                  <button 
-                    onClick={() => window.location.href = '/eventos-lote'}
-                    className="flex items-center gap-2 px-5 py-3 bg-brand-surface border border-brand-border rounded-xl text-[9px] font-black uppercase tracking-widest text-brand-muted hover:text-brand-primary hover:border-brand-primary transition-all shadow-lg"
-                  >
-                      <Calendar size={14} /> Eventos em Lote
-                  </button>
-                </div>
-            </div>
-
-            <div className="bg-brand-surface border border-brand-border rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                {/* IA Banner Floating */}
-                <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:opacity-10 transition-opacity">
-                    <Zap size={200} />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="lg:col-span-1">
+                </            <div className="bg-brand-surface border border-brand-border rounded-3xl p-8 shadow-2xl relative group">
+                {/* 1. Contexto */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="md:col-span-1">
                         <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Colaborador</label>
                         <select 
                             value={fId} 
@@ -384,52 +371,83 @@ const Lancamento = () => {
                             ))}
                         </select>
                     </div>
-
-                    <div className="lg:col-span-1">
-                        <label className="block text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Referência / IA</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <select 
-                                value={mesSelect}
-                                onChange={(e) => setMesSelect(e.target.value)}
-                                className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-3 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
-                            >
-                                <option value="" className="bg-brand-surface">Mês</option>
-                                <option value="01" className="bg-brand-surface">Janeiro</option>
-                                <option value="02" className="bg-brand-surface">Fevereiro</option>
-                                <option value="03" className="bg-brand-surface">Março</option>
-                                <option value="04" className="bg-brand-surface">Abril</option>
-                                <option value="05" className="bg-brand-surface">Maio</option>
-                                <option value="06" className="bg-brand-surface">Junho</option>
-                                <option value="07" className="bg-brand-surface">Julho</option>
-                                <option value="08" className="bg-brand-surface">Agosto</option>
-                                <option value="09" className="bg-brand-surface">Setembro</option>
-                                <option value="10" className="bg-brand-surface">Outubro</option>
-                                <option value="11" className="bg-brand-surface">Novembro</option>
-                                <option value="12" className="bg-brand-surface">Dezembro</option>
-                            </select>
-                            <div className="relative">
-                                <select 
-                                    value={anoSelect}
-                                    onChange={(e) => setAnoSelect(e.target.value)}
-                                    className="w-full bg-brand-primary/5 border border-brand-primary/20 rounded-xl px-3 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
-                                >
-                                    <option value="" className="bg-brand-surface">Ano</option>
-                                    {[2024, 2025, 2026, 2027, 2028].map(ano => (
-                                        <option key={ano} value={ano} className="bg-brand-surface">{ano}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-brand-primary rounded-lg cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/40" onClick={() => fileInputRef.current.click()}>
-                                    {procesingIA ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Zap size={16} className="text-white fill-white" />}
-                                </div>
-                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf,.xlsx,.xls" onChange={handleProcessarIA} />
-                            </div>
-                        </div>
-                        <p className="text-[8px] text-brand-primary font-black uppercase tracking-[0.15em] mt-3 ml-2 italic flex items-center gap-1.5 opacity-60">
-                            <Info size={10} /> Use o raio para extrair via IA
-                        </p>
+                    <div className="md:col-span-1">
+                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Mês</label>
+                        <select 
+                            value={mesSelect}
+                            onChange={(e) => setMesSelect(e.target.value)}
+                            className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
+                        >
+                            <option value="" className="bg-brand-surface">Mês</option>
+                            <option value="01" className="bg-brand-surface">Janeiro</option>
+                            <option value="02" className="bg-brand-surface">Fevereiro</option>
+                            <option value="03" className="bg-brand-surface">Março</option>
+                            <option value="04" className="bg-brand-surface">Abril</option>
+                            <option value="05" className="bg-brand-surface">Maio</option>
+                            <option value="06" className="bg-brand-surface">Junho</option>
+                            <option value="07" className="bg-brand-surface">Julho</option>
+                            <option value="08" className="bg-brand-surface">Agosto</option>
+                            <option value="09" className="bg-brand-surface">Setembro</option>
+                            <option value="10" className="bg-brand-surface">Outubro</option>
+                            <option value="11" className="bg-brand-surface">Novembro</option>
+                            <option value="12" className="bg-brand-surface">Dezembro</option>
+                        </select>
                     </div>
+                    <div className="md:col-span-1">
+                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Ano</label>
+                        <select 
+                            value={anoSelect}
+                            onChange={(e) => setAnoSelect(e.target.value)}
+                            className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
+                        >
+                            <option value="" className="bg-brand-surface">Ano</option>
+                            {[2024, 2025, 2026, 2027, 2028].map(ano => (
+                                <option key={ano} value={ano} className="bg-brand-surface">{ano}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
 
-                    <div className="lg:col-span-1">
+                {/* 2. Função IA */}
+                <div className="mb-10 p-6 bg-brand-bg/60 border border-brand-primary/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-brand-primary/5 transition-all hover:border-brand-primary/50 group/ia">
+                    <div className="flex items-center gap-5">
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf,.xlsx,.xls,.csv" onChange={handleProcessarIA} />
+                        <div className="w-14 h-14 bg-brand-primary/10 border border-brand-primary/30 rounded-2xl flex items-center justify-center text-brand-primary relative overflow-hidden group-hover/ia:scale-105 transition-transform">
+                            <div className="absolute inset-0 bg-brand-primary/10 animate-pulse"></div>
+                            <Zap size={24} className="relative z-10" />
+                        </div>
+                        <div>
+                            <h3 className="text-brand-text font-black text-sm uppercase tracking-widest italic mb-1 flex items-center gap-2">
+                                Extração Inteligente <span className="px-2 py-0.5 bg-brand-primary text-white text-[8px] rounded-md leading-none shadow-lg">IA</span>
+                            </h3>
+                            <p className="text-brand-muted text-[11px] font-medium leading-relaxed opacity-60">Envie um arquivo PDF, Planilha ou Imagem e o sistema preencherá todo o mês automaticamente.</p>
+                        </div>
+                    </div>
+                    <div className="flex-shrink-0 w-full md:w-auto">
+                        <button 
+                            onClick={() => fileInputRef.current.click()} 
+                            disabled={procesingIA} 
+                            className="w-full md:w-auto bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-50 text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-primary/30 transition-all flex items-center justify-center gap-3 transform active:scale-95"
+                        >
+                            {procesingIA ? (
+                                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Processando...</>
+                            ) : (
+                                <><FileUp size={16} /> Importar Arquivo</>
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Linha Divisória */}
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px bg-brand-border/60 flex-1"></div>
+                    <span className="text-brand-muted text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Apontamento Manual (Isolado)</span>
+                    <div className="h-px bg-brand-border/60 flex-1"></div>
+                </div>
+
+                {/* 3. Lançamento Diário */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="md:col-span-1">
                       <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Dia (Manual)</label>
                       <input 
                         type="number" 
@@ -440,15 +458,14 @@ const Lancamento = () => {
                         className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
                       />
                     </div>
-
-                    <div className="lg:col-span-1">
+                    <div className="md:col-span-1">
                       <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Evento Especial</label>
                       <select 
                         value={evento}
                         onChange={(e) => setEvento(e.target.value)}
                         className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
                       >
-                        <option value="" className="bg-brand-surface">Lançamento Normal</option>
+                        <option value="" className="bg-brand-surface">Trabalho Normal</option>
                         <option value="Folga" className="bg-brand-surface">🏖️ Folga</option>
                         <option value="Falta" className="bg-brand-surface">❌ Falta</option>
                         <option value="Atestado" className="bg-brand-surface">🏥 Atestado</option>
