@@ -355,7 +355,10 @@ const Lancamento = () => {
                   >
                       <Clock size={14} /> Lançar Horas do Mês
                   </button>
-                </            <div className="bg-brand-surface border border-brand-border rounded-3xl p-8 shadow-2xl relative group">
+                </div>
+            </div>
+
+            <div className="bg-brand-surface border border-brand-border rounded-3xl p-8 shadow-2xl relative group">
                 {/* 1. Contexto */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="md:col-span-1">
