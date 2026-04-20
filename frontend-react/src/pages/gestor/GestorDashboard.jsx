@@ -199,7 +199,7 @@ const GestorDashboard = () => {
                     <EmployeeCard 
                         key={f.id} 
                         funcionario={f} 
-                        onClick={() => navigate(`/funcionario?id=${f.id}`)}
+                        onClick={() => navigate(`/funcionario?id=${f.id}&mes=${mes}&ano=${ano}`)}
                     />
                 ))}
             </div>

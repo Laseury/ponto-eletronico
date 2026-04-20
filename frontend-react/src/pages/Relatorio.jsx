@@ -200,7 +200,7 @@ const Relatorio = () => {
                                 return (
                                 <tr key={f.id} className="hover:bg-brand-bg transition-colors group">
                                         <td className="px-8 py-4">
-                                            <Link to={`/funcionario?id=${f.id}`} className="text-sm font-black text-brand-text hover:text-brand-primary flex items-center gap-2 transition-colors italic tracking-tight">
+                                            <Link to={`/funcionario?id=${f.id}&mes=${mes}&ano=${ano}`} className="text-sm font-black text-brand-text hover:text-brand-primary flex items-center gap-2 transition-colors italic tracking-tight">
                                                 {f.nome}
                                                 <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-primary" />
                                             </Link>

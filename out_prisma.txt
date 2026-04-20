@@ -1,8 +1,0 @@
-[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
-Loaded Prisma config from prisma.config.ts.
-
-Prisma schema loaded from prisma\schema.prisma.
-Datasource "db": PostgreSQL database "ponto_eletronico", schema "public" at "localhost:5432"
-
-The database is already in sync with the Prisma schema.
-

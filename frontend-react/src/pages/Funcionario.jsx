@@ -128,8 +128,8 @@ const Funcionario = () => {
   const { user } = useAuth();
   const id = searchParams.get('id');
 
-  const [mes, setMes] = useState(new Date().getMonth() + 1);
-  const [ano, setAno] = useState(new Date().getFullYear());
+  const [mes, setMes] = useState(searchParams.get('mes') ? Number(searchParams.get('mes')) : new Date().getMonth() + 1);
+  const [ano, setAno] = useState(searchParams.get('ano') ? Number(searchParams.get('ano')) : new Date().getFullYear());
   const [funcionario, setFuncionario] = useState(null);
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);

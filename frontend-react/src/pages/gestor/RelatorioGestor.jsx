@@ -169,7 +169,7 @@ const RelatorioGestor = () => {
                                 return (
                                     <tr key={f.id} className="hover:bg-slate-800/40 transition-colors group">
                                         <td className="px-10 py-6">
-                                            <Link to={`/funcionario?id=${f.id}`} className="text-base font-black text-white hover:text-blue-400 flex items-center gap-3 transition-colors italic">
+                                            <Link to={`/funcionario?id=${f.id}&mes=${mes}&ano=${ano}`} className="text-base font-black text-white hover:text-blue-400 flex items-center gap-3 transition-colors italic">
                                                 {f.nome}
                                                 <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
                                             </Link>

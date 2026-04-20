@@ -234,7 +234,7 @@ const Dashboard = () => {
                   className={`group relative bg-brand-bg/40 border-[1px] rounded-2xl p-6 hover:bg-brand-bg transition-all cursor-pointer shadow-md active:scale-[0.98] ${
                     criticalBank ? 'border-rose-500/30' : 'border-brand-border'
                   }`}
-                  onClick={() => window.location.href = `/funcionario?id=${f.id}`}
+                  onClick={() => window.location.href = `/funcionario?id=${f.id}&mes=${mes}&ano=${ano}`}
                 >
                   <div className="flex justify-between items-start mb-6">
                     <div>
