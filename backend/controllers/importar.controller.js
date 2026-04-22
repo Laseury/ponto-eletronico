@@ -37,8 +37,7 @@ async function extrairComIA(buffer, mimetype, mesAno) {
 
     // Modelos que estão garantidos e liberados na cota gratuita do Google AI
     const modelosPossiveis = [
-        "gemini-1.5-flash",
-        "gemini-1.5-pro"
+        "gemini-1.5-flash"
     ];
     let ultimoErro = null;
     const MAX_RETRIES = 2; // Tentativas por modelo antes de pular
@@ -86,7 +85,7 @@ async function extrairComIA(buffer, mimetype, mesAno) {
 
                 return dadosObtidos;
             } catch (e) {
-                console.warn(`>>> [IA] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message.substring(0, 120)}...`);
+                console.warn(`>>> [IA] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message}`);
                 ultimoErro = e;
                 
                 // Tenta novamente se for erro de cota (429) ou erro de servidor (500, 502, 503, 504)
@@ -163,7 +162,7 @@ async function importarFolha(req, res) {
             ${dataText}`;
 
             // Tenta múltiplos modelos com retry para PDF/XLSX também (apenas modelos com cota gratuita liberada)
-            const modelosTexto = ["gemini-1.5-flash", "gemini-1.5-pro"];
+            const modelosTexto = ["gemini-1.5-flash"];
             let textoObtido = null;
 
             for (const MODELO of modelosTexto) {
@@ -176,7 +175,7 @@ async function importarFolha(req, res) {
                         console.log(`>>> [IA-Texto] SUCESSO com: ${MODELO}`);
                         break;
                     } catch (e) {
-                        console.warn(`>>> [IA-Texto] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message.substring(0, 120)}...`);
+                        console.warn(`>>> [IA-Texto] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message}`);
                         if (e.message.match(/429|500|502|503|504/) && tentativa < 2) {
                             console.log(`>>> [IA-Texto] Aguardando ${5 * tentativa}s antes de retry...`);
                             await delay(5000 * tentativa);
