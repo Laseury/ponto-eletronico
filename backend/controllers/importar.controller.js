@@ -35,11 +35,10 @@ async function extrairComIA(buffer, mimetype, mesAno) {
         }
     }
 
-    // Modelos em ordem de preferência (inclui lite como fallback extra)
+    // Modelos que estão garantidos e liberados na cota gratuita do Google AI
     const modelosPossiveis = [
-        "gemini-2.0-flash",
         "gemini-1.5-flash",
-        "gemini-2.0-flash-lite"
+        "gemini-1.5-pro"
     ];
     let ultimoErro = null;
     const MAX_RETRIES = 2; // Tentativas por modelo antes de pular
@@ -163,8 +162,8 @@ async function importarFolha(req, res) {
             Texto extraído:
             ${dataText}`;
 
-            // Tenta múltiplos modelos com retry para PDF/XLSX também
-            const modelosTexto = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"];
+            // Tenta múltiplos modelos com retry para PDF/XLSX também (apenas modelos com cota gratuita liberada)
+            const modelosTexto = ["gemini-1.5-flash", "gemini-1.5-pro"];
             let textoObtido = null;
 
             for (const MODELO of modelosTexto) {
