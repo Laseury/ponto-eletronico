@@ -4,6 +4,13 @@ const xlsx                 = require("xlsx");
 const prisma               = require("../db/prisma");
 require("dotenv").config();
 
+let sharp;
+try {
+    sharp = require("sharp");
+} catch (e) {
+    console.warn("[IA] Módulo Sharp não encontrado. As imagens não serão otimizadas.");
+}
+
 // Inicializa a IA na versão padrão configurada
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -13,6 +20,21 @@ function delay(ms) {
 }
 
 async function extrairComIA(buffer, mimetype, mesAno) {
+    if (sharp && mimetype.startsWith("image/")) {
+        try {
+            console.log(">>> [IA] Otimizando imagem para melhorar a leitura...");
+            buffer = await sharp(buffer)
+                .resize({ width: 2500, height: 2500, fit: 'inside', withoutEnlargement: true })
+                .grayscale() // Processa em preto e branco
+                .normalize() // Ajusta o contraste
+                .jpeg({ quality: 85 }) // Converte para um formato unificado
+                .toBuffer();
+            mimetype = "image/jpeg";
+        } catch (e) {
+            console.warn(">>> [IA] Falha ao otimizar imagem, usando formato original:", e.message);
+        }
+    }
+
     // Modelos em ordem de preferência (inclui lite como fallback extra)
     const modelosPossiveis = [
         "gemini-2.0-flash",
