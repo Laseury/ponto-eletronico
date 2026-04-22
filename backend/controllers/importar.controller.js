@@ -25,9 +25,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 function formatarDatas(mesAno, dadosObtidos) {
     if (mesAno && dadosObtidos && dadosObtidos.registros) {
         dadosObtidos.registros.forEach(r => {
-            if (r.data && r.data.includes("-")) {
-                const dia = r.data.split("-").pop().padStart(2, "0");
-                r.data = `${mesAno}-${dia}`;
+            if (r.data) {
+                // Pega apenas o número do dia (ex: "01", "2024-04-01", "Dia 1" -> tudo vira "01")
+                const apenasNumeros = r.data.toString().replace(/\D/g, "");
+                if (apenasNumeros) {
+                    const dia = apenasNumeros.slice(-2).padStart(2, "0");
+                    r.data = `${mesAno}-${dia}`;
+                }
             }
         });
     }
@@ -204,9 +208,12 @@ async function importarFolha(req, res) {
 
         if (isImage) {
             const prompt = `Analise esta foto de folha de ponto e extraia os horários. 
-                MUITO IMPORTANTE: Ignore os cabeçalhos das colunas (Entrada, Saída, etc) onde os horários foram escritos, pois eles podem estar preenchidos nas colunas erradas.
-                Para cada dia, pegue TODOS os horários encontrados, ORDENE-OS em cronologia crescente (menor para o maior) e então atribua rigidamente nesta ordem:
-                1º horário -> e1, 2º horário -> s1, 3º horário -> e2, 4º horário -> s2, 5º horário -> e3, 6º horário -> s3. Retorne APENAS o JSON puro sem markdown com { "registros": [ ... ] }`;
+                REGRAS OBRIGATÓRIAS:
+                1. Identifique o DIA do mês em cada linha.
+                2. Ignore os cabeçalhos das colunas (Entrada, Saída, etc) onde os horários foram escritos, pois eles podem estar preenchidos nas colunas erradas.
+                3. Para cada dia, pegue TODOS os horários encontrados, ORDENE-OS em cronologia crescente (menor para o maior) e então atribua nesta ordem:
+                1º horário -> e1, 2º horário -> s1, 3º horário -> e2, 4º horário -> s2, 5º horário -> e3, 6º horário -> s3. 
+                4. Retorne APENAS o JSON puro no formato: { "registros": [ { "data": "01", "e1": "08:00", "s1": "12:00"... }, ... ] }`;
 
             if (provider === "chatgpt") {
                 resultadoFinal = await extrairComChatGPT(buffer, true, mesAno, prompt);
