@@ -221,6 +221,7 @@ const Lancamento = () => {
     const [registrosIA, setRegistrosIA] = useState(null);
     const [modalIAOpen, setModalIAOpen] = useState(false);
     const [registrosCadastrados, setRegistrosCadastrados] = useState([]);
+    const [provider, setProvider] = useState('gemini');
 
     const fetchRegistrosCadastrados = async () => {
         if (fId && mesSelect && anoSelect) {
@@ -322,6 +323,7 @@ const Lancamento = () => {
         formData.append('arquivo', file);
         formData.append('funcionario_id', fId);
         formData.append('mesAno', mesAno);
+        formData.append('provider', provider);
 
         setProcessingIA(true);
         try {
@@ -426,7 +428,15 @@ const Lancamento = () => {
                             <p className="text-brand-muted text-[11px] font-medium leading-relaxed opacity-60">Envie um arquivo PDF, Planilha ou Imagem e o sistema preencherá todo o mês automaticamente.</p>
                         </div>
                     </div>
-                    <div className="flex-shrink-0 w-full md:w-auto">
+                    <div className="flex-shrink-0 w-full md:w-auto flex flex-col gap-2">
+                        <select 
+                            value={provider}
+                            onChange={(e) => setProvider(e.target.value)}
+                            className="bg-brand-surface border border-brand-primary/30 rounded-xl px-4 py-2.5 text-brand-text text-[11px] font-black outline-none focus:ring-2 focus:ring-brand-primary shadow-inner cursor-pointer uppercase tracking-widest"
+                        >
+                            <option value="gemini">⚡ Google Gemini</option>
+                            <option value="chatgpt">🧠 OpenAI ChatGPT</option>
+                        </select>
                         <button 
                             onClick={() => fileInputRef.current.click()} 
                             disabled={procesingIA} 

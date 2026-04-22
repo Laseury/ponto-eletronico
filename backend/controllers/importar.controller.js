@@ -11,8 +11,28 @@ try {
     console.warn("[IA] Módulo Sharp não encontrado. As imagens não serão otimizadas.");
 }
 
+let openaiClient;
+try {
+    const { OpenAI } = require("openai");
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+} catch (e) {
+    console.warn("[IA] OpenAI não configurado ou módulo ausente.");
+}
+
 // Inicializa a IA na versão padrão configurada
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+function formatarDatas(mesAno, dadosObtidos) {
+    if (mesAno && dadosObtidos && dadosObtidos.registros) {
+        dadosObtidos.registros.forEach(r => {
+            if (r.data && r.data.includes("-")) {
+                const dia = r.data.split("-").pop().padStart(2, "0");
+                r.data = `${mesAno}-${dia}`;
+            }
+        });
+    }
+    return dadosObtidos;
+}
 
 // Função auxiliar para esperar antes de retry
 function delay(ms) {
@@ -20,21 +40,6 @@ function delay(ms) {
 }
 
 async function extrairComIA(buffer, mimetype, mesAno) {
-    if (sharp && mimetype.startsWith("image/")) {
-        try {
-            console.log(">>> [IA] Otimizando imagem para melhorar a leitura...");
-            buffer = await sharp(buffer)
-                .resize({ width: 2500, height: 2500, fit: 'inside', withoutEnlargement: true })
-                .grayscale() // Processa em preto e branco
-                .normalize() // Ajusta o contraste
-                .jpeg({ quality: 85 }) // Converte para um formato unificado
-                .toBuffer();
-            mimetype = "image/jpeg";
-        } catch (e) {
-            console.warn(">>> [IA] Falha ao otimizar imagem, usando formato original:", e.message);
-        }
-    }
-
     // Modelos que estão garantidos e liberados na cota gratuita do Google AI
     const modelosPossiveis = [
         "gemini-1.5-flash"
@@ -73,21 +78,27 @@ async function extrairComIA(buffer, mimetype, mesAno) {
                 const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
                 const dadosObtidos = JSON.parse(jsonStr);
 
-                // Subscrição NATIVA do Mês/Ano via Javascript (Garante que a escolha manual do usuário funcione sempre)
-                if (mesAno && dadosObtidos.registros) {
-                    dadosObtidos.registros.forEach(r => {
-                        if (r.data) {
-                            const dia = r.data.split("-").pop().padStart(2, "0"); // Pega o número do dia extraído
-                            r.data = `${mesAno}-${dia}`; // Concatena com o mês/ano que o usuário escolheu
-                        }
-                    });
-                }
-
-                return dadosObtidos;
+                return formatarDatas(mesAno, dadosObtidos);
             } catch (e) {
                 console.warn(`>>> [IA] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message}`);
                 ultimoErro = e;
                 
+                if (e.message.includes("404")) {
+                    console.log(`>>> [IA] O modelo ${MODELO} retornou 404. Coletando lista exata de modelos permitidos pela sua chave de API...`);
+                    try {
+                        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + process.env.GEMINI_API_KEY);
+                        const dados = await res.json();
+                        if (dados.models) {
+                            const nomes = dados.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")).map(m => m.name.replace("models/", ""));
+                            console.log(">>> [IA] ✨ MODELOS PERMITIDOS NESTA CHAVE: ", nomes.join(", "));
+                        } else {
+                            console.log(">>> [IA] Retorno da API ao listar modelos:", dados);
+                        }
+                    } catch (err) {
+                        console.log(">>> [IA] Falha ao listar modelos:", err.message);
+                    }
+                }
+
                 // Tenta novamente se for erro de cota (429) ou erro de servidor (500, 502, 503, 504)
                 if (e.message.match(/429|500|502|503|504/)) {
                     if (tentativa < MAX_RETRIES) {
@@ -123,19 +134,85 @@ function processarExcel(buffer, nomeFuncionario) {
     return xlsx.utils.sheet_to_csv(workbook.Sheets[targetSheet]);
 }
 
+async function extrairComChatGPT(buffer, isImage, mesAno, promptText) {
+    if (!openaiClient) throw new Error("A biblioteca de IA Alternativa (OpenAI) não está definida devido à falta do OPENAI_API_KEY no sistema.");
+    
+    // Modelos OpenAI (gpt-4o para visão, gpt-4o-mini para texto puro)
+    const modelo = isImage ? "gpt-4o" : "gpt-4o-mini";
+
+    console.log(`>>> [IA ChatGPT] Iniciando extração com ${modelo}...`);
+
+    let output;
+    try {
+        if (isImage) {
+            // Conversão para padrão URI que os modelos de chatCompletion de visão exigem
+            const base64Image = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+            const comp = await openaiClient.chat.completions.create({
+                model: modelo,
+                messages: [{ role: "user", content: [{ type: "text", text: promptText }, { type: "image_url", image_url: { url: base64Image } }] }],
+                max_tokens: 1500
+            });
+            output = comp.choices[0].message.content;
+        } else {
+            console.log(`>>> [IA ChatGPT] Lendo documento formato texto...`);
+            const fallbackComp = await openaiClient.chat.completions.create({
+                model: modelo,
+                messages: [{ role: "user", content: promptText }],
+                max_tokens: 1500
+            });
+            output = fallbackComp.choices[0].message.content;
+        }
+
+        console.log(`>>> [IA ChatGPT] SUCESSO com OpenAI!`);
+        const jsonStr = output.replace(/```json/g, "").replace(/```/g, "").trim();
+        const dadosObtidos = JSON.parse(jsonStr);
+
+        return formatarDatas(mesAno, dadosObtidos);
+    } catch (e) {
+        console.error(">>> [IA ChatGPT] Falha na extração OpenAI:", e.message);
+        throw e;
+    }
+}
+
 async function importarFolha(req, res) {
     console.log(">>> [DEBUG] ROTA DE IMPORTAÇÃO ACESSADA! <<<");
     try {
         if (!req.file) return res.status(400).json({ erro: "Nenhum arquivo enviado." });
 
-        const { mimetype, buffer, originalname } = req.file;
-        const { funcionario_id, mesAno } = req.body;
+        let { mimetype, buffer, originalname } = req.file;
+        const { funcionario_id, mesAno, provider } = req.body;
         const ext = (originalname || "").split(".").pop().toLowerCase();
-
         let resultadoFinal;
 
-        if (mimetype.startsWith("image/") || ["jpg", "jpeg", "png"].includes(ext)) {
-            resultadoFinal = await extrairComIA(buffer, mimetype, mesAno);
+        const isImage = mimetype.startsWith("image/") || ["jpg", "jpeg", "png"].includes(ext);
+
+        if (isImage && sharp) {
+            try {
+                // Otimização global (Ocorre tanto pro Gemini quanto Llama)
+                console.log(">>> [IA] Otimizando imagem globalmente para leitura robusta...");
+                buffer = await sharp(buffer)
+                    .resize({ width: 2500, height: 2500, fit: 'inside', withoutEnlargement: true })
+                    .grayscale()
+                    .normalize()
+                    .jpeg({ quality: 85 })
+                    .toBuffer();
+                mimetype = "image/jpeg";
+            } catch(e) {
+                console.warn(">>> [IA] Falha na otimização de imagem padrão. Seguindo com original:", e.message);
+            }
+        }
+
+        if (isImage) {
+            const prompt = `Analise esta foto de folha de ponto e extraia os horários. 
+                MUITO IMPORTANTE: Ignore os cabeçalhos das colunas (Entrada, Saída, etc) onde os horários foram escritos, pois eles podem estar preenchidos nas colunas erradas.
+                Para cada dia, pegue TODOS os horários encontrados, ORDENE-OS em cronologia crescente (menor para o maior) e então atribua rigidamente nesta ordem:
+                1º horário -> e1, 2º horário -> s1, 3º horário -> e2, 4º horário -> s2, 5º horário -> e3, 6º horário -> s3. Retorne APENAS o JSON puro sem markdown com { "registros": [ ... ] }`;
+
+            if (provider === "chatgpt") {
+                resultadoFinal = await extrairComChatGPT(buffer, true, mesAno, prompt);
+            } else {
+                resultadoFinal = await extrairComIA(buffer, mimetype, mesAno);
+            }
         } else {
             // Busca nome do funcionário no Banco
             const func = await prisma.funcionario.findUnique({
@@ -149,7 +226,7 @@ async function importarFolha(req, res) {
                 ? (await pdfParse(buffer)).text 
                 : processarExcel(buffer, func.nome);
 
-            const prompt = `Analise os dados extraídos desta folha de ponto e retorne os registros em JSON.
+            const promptCompleto = `Analise os dados extraídos desta folha de ponto e retorne os registros em JSON.
             MÊS/ANO DE REFERÊNCIA: ${mesAno}
             
             Regras de extração:
@@ -161,46 +238,40 @@ async function importarFolha(req, res) {
             Texto extraído:
             ${dataText}`;
 
-            // Tenta múltiplos modelos com retry para PDF/XLSX também (apenas modelos com cota gratuita liberada)
-            const modelosTexto = ["gemini-1.5-flash"];
-            let textoObtido = null;
+            if (provider === "chatgpt") {
+                resultadoFinal = await extrairComChatGPT(null, false, mesAno, promptCompleto);
+            } else {
+                // Tenta múltiplos modelos com retry para PDF/XLSX também (apenas modelos com cota gratuita liberada)
+                const modelosTexto = ["gemini-1.5-flash"];
+                let textoObtido = null;
 
-            for (const MODELO of modelosTexto) {
-                for (let tentativa = 1; tentativa <= 2; tentativa++) {
-                    try {
-                        console.log(`>>> [IA-Texto] Tentando ${MODELO} (tentativa ${tentativa}/2)...`);
-                        const model = genAI.getGenerativeModel({ model: MODELO });
-                        const result = await model.generateContent(prompt);
-                        textoObtido = result.response.text();
-                        console.log(`>>> [IA-Texto] SUCESSO com: ${MODELO}`);
-                        break;
-                    } catch (e) {
-                        console.warn(`>>> [IA-Texto] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message}`);
-                        if (e.message.match(/429|500|502|503|504/) && tentativa < 2) {
-                            console.log(`>>> [IA-Texto] Aguardando ${5 * tentativa}s antes de retry...`);
-                            await delay(5000 * tentativa);
-                        } else if (!e.message.match(/429|500|502|503|504/)) {
-                            break; // Outro erro, pula modelo
+                for (const MODELO of modelosTexto) {
+                    for (let tentativa = 1; tentativa <= 2; tentativa++) {
+                        try {
+                            console.log(`>>> [IA-Texto] Tentando ${MODELO} (tentativa ${tentativa}/2)...`);
+                            const model = genAI.getGenerativeModel({ model: MODELO });
+                            const result = await model.generateContent(promptCompleto);
+                            textoObtido = result.response.text();
+                            console.log(`>>> [IA-Texto] SUCESSO com: ${MODELO}`);
+                            break;
+                        } catch (e) {
+                            console.warn(`>>> [IA-Texto] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message}`);
+                            if (e.message.match(/429|500|502|503|504/) && tentativa < 2) {
+                                console.log(`>>> [IA-Texto] Aguardando ${5 * tentativa}s antes de retry...`);
+                                await delay(5000 * tentativa);
+                            } else if (!e.message.match(/429|500|502|503|504/)) {
+                                break; // Outro erro, pula modelo
+                            }
                         }
                     }
+                    if (textoObtido) break;
                 }
-                if (textoObtido) break;
-            }
 
-            if (!textoObtido) throw new Error("Todos os modelos de IA falharam ao processar o documento.");
+                if (!textoObtido) throw new Error("Todos os modelos de IA falharam ao processar o documento.");
 
-            const jsonStr = textoObtido.replace(/```json/g, "").replace(/```/g, "").trim();
-            resultadoFinal = JSON.parse(jsonStr);
-
-            // Garantir datas corretas se a IA falhar na concatenação do ano
-            if (mesAno && resultadoFinal.registros) {
-                resultadoFinal.registros.forEach(r => {
-                    if (r.data && r.data.includes("-")) {
-                        const parts = r.data.split("-");
-                        const dia = parts.pop().padStart(2, "0");
-                        r.data = `${mesAno}-${dia}`;
-                    }
-                });
+                const jsonStr = textoObtido.replace(/```json/g, "").replace(/```/g, "").trim();
+                const tempDecoded = JSON.parse(jsonStr);
+                resultadoFinal = formatarDatas(mesAno, tempDecoded);
             }
         }
 
