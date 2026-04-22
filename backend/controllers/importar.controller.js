@@ -15,8 +15,8 @@ function delay(ms) {
 async function extrairComIA(buffer, mimetype, mesAno) {
     // Modelos em ordem de preferência (inclui lite como fallback extra)
     const modelosPossiveis = [
-        "gemini-2.5-flash",
         "gemini-2.0-flash",
+        "gemini-1.5-flash",
         "gemini-2.0-flash-lite"
     ];
     let ultimoErro = null;
@@ -68,17 +68,17 @@ async function extrairComIA(buffer, mimetype, mesAno) {
                 console.warn(`>>> [IA] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message.substring(0, 120)}...`);
                 ultimoErro = e;
                 
-                // Se for erro de cota (429), espera antes de tentar novamente
-                if (e.message.includes("429")) {
+                // Tenta novamente se for erro de cota (429) ou erro de servidor (500, 502, 503, 504)
+                if (e.message.match(/429|500|502|503|504/)) {
                     if (tentativa < MAX_RETRIES) {
                         const tempoEspera = 5000 * tentativa; // 5s, 10s...
-                        console.log(`>>> [IA] Cota excedida no ${MODELO}. Aguardando ${tempoEspera/1000}s antes de tentar novamente...`);
+                        console.log(`>>> [IA] Erro temporário no ${MODELO}. Aguardando ${tempoEspera/1000}s antes de tentar novamente...`);
                         await delay(tempoEspera);
                     } else {
-                        console.log(`>>> [IA] Cota excedida no ${MODELO} após ${MAX_RETRIES} tentativas. Tentando próximo modelo...`);
+                        console.log(`>>> [IA] Erro persistente no ${MODELO} após ${MAX_RETRIES} tentativas. Tentando próximo modelo...`);
                     }
                 } else {
-                    // Para outros erros, pula direto para o próximo modelo
+                    // Para outros erros (ex: 404, 400), pula direto para o próximo modelo
                     break;
                 }
             }
@@ -142,7 +142,7 @@ async function importarFolha(req, res) {
             ${dataText}`;
 
             // Tenta múltiplos modelos com retry para PDF/XLSX também
-            const modelosTexto = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+            const modelosTexto = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"];
             let textoObtido = null;
 
             for (const MODELO of modelosTexto) {
@@ -156,10 +156,10 @@ async function importarFolha(req, res) {
                         break;
                     } catch (e) {
                         console.warn(`>>> [IA-Texto] Falha no ${MODELO} (tentativa ${tentativa}): ${e.message.substring(0, 120)}...`);
-                        if (e.message.includes("429") && tentativa < 2) {
+                        if (e.message.match(/429|500|502|503|504/) && tentativa < 2) {
                             console.log(`>>> [IA-Texto] Aguardando ${5 * tentativa}s antes de retry...`);
                             await delay(5000 * tentativa);
-                        } else if (!e.message.includes("429")) {
+                        } else if (!e.message.match(/429|500|502|503|504/)) {
                             break; // Outro erro, pula modelo
                         }
                     }
