@@ -205,7 +205,7 @@ const Funcionario = () => {
   }, [fetchFuncionarioData]);
 
   const analytics = useMemo(() => {
-    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0 };
+    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0 };
     const min = (h) => {
       if (!h) return 0;
       const [hh, mm] = h.split(':').map(Number);
@@ -226,6 +226,7 @@ const Funcionario = () => {
       if (r.evento === 'Feriado') {
         const carga = funcionario?.tipo?.startsWith('Horista') ? 480 : 440;
         stats.feriados += carga;
+        stats.dias_feriados++;
       }
       if (r.total && r.evento !== 'Feriado') stats.trabalhado += min(r.total);
       if (r.noturno) stats.noturno += min(r.noturno);
@@ -249,7 +250,7 @@ const Funcionario = () => {
       noturno: fmt(stats.noturno),
       diurno: fmt(Math.max(0, stats.trabalhado - stats.noturno)),
       noturnoComFator: fmt(Math.round(stats.noturnoPuro * (60 / 52.5))),
-      totalFeriados: fmt(stats.feriados)
+      totalFeriados: stats.dias_feriados > 0 ? `${stats.dias_feriados}d - ${fmt(stats.feriados)}` : '00:00'
     };
   }, [registros]);
 
@@ -379,23 +380,47 @@ const Funcionario = () => {
       }
       const htmlContent = `
         <html><head><style>
-          body { font-family: sans-serif; font-size: 10px; color: #333; margin: 20px; }
-          .hdr { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-          .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-          .card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9; }
-          table { width: 100%; border-collapse: collapse; }
-          th { background: #333; color: #fff; padding: 5px; font-size: 9px; }
-          td { border: 1px solid #ddd; padding: 4px; text-align: center; }
+          @page { size: portrait; margin: 1cm; }
+          body { font-family: sans-serif; font-size: 9px; color: #333; margin: 0; padding: 0; }
+          .hdr { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+          .hdr h1 { font-size: 16px; margin: 0; }
+          .hdr p { font-size: 10px; margin: 5px 0 0 0; font-weight: bold; }
+          .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 15px; }
+          .card { border: 1px solid #ddd; padding: 6px 4px; border-radius: 4px; background: #f9f9f9; text-align: center; }
+          .card strong { font-size: 7px; text-transform: uppercase; color: #666; display: block; margin-bottom: 2px; }
+          table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+          th { background: #333; color: #fff; padding: 4px 2px; font-size: 8px; }
+          td { border: 1px solid #ddd; padding: 3px 1px; text-align: center; font-size: 8.5px; }
+          .col-data { width: 55px; }
+          .col-hora { width: 35px; }
+          .col-total { width: 40px; }
+          .col-evento { width: auto; }
         </style></head><body>
           <div class="hdr"><h1>VISO HOTEL — FICHA DE PONTO</h1><p>Colaborador: ${funcionario?.nome} | Período: ${labelMes}</p></div>
           <div class="grid">
-            <div class="card"><strong>Tipo:</strong><br>${funcionario?.tipo}</div>
-            <div class="card"><strong>Saldo Anterior:</strong><br>${relatorio?.saldo_anterior || '00:00'}</div>
-            <div class="card"><strong>Faltas no Mês:</strong><br>${analytics.totalFaltas}</div>
-            <div class="card"><strong>Saldo do Mês:</strong><br>${analytics.saldo}</div>
-            <div class="card"><strong>Banco Consolidado:</strong><br>${relatorio?.banco_horas || analytics.saldo}</div>
+            <div class="card"><strong>Tipo</strong>${funcionario?.tipo}</div>
+            <div class="card"><strong>Faltas</strong>${analytics.totalFaltas}</div>
+            <div class="card"><strong>Feriados</strong>${analytics.totalFeriados}</div>
+            <div class="card"><strong>S. Anterior</strong>${relatorio?.saldo_anterior || '00:00'}</div>
+            <div class="card"><strong>S. Mês</strong>${analytics.saldo}</div>
+            <div class="card"><strong>Consolidado</strong>${relatorio?.banco_horas || analytics.saldo}</div>
           </div>
-          <table><thead><tr><th>Data</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>E3</th><th>S3</th><th>Total</th><th>Not.</th><th>Ext.</th><th>Neg.</th><th>Evento</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+          <table>
+            <thead>
+              <tr>
+                <th class="col-data">Data</th>
+                <th class="col-hora">E1</th><th class="col-hora">S1</th>
+                <th class="col-hora">E2</th><th class="col-hora">S2</th>
+                <th class="col-hora">E3</th><th class="col-hora">S3</th>
+                <th class="col-total">Total</th>
+                <th class="col-total">Not.</th>
+                <th class="col-total">Ext.</th>
+                <th class="col-total">Neg.</th>
+                <th class="col-evento">Evento</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
         </body></html>
       `;
       const win = window.open('', '_blank');
