@@ -52,7 +52,7 @@ const Relatorio = () => {
         
         const headers = ["Nome", "Tipo", "Dias Trab.", "Faltas", "Feriados", "Extras", "Negativos", "Saldo", "Banco", "Noturno", "Valor Noturno"];
         const rows = dadosFiltrados.map(f => [
-            f.nome, f.tipo, f.dias_trabalhados, f.faltas, f.total_feriados, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno
+            f.nome, f.tipo, f.dias_trabalhados, f.faltas, `${f.dias_feriados}d - ${f.total_feriados}`, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno
         ]);
 
         const csvContent = [headers, ...rows].map(e => e.join(";")).join("\n");
@@ -216,7 +216,7 @@ const Relatorio = () => {
                                         </td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-text bg-brand-bg/20">{f.dias_trabalhados}</td>
                                         <td className={`px-6 py-4 text-center text-xs font-black ${f.faltas > 0 ? 'text-rose-500 underline decoration-rose-500/30' : 'text-brand-muted opacity-30'}`}>{f.faltas || 0}</td>
-                                        <td className={`px-6 py-4 text-center text-xs font-black text-emerald-500 bg-emerald-500/5`}>{f.total_feriados || '00:00'}</td>
+                                        <td className={`px-6 py-4 text-center text-xs font-black text-emerald-500 bg-emerald-500/5`}>{f.dias_feriados > 0 ? `${f.dias_feriados}d - ${f.total_feriados}` : '00:00'}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-accent bg-brand-accent/5">{f.total_extras}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-rose-400 bg-rose-500/5">{f.total_negativos}</td>
                                         <td className={`px-6 py-4 text-center text-sm font-black ${corSaldo}`}>{f.saldo_mes}</td>

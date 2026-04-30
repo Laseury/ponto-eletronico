@@ -21,6 +21,7 @@ async function gerarRelatorio(req, res) {
                 COUNT(r.id) FILTER (WHERE r.evento IS NULL OR r.evento = '')       AS dias_trabalhados,
                 COUNT(r.id) FILTER (WHERE r.evento IS NOT NULL AND r.evento != '') AS dias_evento,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Falta')                      AS faltas,
+                COUNT(r.id) FILTER (WHERE r.evento = 'Feriado')                      AS dias_feriados,
                 SUM(CASE WHEN r.extras LIKE '+%:%'
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
@@ -157,6 +158,7 @@ async function gerarRelatorio(req, res) {
                 total_noturno:    minutosParaHorario(noturnoMin),
                 total_diurno:     minutosParaHorario(diurnoMin),
                 valor_noturno:    valorNoturno,
+                dias_feriados:    Number(row.dias_feriados || 0),
                 total_feriados:   minutosParaHorario(Number(row.total_feriado_min || 0))
             };
         });

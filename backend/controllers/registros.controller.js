@@ -248,4 +248,40 @@ async function verificarRegistro(req, res) {
     }
 }
 
-module.exports = { listarRegistros, salvarRegistro, verificarRegistro };
+async function excluirRegistro(req, res) {
+    try {
+        const id = parseInt(req.params.id);
+        
+        const registro = await prisma.registroPonto.findUnique({
+            where: { id }
+        });
+        
+        if (!registro) {
+            return res.status(404).json({ erro: "Registro não encontrado" });
+        }
+        
+        await prisma.registroPonto.delete({
+            where: { id }
+        });
+        
+        const usuario = req.headers["x-usuario"] || "desconhecido";
+        
+        // Log deletion
+        await prisma.logRegistro.create({
+            data: {
+                funcionarioId: registro.funcionarioId,
+                dataRegistro: new Date(registro.data),
+                usuario: usuario,
+                acao: "edicao", // Reusing edicao for simplicity as per existing logic
+                campoAlterado: "exclusao",
+                valorNovo: "Registro Excluído"
+            }
+        });
+        
+        res.json({ mensagem: "Registro excluído com sucesso" });
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message });
+    }
+}
+
+module.exports = { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro };

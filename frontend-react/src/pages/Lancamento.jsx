@@ -11,23 +11,45 @@ import {
   X,
   ChevronRight,
   Info,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 import { useAuth } from '../context/AuthContext';
 
-const RevisaoIAModal = ({ isOpen, onClose, registros, funcionarioId, onComplete }) => {
+const RevisaoIAModal = ({ isOpen, onClose, registros, registrosCadastrados, funcionarioId, onComplete }) => {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [sobrescrever, setSobrescrever] = useState(false);
 
   useEffect(() => {
     if (registros) {
-      setItems(registros.map(r => ({ ...r, selecionado: true, status: 'pendente' })));
+      setItems(registros.map(r => {
+        const jaPreenchido = registrosCadastrados && registrosCadastrados.some(rc => rc.data === r.data);
+        return { 
+          ...r, 
+          selecionado: !jaPreenchido, 
+          jaPreenchido,
+          status: 'pendente' 
+        };
+      }));
+      setSobrescrever(false);
     }
-  }, [registros]);
+  }, [registros, registrosCadastrados]);
+
+  const handleToggleSobrescrever = (e) => {
+    const checked = e.target.checked;
+    setSobrescrever(checked);
+    setItems(prevItems => prevItems.map(i => {
+      if (i.jaPreenchido) {
+        return { ...i, selecionado: checked };
+      }
+      return i;
+    }));
+  };
 
   const handleToggle = (index) => {
     const newItems = [...items];
@@ -102,6 +124,20 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, funcionarioId, onComplete 
         </div>
 
         <div className="flex-1 overflow-auto custom-scrollbar p-6">
+          <div className="mb-4 flex justify-between items-center bg-brand-bg/40 p-3 rounded-xl border border-brand-border/50">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={sobrescrever}
+                onChange={handleToggleSobrescrever}
+                className="w-4 h-4 rounded border-brand-border bg-brand-bg text-brand-primary focus:ring-brand-primary/30 transition-all"
+              />
+              <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                <AlertCircle size={14} />
+                Sobrescrever dias já preenchidos no sistema
+              </span>
+            </label>
+          </div>
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] border-b border-brand-border/50 opacity-60">
@@ -133,7 +169,10 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, funcionarioId, onComplete 
                     />
                   </td>
                   <td className="px-4 py-4">
-                    <p className="text-xs font-black text-brand-text leading-none mb-1 opacity-90">{new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR').substring(0, 5)}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs font-black text-brand-text leading-none opacity-90">{new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR').substring(0, 5)}</p>
+                      {item.jaPreenchido && <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-md text-[7px] font-black uppercase tracking-widest" title="Já existe um lançamento para este dia.">Já no sistema</span>}
+                    </div>
                     <p className="text-[9px] text-brand-muted font-black uppercase opacity-40">{new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR', {weekday: 'short'})}</p>
                   </td>
                   {['1', '2', '3'].map(turno => (
@@ -221,6 +260,7 @@ const Lancamento = () => {
     const [registrosIA, setRegistrosIA] = useState(null);
     const [modalIAOpen, setModalIAOpen] = useState(false);
     const [registrosCadastrados, setRegistrosCadastrados] = useState([]);
+    const [selecionadosExclusao, setSelecionadosExclusao] = useState([]);
     const [provider, setProvider] = useState('gemini');
 
     const fetchRegistrosCadastrados = async () => {
@@ -229,6 +269,7 @@ const Lancamento = () => {
                 const res = await axios.get(`/registros/${fId}?mes=${mesSelect}&ano=${anoSelect}`);
                 // filtra apenas os que tem alguma hora trabalhada ou evento
                 setRegistrosCadastrados((res.data || []).filter(r => r.e1 || r.evento || r.extras || r.negativos));
+                setSelecionadosExclusao([]);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
                 swalTheme({ title: 'Erro!', text: 'Não foi possível carregar os dados.', icon: 'error' });
@@ -336,6 +377,51 @@ const Lancamento = () => {
         } finally {
             setProcessingIA(false);
             e.target.value = '';
+        }
+    };
+
+    const handleExcluirSelecionados = async () => {
+        if (selecionadosExclusao.length === 0) return;
+
+        const res = await swalTheme({
+            title: 'Confirmar Exclusão',
+            text: `Deseja realmente excluir ${selecionadosExclusao.length} registro(s)? Esta ação não pode ser desfeita.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonColor: '#6b7280',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (res.isConfirmed) {
+            try {
+                for (const id of selecionadosExclusao) {
+                    await axios.delete(`/registros/${id}`, {
+                        headers: { 'x-usuario': user?.usuario || 'anonimo' }
+                    });
+                }
+                swalTheme({ title: 'Sucesso!', text: 'Registros excluídos com sucesso.', icon: 'success' });
+                fetchRegistrosCadastrados();
+            } catch (error) {
+                swalTheme({ title: 'Erro!', text: 'Não foi possível excluir alguns registros.', icon: 'error' });
+            }
+        }
+    };
+
+    const handleToggleExclusao = (id) => {
+        if (selecionadosExclusao.includes(id)) {
+            setSelecionadosExclusao(selecionadosExclusao.filter(item => item !== id));
+        } else {
+            setSelecionadosExclusao([...selecionadosExclusao, id]);
+        }
+    };
+
+    const handleSelectAllExclusao = () => {
+        if (selecionadosExclusao.length === registrosCadastrados.length && registrosCadastrados.length > 0) {
+            setSelecionadosExclusao([]);
+        } else {
+            setSelecionadosExclusao(registrosCadastrados.map(r => r.id));
         }
     };
 
@@ -585,6 +671,7 @@ const Lancamento = () => {
                 isOpen={modalIAOpen} 
                 onClose={() => setModalIAOpen(false)} 
                 registros={registrosIA} 
+                registrosCadastrados={registrosCadastrados}
                 funcionarioId={fId}
                 onComplete={() => {
                     setDia('');
@@ -595,14 +682,32 @@ const Lancamento = () => {
             {/* Registros já lançados */}
             {fId && mesAno && (
                 <div className="bg-brand-surface border border-brand-border rounded-2xl p-8 shadow-2xl relative overflow-hidden group mt-8">
-                    <div className="flex items-center gap-3 mb-6">
-                        <Clock size={20} className="text-brand-primary" />
-                        <h3 className="text-xl font-black text-brand-text">Lançamentos em {mesSelect}/{anoSelect}</h3>
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <Clock size={20} className="text-brand-primary" />
+                            <h3 className="text-xl font-black text-brand-text">Lançamentos em {mesSelect}/{anoSelect}</h3>
+                        </div>
+                        {selecionadosExclusao.length > 0 && (
+                            <button 
+                                onClick={handleExcluirSelecionados}
+                                className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-500/20"
+                            >
+                                <Trash2 size={14} /> Excluir ({selecionadosExclusao.length})
+                            </button>
+                        )}
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-brand-border text-[10px] uppercase tracking-widest text-brand-muted opacity-60">
+                                    <th className="px-4 py-3 text-center w-10">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={registrosCadastrados.length > 0 && selecionadosExclusao.length === registrosCadastrados.length}
+                                            onChange={handleSelectAllExclusao}
+                                            className="w-3.5 h-3.5 rounded border-brand-border bg-brand-bg text-rose-500 focus:ring-rose-500/30 transition-all cursor-pointer"
+                                        />
+                                    </th>
                                     <th className="px-4 py-3 font-black text-center">Data</th>
                                     <th className="px-4 py-3 font-black text-center">Entradas/Saídas</th>
                                     <th className="px-4 py-3 font-black text-center">Eventos/Horas</th>
@@ -614,7 +719,15 @@ const Lancamento = () => {
                                         const diaApenas = new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
                                         const diaExtenso = new Date(r.data + 'T12:00:00').toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '');
                                         return (
-                                            <tr key={idx} className="hover:bg-brand-bg/50 transition-colors">
+                                            <tr key={idx} className={`hover:bg-brand-bg/50 transition-colors ${selecionadosExclusao.includes(r.id) ? 'bg-rose-500/5' : ''}`}>
+                                                <td className="px-4 py-4 text-center">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={selecionadosExclusao.includes(r.id)}
+                                                        onChange={() => handleToggleExclusao(r.id)}
+                                                        className="w-4 h-4 rounded border-brand-border bg-brand-bg text-rose-500 focus:ring-rose-500/30 transition-all cursor-pointer"
+                                                    />
+                                                </td>
                                                 <td className="px-4 py-4 text-center">
                                                     <p className="text-sm font-black text-brand-text mb-0.5">{diaApenas}</p>
                                                     <p className="text-[8px] font-black text-brand-muted uppercase tracking-widest opacity-40">{diaExtenso}</p>
@@ -645,7 +758,7 @@ const Lancamento = () => {
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan="3" className="px-4 py-8 text-center text-brand-muted text-sm italic opacity-60">
+                                        <td colSpan="4" className="px-4 py-8 text-center text-brand-muted text-sm italic opacity-60">
                                             Nenhum lançamento encontrado para os filtros selecionados.
                                         </td>
                                     </tr>
