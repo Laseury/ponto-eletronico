@@ -206,28 +206,34 @@ const Funcionario = () => {
     fetchFuncionarioData();
   }, [fetchFuncionarioData]);
 
+  const min = (h) => {
+    if (!h) return 0;
+    const [hh, mm] = h.split(':').map(Number);
+    return hh * 60 + mm;
+  };
+
+  const calcNoturnoPuro = (ent, sai) => {
+    if (!ent || !sai) return 0;
+    let e = min(ent); let s = min(sai); 
+    if (s < e) s += 1440; 
+    
+    const intersection = (s1, e1, s2, e2) => {
+      const start = Math.max(s1, s2);
+      const end = Math.min(e1, e2);
+      return end > start ? end - start : 0;
+    };
+
+    return intersection(e, s, 1320, 1740) + intersection(e, s, -120, 300);
+  };
+
+  const fmt = (m) => {
+    const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
+    const mm = Math.abs(m % 60).toString().padStart(2, '0');
+    return `${h}:${mm}`;
+  };
+
   const analytics = useMemo(() => {
     let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0 };
-    const min = (h) => {
-      if (!h) return 0;
-      const [hh, mm] = h.split(':').map(Number);
-      return hh * 60 + mm;
-    };
-    const calcNoturnoPuro = (ent, sai) => {
-      if (!ent || !sai) return 0;
-      let e = min(ent); let s = min(sai); 
-      if (s < e) s += 1440; 
-      
-      const intersection = (s1, e1, s2, e2) => {
-        const start = Math.max(s1, s2);
-        const end = Math.min(e1, e2);
-        return end > start ? end - start : 0;
-      };
-
-      // Noturno é das 22h às 05h. 
-      // Testamos contra hoje [1320, 1740] e ontem [-120, 300]
-      return intersection(e, s, 1320, 1740) + intersection(e, s, -120, 300);
-    };
     registros.forEach(r => {
       const cargaLinha = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
       const totalLinha = r.total ? min(r.total) : 0;
