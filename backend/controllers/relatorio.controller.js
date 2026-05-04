@@ -42,7 +42,10 @@ async function gerarRelatorio(req, res) {
                     CASE 
                         WHEN r.total LIKE '%:%' THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)
                         WHEN r.evento IN ('Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
-                        THEN COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
+                        THEN CASE 
+                            WHEN f.tipo = 'Horista Noturno' THEN 440
+                            ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
+                        END
                         ELSE 0 
                     END
                 ) AS total_trabalhado_min,
@@ -167,7 +170,8 @@ async function gerarRelatorio(req, res) {
                     const totalDias = new Date(ano, mes, 0).getDate();
                     const diasDSR = Number(row.dias_dsr || 0);
                     const diasFeriado = Number(row.dias_feriados || 0);
-                    const cargaDiaria = Number(row.carga_horaria_diaria || (row.tipo === 'Horista' ? 480 : 440));
+                    let cargaDiaria = Number(row.carga_horaria_diaria || (row.tipo === 'Horista' ? 480 : 440));
+                    if (row.tipo === 'Horista Noturno') cargaDiaria = 440;
                     return (totalDias - diasDSR - diasFeriado) * cargaDiaria;
                 })()),
                 valor_noturno:    valorNoturno,

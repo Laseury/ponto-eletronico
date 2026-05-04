@@ -120,8 +120,9 @@ async function salvarRegistro(req, res) {
         }
 
         const ehHoristaOuNoturno = tipo === "Horista" || tipo === "Horista Noturno";
-        const ehHorista = tipo === "Horista"; // Apenas Horista Diurno é 8h
-        const cargaMinutos = func.cargaHorariaDiaria || (ehHorista ? 480 : 440); // 8h vs 7h20
+        const ehHorista = tipo === "Horista"; 
+        // Horista Noturno e Mensalistas são 7h20 (440m). Apenas Horista Diurno é 8h (480m).
+        const cargaMinutos = tipo === "Horista Noturno" ? 440 : (func.cargaHorariaDiaria || (ehHorista ? 480 : 440));
 
         let extrasMinutos = 0;
         let negativosMinutos = 0;

@@ -232,7 +232,7 @@ const Funcionario = () => {
       }
       if (r.evento === 'DSR') stats.dias_dsr++;
 
-      const diaria = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
+      const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
       if (r.total) {
         stats.trabalhado += min(r.total);
       } else if (['Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
@@ -250,7 +250,7 @@ const Funcionario = () => {
       return `${h}:${mm}`;
     };
     const saldo = stats.extras - stats.negativos;
-    const diaria = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
+    const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
     
     // Carga Mensal = (Dias do Mês - DSR - Feriados) * Carga Diária
     const totalDiasMes = new Date(ano, mes, 0).getDate();
