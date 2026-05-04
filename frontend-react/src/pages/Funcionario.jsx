@@ -222,8 +222,16 @@ const Funcionario = () => {
       return end > start ? end - start : 0;
     };
     registros.forEach(r => {
-      if (r.extras?.startsWith('+')) stats.extras += min(r.extras.replace('+', ''));
-      if (r.negativos?.startsWith('-') && !ehHoristaOuNoturno) stats.negativos += min(r.negativos.replace('-', ''));
+      const cargaLinha = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
+      const totalLinha = r.total ? min(r.total) : 0;
+      
+      if (r.total && !r.evento) {
+        if (totalLinha > cargaLinha) {
+          stats.extras += (totalLinha - cargaLinha);
+        } else if (!ehHoristaOuNoturno) {
+          stats.negativos += (cargaLinha - totalLinha);
+        }
+      }
       if (r.evento === 'Falta') stats.faltas++;
       if (r.evento === 'Feriado') {
         const carga = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
@@ -382,6 +390,28 @@ const Funcionario = () => {
       for (let d = 1; d <= daysInMonth; d++) {
         const chave = `${ano}-${mes.toString().padStart(2, '0')}-${d.toString().padStart(2,'0')}`;
         const r = mapa[chave] || {};
+        const cargaExata = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
+        const totalMin = r.total ? (parseInt(r.total.split(':')[0]) * 60 + parseInt(r.total.split(':')[1])) : 0;
+        
+        let displayExtras = r.extras || '';
+        let displayNegativos = r.negativos || '';
+
+        if (r.total && !r.evento) {
+          if (totalMin > cargaExata) {
+            const diff = totalMin - cargaExata;
+            const h = Math.floor(diff / 60).toString().padStart(2, '0');
+            const m = (diff % 60).toString().padStart(2, '0');
+            displayExtras = `+${h}:${m}`;
+            displayNegativos = '00:00';
+          } else {
+            const diff = cargaExata - totalMin;
+            const h = Math.floor(diff / 60).toString().padStart(2, '0');
+            const m = (diff % 60).toString().padStart(2, '0');
+            displayExtras = '00:00';
+            displayNegativos = `-${h}:${m}`;
+          }
+        }
+
         rowsHtml += `
           <tr>
             <td>${d.toString().padStart(2,'0')}/${mes.toString().padStart(2,'0')}/${ano}</td>
@@ -390,8 +420,8 @@ const Funcionario = () => {
             <td>${r.e3?.substring(0,5) || '' }</td><td>${r.s3?.substring(0,5) || '' }</td>
             <td>${r.total || ''}</td>
             <td>${r.noturno?.substring(0,5) || ''}</td>
-            <td style="color: #2e7d32">${r.extras || ''}</td>
-            ${!ehHoristaOuNoturno ? `<td style="color: #d32f2f">${r.negativos || ''}</td>` : ''}
+            <td style="color: #2e7d32">${displayExtras}</td>
+            ${!ehHoristaOuNoturno ? `<td style="color: #d32f2f">${displayNegativos}</td>` : ''}
             <td>${r.evento || ''}</td>
           </tr>
         `;
@@ -566,6 +596,28 @@ const Funcionario = () => {
                     const r = mapa[dateStr] || { data: dateStr, e1: '', s1: '', e2: '', s2: '', e3: '', s3: '', extras: '', negativos: '', total: '', noturno: '', evento: '' };
                     const isToday = new Date().toISOString().substring(0, 10) === dateStr;
                     const dateObj = new Date(dateStr + 'T12:00:00');
+                    const cargaExata = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
+                    const totalMin = r.total ? (parseInt(r.total.split(':')[0]) * 60 + parseInt(r.total.split(':')[1])) : 0;
+                    
+                    let displayExtras = r.extras;
+                    let displayNegativos = r.negativos;
+
+                    if (r.total && !r.evento) {
+                      if (totalMin > cargaExata) {
+                        const diff = totalMin - cargaExata;
+                        const h = Math.floor(diff / 60).toString().padStart(2, '0');
+                        const m = (diff % 60).toString().padStart(2, '0');
+                        displayExtras = `+${h}:${m}`;
+                        displayNegativos = '00:00';
+                      } else {
+                        const diff = cargaExata - totalMin;
+                        const h = Math.floor(diff / 60).toString().padStart(2, '0');
+                        const m = (diff % 60).toString().padStart(2, '0');
+                        displayExtras = '00:00';
+                        displayNegativos = `-${h}:${m}`;
+                      }
+                    }
+
                     return (
                       <tr key={dateStr} className={`hover:bg-brand-bg/30 transition-colors ${isToday ? 'bg-brand-primary/10' : ''}`}>
                         <td className="px-6 py-3 text-center">
@@ -577,8 +629,8 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e3?.substring(0,5) || '—'}</span><span>{r.s3?.substring(0,5) || '—'}</span></div></td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text bg-brand-bg/20">{r.total || '—'}</td>
                         <td className="px-3 py-2 text-center">{r.noturno && r.noturno !== '00:00' ? (<span className="px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary text-[10px] font-black border border-brand-primary/20">{r.noturno.substring(0,5)}</span>) : '—'}</td>
-                        <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{r.extras || '—'}</td>
-                        {!ehHoristaOuNoturno && <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{r.negativos || '—'}</td>}
+                        <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{displayExtras || '—'}</td>
+                        {!ehHoristaOuNoturno && <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{displayNegativos || '—'}</td>}
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
                         <td className="px-6 py-2 text-right">
                             <div className="flex items-center justify-end gap-2">
