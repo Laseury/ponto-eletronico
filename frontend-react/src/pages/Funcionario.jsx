@@ -215,11 +215,18 @@ const Funcionario = () => {
     };
     const calcNoturnoPuro = (ent, sai) => {
       if (!ent || !sai) return 0;
-      let e = min(ent); let s = min(sai); if (s < e) s += 1440;
-      const INICIO = 22 * 60; const FIM = 29 * 60;
-      let eN = e < 5 * 60 ? e + 1440 : e; let sN = s < 5 * 60 ? s + 1440 : s;
-      const start = Math.max(eN, INICIO); const end = Math.min(sN, FIM);
-      return end > start ? end - start : 0;
+      let e = min(ent); let s = min(sai); 
+      if (s < e) s += 1440; 
+      
+      const intersection = (s1, e1, s2, e2) => {
+        const start = Math.max(s1, s2);
+        const end = Math.min(e1, e2);
+        return end > start ? end - start : 0;
+      };
+
+      // Noturno é das 22h às 05h. 
+      // Testamos contra hoje [1320, 1740] e ontem [-120, 300]
+      return intersection(e, s, 1320, 1740) + intersection(e, s, -120, 300);
     };
     registros.forEach(r => {
       const cargaLinha = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
@@ -264,6 +271,10 @@ const Funcionario = () => {
     const totalDiasMes = new Date(ano, mes, 0).getDate();
     const mensal = (totalDiasMes - stats.dias_dsr - stats.dias_feriados) * diaria;
 
+    const noturnoFatorMin = Math.round(stats.noturnoPuro * (60 / 52.5));
+    const diurnoMin = Math.max(0, stats.trabalhado - stats.noturnoPuro);
+    const baseCalculoMin = diurnoMin + noturnoFatorMin;
+
     return {
       totalTrabalhado: fmt(stats.trabalhado),
       cargaMensal: fmt(mensal),
@@ -273,9 +284,10 @@ const Funcionario = () => {
       totalFaltas: stats.faltas,
       saldo: saldo === 0 ? '00:00' : (saldo > 0 ? `+${fmt(saldo)}` : `-${fmt(saldo)}`),
       saldoMin: saldo,
-      noturno: fmt(stats.noturno),
-      diurno: fmt(Math.max(0, stats.trabalhado - stats.noturno)),
-      noturnoComFator: fmt(Math.round(stats.noturnoPuro * (60 / 52.5))),
+      noturno: fmt(stats.noturnoPuro),
+      diurno: fmt(diurnoMin),
+      noturnoComFator: fmt(noturnoFatorMin),
+      baseCalculo: fmt(baseCalculoMin),
       totalFeriados: stats.dias_feriados > 0 ? `${stats.dias_feriados}d - ${fmt(stats.feriados)}` : '00:00'
     };
   }, [registros]);
@@ -618,6 +630,9 @@ const Funcionario = () => {
                       }
                     }
 
+                    const noturnoLinhaMin = calcNoturnoPuro(r.e1, r.s1) + calcNoturnoPuro(r.e2, r.s2) + calcNoturnoPuro(r.e3, r.s3);
+                    const noturnoDisplay = noturnoLinhaMin > 0 ? fmt(noturnoLinhaMin) : '—';
+
                     return (
                       <tr key={dateStr} className={`hover:bg-brand-bg/30 transition-colors ${isToday ? 'bg-brand-primary/10' : ''}`}>
                         <td className="px-6 py-3 text-center">
@@ -628,7 +643,13 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e2?.substring(0,5) || '—'}</span><span>{r.s2?.substring(0,5) || '—'}</span></div></td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e3?.substring(0,5) || '—'}</span><span>{r.s3?.substring(0,5) || '—'}</span></div></td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text bg-brand-bg/20">{r.total || '—'}</td>
-                        <td className="px-3 py-2 text-center">{r.noturno && r.noturno !== '00:00' ? (<span className="px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary text-[10px] font-black border border-brand-primary/20">{r.noturno.substring(0,5)}</span>) : '—'}</td>
+                        <td className="px-3 py-2 text-center">
+                          {noturnoLinhaMin > 0 ? (
+                            <span className="px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary text-[10px] font-black border border-brand-primary/20">
+                              {noturnoDisplay}
+                            </span>
+                          ) : '—'}
+                        </td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{displayExtras || '—'}</td>
                         {!ehHoristaOuNoturno && <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{displayNegativos || '—'}</td>}
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
@@ -697,7 +718,7 @@ const Funcionario = () => {
               <div className="flex flex-col gap-4 px-8 py-6 bg-brand-bg/60 rounded-[2rem] border border-brand-border shadow-2xl">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Base p/ Pagamento (Diário + Not. Fator)</span>
-                  <span className="text-2xl font-black text-brand-text">{analytics.noturnoComFator}</span>
+                  <span className="text-2xl font-black text-brand-text">{analytics.baseCalculo}</span>
                 </div>
                 <div className="mt-2 text-[8px] font-black text-brand-muted/40 uppercase tracking-[0.1em] border-t border-brand-border pt-4 text-center leading-relaxed">
                   * Fator Legal (1.1428): Coeficiente que converte horas cronológicas em horas noturnas de 52m30s para fins de pagamento (Art. 73 CLT).
