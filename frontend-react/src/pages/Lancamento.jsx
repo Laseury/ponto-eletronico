@@ -203,6 +203,7 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, registrosCadastrados, func
                       <option value="Folga">Folga</option>
                       <option value="Falta">Falta</option>
                       <option value="Atestado">Atestado</option>
+                      <option value="Declaração">Declaração</option>
                       <option value="DSR">DSR</option>
                     </select>
                   </td>
@@ -568,6 +569,7 @@ const Lancamento = () => {
                         <option value="Folga" className="bg-brand-surface">🏖️ Folga</option>
                         <option value="Falta" className="bg-brand-surface">❌ Falta</option>
                         <option value="Atestado" className="bg-brand-surface">🏥 Atestado</option>
+                        <option value="Declaração" className="bg-brand-surface">📄 Declaração</option>
                         <option value="Ferias" className="bg-brand-surface">🏄 Férias</option>
                         <option value="DSR" className="bg-brand-surface">📅 DSR</option>
                         <option value="Feriado" className="bg-brand-surface">🎉 Feriado</option>

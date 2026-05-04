@@ -239,7 +239,7 @@ async function importarFolha(req, res) {
             Regras de extração:
             1. Formate a data como YYYY-MM-DD.
             2. Identifique os horários e coloque na ordem: e1, s1, e2, s2, e3, s3.
-            3. Se for um evento (Férias, Feriado, Atestado, Falta), coloque no campo 'evento'.
+            3. Se for um evento (Férias, Feriado, Atestado, Falta, Declaração), coloque no campo 'evento'.
             4. Retorne APENAS o JSON puro.
             
             Texto extraído:

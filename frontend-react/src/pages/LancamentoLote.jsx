@@ -158,6 +158,7 @@ const LancamentoLote = () => {
                                     <option value="Folga Banco" className="bg-brand-surface">🏦 Folga Banco</option>
                                     <option value="Falta" className="bg-brand-surface">❌ Falta</option>
                                     <option value="Atestado" className="bg-brand-surface">🏥 Atestado</option>
+                                    <option value="Declaração" className="bg-brand-surface">📄 Declaração</option>
                                     <option value="Feriado" className="bg-brand-surface">🎉 Feriado</option>
                                     <option value="Ferias" className="bg-brand-surface">🏄 Férias</option>
                                 </select>

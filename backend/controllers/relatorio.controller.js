@@ -52,7 +52,7 @@ async function gerarRelatorio(req, res) {
                 ON r.funcionario_id = f.id
                 AND EXTRACT(MONTH FROM r.data) = ${mes}
                 AND EXTRACT(YEAR FROM r.data)  = ${ano}
-            GROUP BY f.id, f.nome, f.tipo, f.ativo
+            GROUP BY f.id, f.nome, f.tipo, f.ativo, f.carga_horaria_diaria, f.carga_horaria_mensal
             ORDER BY f.nome
         `;
 

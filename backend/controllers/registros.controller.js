@@ -126,7 +126,7 @@ async function salvarRegistro(req, res) {
         let extrasMinutos = 0;
         let negativosMinutos = 0;
 
-        if (evento === "Férias" || evento === "Ferias" || evento === "Atestado" || evento === "Feriado") {
+        if (evento === "Férias" || evento === "Ferias" || evento === "Atestado" || evento === "Feriado" || evento === "Declaração" || evento === "Declaracao") {
             extrasMinutos = 0;
             negativosMinutos = 0;
             totalMinutos = 0;

@@ -82,6 +82,7 @@ const EditRecordModal = ({ isOpen, onClose, record, onSave }) => {
               <option value="Folga Banco">Folga Banco</option>
               <option value="Falta">Falta</option>
               <option value="Atestado">Atestado</option>
+              <option value="Declaração">Declaração</option>
               <option value="Feriado">Feriado</option>
               <option value="Ferias">Férias</option>
             </select>

@@ -635,6 +635,7 @@ const LancamentoHoras = () => {
                           <option value="Folga">🏖️ Folga</option>
                           <option value="Falta">❌ Falta</option>
                           <option value="Atestado">🏥 Atestado</option>
+                          <option value="Declaração">📄 Declaração</option>
                           <option value="Ferias">🏄 Férias</option>
                           <option value="DSR">📅 DSR</option>
                           <option value="Feriado">🎉 Feriado</option>
