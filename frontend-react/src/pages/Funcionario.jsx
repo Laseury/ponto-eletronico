@@ -15,7 +15,8 @@ import {
   History,
   Trash2,
   Save,
-  Users
+  Users,
+  Sparkles
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
@@ -396,6 +397,45 @@ const Funcionario = () => {
     });
   };
 
+  const exportarParaIA = () => {
+    try {
+      const data = {
+        colaborador: {
+          nome: funcionario?.nome,
+          tipo: funcionario?.tipo,
+          carga_diaria_minutos: funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440))
+        },
+        periodo: { mes, ano },
+        resumo_sistema: analytics,
+        registros_diarios: registros.map(r => {
+          const noturnoMin = calcNoturnoPuro(r.e1, r.s1) + calcNoturnoPuro(r.e2, r.s2) + calcNoturnoPuro(r.e3, r.s3);
+          return {
+            data: r.data.substring(0, 10),
+            e1: r.e1, s1: r.s1,
+            e2: r.e2, s2: r.s2,
+            e3: r.e3, s3: r.s3,
+            total_trabalhado: r.total,
+            noturno_cronologico: fmt(noturnoMin),
+            noturno_com_fator: fmt(Math.round(noturnoMin * (60 / 52.5))),
+            evento: r.evento || null
+          };
+        })
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `IA_COMPARE_${funcionario?.nome.replace(/\s+/g, '_')}_${mes}_${ano}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      swalTheme({ title: 'Exportado!', text: 'Arquivo pronto para análise da IA.', icon: 'success', timer: 2000, showConfirmButton: false });
+    } catch (e) {
+      swalTheme({ title: 'Erro!', text: 'Falha ao gerar arquivo.', icon: 'error' });
+    }
+  };
+
   const generatePDF = () => {
     try {
       swalTheme({ title: 'Exportação', text: 'Gerando arquivo de impressão...', icon: 'info', timer: 2000, showConfirmButton: false });
@@ -557,8 +597,19 @@ const Funcionario = () => {
               {funcionario?.ativo !== false ? 'Inativar' : 'Ativar'}
             </button>
           )}
-          <button onClick={generatePDF} className="flex items-center gap-2 bg-brand-accent hover:bg-brand-accent/90 text-white font-black py-3 px-6 rounded-xl shadow-lg shadow-brand-accent/20 transition-all text-[9px] uppercase tracking-widest">
-            <FileDown size={18} /> Exportar
+          {canEdit && (
+            <button 
+              onClick={exportarParaIA}
+              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-500/20 uppercase tracking-widest"
+            >
+              <Sparkles size={14} /> Exportar para IA
+            </button>
+          )}
+          <button 
+            onClick={generatePDF}
+            className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/80 text-brand-bg text-[10px] font-black px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-primary/20 uppercase tracking-widest"
+          >
+            <FileDown size={14} /> Imprimir PDF
           </button>
           {canEdit && (
             <button 
