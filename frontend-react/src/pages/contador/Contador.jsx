@@ -124,7 +124,7 @@ const Contador = () => {
                             <tr className="bg-slate-950 border-b border-slate-800">
                                 <th className="px-10 py-6 text-xs font-black text-slate-500 uppercase tracking-widest">Funcionário</th>
                                 <th className="px-6 py-6 text-xs font-black text-slate-500 uppercase tracking-widest">Tipo</th>
-                                <th className="px-6 py-6 text-xs font-black text-slate-500 uppercase tracking-widest text-center">Normais</th>
+                                <th className="px-6 py-6 text-xs font-black text-slate-500 uppercase tracking-widest text-center">Carga Mensal</th>
                                 <th className="px-6 py-6 text-xs font-black text-emerald-500/80 uppercase tracking-widest text-center">Extras</th>
                                 <th className="px-6 py-6 text-xs font-black text-rose-500/80 uppercase tracking-widest text-center">Negativas</th>
                                 <th className="px-6 py-6 text-xs font-black text-indigo-500/80 uppercase tracking-widest text-center">Noturno</th>
@@ -161,7 +161,7 @@ const Contador = () => {
                                         <td className="px-6 py-6">
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-slate-950 px-3 py-1 rounded-md border border-slate-800 shadow-inner">{f.tipo}</span>
                                         </td>
-                                        <td className="px-6 py-6 text-center text-sm font-black text-slate-400 bg-slate-950/20">{f.total_diurno || '00:00'}</td>
+                                        <td className="px-6 py-6 text-center text-sm font-black text-slate-400 bg-slate-950/20">{f.carga_mensal || '00:00'}</td>
                                         <td className="px-6 py-6 text-center text-base font-black text-emerald-400 bg-emerald-500/5">{f.total_extras !== '00:00' ? `+${f.total_extras}` : <span className="opacity-10">—</span>}</td>
                                         <td className="px-6 py-6 text-center text-base font-black text-rose-400 bg-rose-500/5">{f.total_negativos !== '00:00' ? `-${f.total_negativos}` : <span className="opacity-10">—</span>}</td>
                                         <td className="px-6 py-6 text-center">

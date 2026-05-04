@@ -224,7 +224,7 @@ const Funcionario = () => {
       if (r.negativos?.startsWith('-')) stats.negativos += min(r.negativos.replace('-', ''));
       if (r.evento === 'Falta') stats.faltas++;
       if (r.evento === 'Feriado') {
-        const carga = funcionario?.tipo?.startsWith('Horista') ? 480 : 440;
+        const carga = funcionario?.tipo === 'Horista' ? 480 : 440;
         stats.feriados += carga;
         stats.dias_feriados++;
       }
@@ -240,7 +240,12 @@ const Funcionario = () => {
       return `${h}:${mm}`;
     };
     const saldo = stats.extras - stats.negativos;
+    const diaria = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
+    const mensal = funcionario?.cargaHorariaMensal || (diaria * 30);
+
     return {
+      totalTrabalhado: fmt(stats.trabalhado),
+      cargaMensal: fmt(mensal),
       totalNormal: fmt(stats.trabalhado - stats.extras),
       totalExtras: stats.extras > 0 ? `+${fmt(stats.extras)}` : '00:00',
       totalNegativos: stats.negativos > 0 ? `-${fmt(stats.negativos)}` : '00:00',
@@ -606,11 +611,13 @@ const Funcionario = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className="bg-brand-surface border border-brand-border rounded-[3rem] p-8 shadow-xl transition-all">
            <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 flex items-center gap-3 opacity-60"><Clock size={20} className="text-brand-primary" /> Detalhamento</h3>
-           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <MiniCard label="Normais" value={analytics.totalNormal} />
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <MiniCard label="Horas Trabalhadas" value={analytics.totalTrabalhado} />
+              <MiniCard label="Carga Horária Mensal" value={analytics.cargaMensal} />
               <MiniCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" />
               <MiniCard label="Extras" value={analytics.totalExtras} color="text-emerald-400" />
               <MiniCard label="Negativas" value={analytics.totalNegativos} color="text-rose-400" />
+              <MiniCard label="Saldo" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
            </div>
         </div>
         {(funcionario?.tipo?.includes('Noturno') || analytics.noturno !== '00:00') && (

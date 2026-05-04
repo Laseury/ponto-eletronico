@@ -36,14 +36,19 @@ async function buscarFuncionarioPorId(req, res) {
 
 async function criarFuncionario(req, res) {
   try {
-    const { nome, tipo } = req.body;
+    const { nome, tipo, cargaHorariaDiaria, cargaHorariaMensal } = req.body;
 
     if (!nome || !tipo) {
       return res.status(400).json({ erro: "Nome e tipo são obrigatórios" });
     }
     
     const resultado = await prisma.funcionario.create({
-      data: { nome, tipo }
+      data: { 
+        nome, 
+        tipo, 
+        cargaHorariaDiaria: cargaHorariaDiaria ? parseInt(cargaHorariaDiaria) : undefined,
+        cargaHorariaMensal: cargaHorariaMensal ? parseInt(cargaHorariaMensal) : undefined
+      }
     });
     
     res.status(201).json(resultado);
@@ -55,11 +60,16 @@ async function criarFuncionario(req, res) {
 async function editarFuncionario(req, res) {
   try {
     const id = parseInt(req.params.id);
-    const { nome, tipo } = req.body;
+    const { nome, tipo, cargaHorariaDiaria, cargaHorariaMensal } = req.body;
 
     const resultado = await prisma.funcionario.update({
       where: { id: id },
-      data: { nome, tipo }
+      data: { 
+        nome, 
+        tipo,
+        cargaHorariaDiaria: cargaHorariaDiaria ? parseInt(cargaHorariaDiaria) : undefined,
+        cargaHorariaMensal: cargaHorariaMensal ? parseInt(cargaHorariaMensal) : undefined
+      }
     });
 
     res.json(resultado);

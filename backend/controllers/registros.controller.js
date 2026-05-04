@@ -103,7 +103,7 @@ async function salvarRegistro(req, res) {
 
         const func = await prisma.funcionario.findUnique({
             where: { id: parseInt(funcionario_id) },
-            select: { tipo: true }
+            select: { tipo: true, cargaHorariaDiaria: true }
         });
         
         if (!func) {
@@ -119,8 +119,9 @@ async function salvarRegistro(req, res) {
             totalMinutos += calcularTurno(e3, s3);
         }
 
-        const ehHorista = tipo === "Horista" || tipo === "Horista Noturno";
-        const cargaMinutos = ehHorista ? 480 : 440; // 8h vs 7h20
+        const ehHoristaOuNoturno = tipo === "Horista" || tipo === "Horista Noturno";
+        const ehHorista = tipo === "Horista"; // Apenas Horista Diurno é 8h
+        const cargaMinutos = func.cargaHorariaDiaria || (ehHorista ? 480 : 440); // 8h vs 7h20
 
         let extrasMinutos = 0;
         let negativosMinutos = 0;
@@ -130,20 +131,18 @@ async function salvarRegistro(req, res) {
             negativosMinutos = 0;
             totalMinutos = 0;
         } else if (evento === "Falta") {
-            if (!ehHorista) {
-                negativosMinutos = 440;
-            } else {
-                negativosMinutos = negativos_manual ? calcularMinutos(negativos_manual) : 480;
-            }
+            negativosMinutos = ehHoristaOuNoturno ? 0 : (negativos_manual ? calcularMinutos(negativos_manual) : cargaMinutos);
+            totalMinutos = 0;
+            extrasMinutos = 0;
         } else if (evento === "Folga Banco") {
-            negativosMinutos = cargaMinutos;
+            negativosMinutos = ehHoristaOuNoturno ? 0 : cargaMinutos;
         } else if (evento === "DSR") {
             extrasMinutos = 0;
             negativosMinutos = 0;
         } else if (!evento && totalMinutos > 0) {
             if (totalMinutos > cargaMinutos) {
                 extrasMinutos = totalMinutos - cargaMinutos;
-            } else {
+            } else if (totalMinutos < cargaMinutos && !ehHoristaOuNoturno) {
                 negativosMinutos = cargaMinutos - totalMinutos;
             }
         }

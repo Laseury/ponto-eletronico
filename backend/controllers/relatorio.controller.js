@@ -17,7 +17,7 @@ async function gerarRelatorio(req, res) {
 
         const resultado = await prisma.$queryRaw`
             SELECT
-                f.id, f.nome, f.tipo, f.ativo,
+                f.id, f.nome, f.tipo, f.ativo, f.carga_horaria_diaria, f.carga_horaria_mensal,
                 COUNT(r.id) FILTER (WHERE r.evento IS NULL OR r.evento = '')       AS dias_trabalhados,
                 COUNT(r.id) FILTER (WHERE r.evento IS NOT NULL AND r.evento != '') AS dias_evento,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Falta')                      AS faltas,
@@ -44,7 +44,7 @@ async function gerarRelatorio(req, res) {
                 ) AS total_trabalhado_min,
                 SUM(
                     CASE WHEN r.evento = 'Feriado'
-                    THEN CASE WHEN f.tipo LIKE 'Horista%' THEN 480 ELSE 440 END
+                    THEN COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
                     ELSE 0 END
                 ) AS total_feriado_min
             FROM funcionarios f
@@ -157,6 +157,8 @@ async function gerarRelatorio(req, res) {
                 ciclo:            `${mesInicioCiclo <= 6 ? "Jan–Jun" : "Jul–Dez"} ${ano}`,
                 total_noturno:    minutosParaHorario(noturnoMin),
                 total_diurno:     minutosParaHorario(diurnoMin),
+                total_trabalhado: minutosParaHorario(trabMin),
+                carga_mensal:     minutosParaHorario(row.carga_horaria_mensal || ((row.carga_horaria_diaria || (row.tipo === 'Horista' ? 480 : 440)) * 30)),
                 valor_noturno:    valorNoturno,
                 dias_feriados:    Number(row.dias_feriados || 0),
                 total_feriados:   minutosParaHorario(Number(row.total_feriado_min || 0))

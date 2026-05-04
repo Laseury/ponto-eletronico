@@ -17,9 +17,17 @@ const Cadastro = () => {
     const navigate = useNavigate();
     const [nome, setNome] = useState('');
     const [tipo, setTipo] = useState('');
+    const [cargaDiaria, setCargaDiaria] = useState('');
+    const [cargaMensal, setCargaMensal] = useState('');
     const [loading, setLoading] = useState(false);
     const [funcionarios, setFuncionarios] = useState([]);
     const [mostrarInativos, setMostrarInativos] = useState(false);
+
+    const min = (h) => {
+        if (!h) return 0;
+        const [hh, mm] = h.split(':').map(Number);
+        return (hh || 0) * 60 + (mm || 0);
+    };
 
     const fetchFuncionarios = async () => {
         try {
@@ -48,7 +56,12 @@ const Cadastro = () => {
 
         setLoading(true);
         try {
-            const response = await axios.post('/funcionarios', { nome, tipo });
+            const response = await axios.post('/funcionarios', { 
+                nome, 
+                tipo,
+                cargaHorariaDiaria: min(cargaDiaria),
+                cargaHorariaMensal: min(cargaMensal)
+            });
             
             swalTheme({
                 title: 'Sucesso!',
@@ -59,6 +72,8 @@ const Cadastro = () => {
             
             setNome('');
             setTipo('');
+            setCargaDiaria('');
+            setCargaMensal('');
             fetchFuncionarios();
         } catch (error) {
             console.error('Erro ao cadastrar:', error);
@@ -119,7 +134,17 @@ const Cadastro = () => {
                             </label>
                             <select 
                                 value={tipo}
-                                onChange={(e) => setTipo(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setTipo(val);
+                                    if (val === 'Mensalista' || val === 'Horista Noturno') {
+                                        setCargaDiaria('07:20');
+                                        setCargaMensal('220:00');
+                                    } else {
+                                        setCargaDiaria('08:00');
+                                        setCargaMensal('240:00');
+                                    }
+                                }}
                                 className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all appearance-none cursor-pointer shadow-inner"
                                 required
                             >
@@ -128,6 +153,32 @@ const Cadastro = () => {
                                 <option value="Horista" className="bg-brand-surface">Horista</option>
                                 <option value="Horista Noturno" className="bg-brand-surface">Horista Noturno</option>
                             </select>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-40">
+                                <Briefcase size={14} className="text-brand-primary" /> Carga Diária (HH:mm)
+                            </label>
+                            <input 
+                                type="text" 
+                                value={cargaDiaria}
+                                onChange={(e) => setCargaDiaria(e.target.value)}
+                                placeholder="07:20"
+                                className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all shadow-inner"
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-40">
+                                <Briefcase size={14} className="text-brand-primary" /> Carga Mensal (HH:mm)
+                            </label>
+                            <input 
+                                type="text" 
+                                value={cargaMensal}
+                                onChange={(e) => setCargaMensal(e.target.value)}
+                                placeholder="220:00"
+                                className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all shadow-inner"
+                            />
                         </div>
                     </div>
 

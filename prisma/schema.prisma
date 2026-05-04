@@ -13,6 +13,8 @@ model Funcionario {
   extras          String?           @default("00:00") @db.VarChar(10)
   faltas          Int?              @default(0)
   ativo           Boolean?          @default(true)
+  cargaHorariaDiaria Int?         @default(440) @map("carga_horaria_diaria")
+  cargaHorariaMensal Int?         @default(13200) @map("carga_horaria_mensal")
   registros_ponto RegistroPonto[]
   log_registros   LogRegistro[]
   comentarios     Comentario[]
