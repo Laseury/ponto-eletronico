@@ -21,12 +21,14 @@ async function gerarRelatorio(req, res) {
                 COUNT(r.id) FILTER (WHERE r.evento IS NULL OR r.evento = '')       AS dias_trabalhados,
                 COUNT(r.id) FILTER (WHERE r.evento IS NOT NULL AND r.evento != '') AS dias_evento,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Falta')                      AS faltas,
-                COUNT(r.id) FILTER (WHERE r.evento = 'Feriado')                      AS dias_feriados,
+                COUNT(r.id) FILTER (WHERE r.evento = 'Feriado')                    AS dias_feriados,
+                COUNT(r.id) FILTER (WHERE r.evento = 'DSR')                        AS dias_dsr,
+                COUNT(r.id) FILTER (WHERE r.evento = 'Folga' OR r.evento = 'Atestado' OR r.evento = 'Ferias' OR r.evento = 'Férias' OR r.evento = 'Declaração' OR r.evento = 'Declaracao') AS dias_abonados,
                 SUM(CASE WHEN r.extras LIKE '+%:%'
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
                     ELSE 0 END) AS total_extras_min,
-                SUM(CASE WHEN r.negativos LIKE '-%:%'
+                SUM(CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno')
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END) AS total_negativos_min,
@@ -37,10 +39,12 @@ async function gerarRelatorio(req, res) {
                     ELSE 0 END
                 ) AS total_noturno_min,
                 SUM(
-                    CASE WHEN r.total LIKE '%:%' AND (r.evento IS NULL OR r.evento != 'Feriado')
-                    THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 +
-                         CAST(SPLIT_PART(r.total,':',2) AS INT)
-                    ELSE 0 END
+                    CASE 
+                        WHEN r.total LIKE '%:%' THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)
+                        WHEN r.evento IN ('Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
+                        THEN COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
+                        ELSE 0 
+                    END
                 ) AS total_trabalhado_min,
                 SUM(
                     CASE WHEN r.evento = 'Feriado'
@@ -63,11 +67,12 @@ async function gerarRelatorio(req, res) {
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
                     ELSE 0 END) AS banco_extras_min,
-                SUM(CASE WHEN r.negativos LIKE '-%:%'
+                SUM(CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno')
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END) AS banco_negativos_min
             FROM registros_ponto r
+            JOIN funcionarios f ON r.funcionario_id = f.id
             WHERE EXTRACT(YEAR FROM r.data)  = ${ano}
               AND EXTRACT(MONTH FROM r.data) >= ${mesInicioCiclo}
               AND EXTRACT(MONTH FROM r.data) <= ${mes}
@@ -158,7 +163,13 @@ async function gerarRelatorio(req, res) {
                 total_noturno:    minutosParaHorario(noturnoMin),
                 total_diurno:     minutosParaHorario(diurnoMin),
                 total_trabalhado: minutosParaHorario(trabMin),
-                carga_mensal:     minutosParaHorario(row.carga_horaria_mensal || ((row.carga_horaria_diaria || (row.tipo === 'Horista' ? 480 : 440)) * 30)),
+                carga_mensal:     minutosParaHorario((function() {
+                    const totalDias = new Date(ano, mes, 0).getDate();
+                    const diasDSR = Number(row.dias_dsr || 0);
+                    const diasFeriado = Number(row.dias_feriados || 0);
+                    const cargaDiaria = Number(row.carga_horaria_diaria || (row.tipo === 'Horista' ? 480 : 440));
+                    return (totalDias - diasDSR - diasFeriado) * cargaDiaria;
+                })()),
                 valor_noturno:    valorNoturno,
                 dias_feriados:    Number(row.dias_feriados || 0),
                 total_feriados:   minutosParaHorario(Number(row.total_feriado_min || 0))

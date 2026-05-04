@@ -145,6 +145,7 @@ const Funcionario = () => {
   const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '' });
 
   const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador'].includes(user?.perfil), [user]);
+  const ehHoristaOuNoturno = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
 
   const formatDateSafe = (date, includeTime = false) => {
     if (!date) return '—';
@@ -206,7 +207,7 @@ const Funcionario = () => {
   }, [fetchFuncionarioData]);
 
   const analytics = useMemo(() => {
-    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0 };
+    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0 };
     const min = (h) => {
       if (!h) return 0;
       const [hh, mm] = h.split(':').map(Number);
@@ -222,14 +223,22 @@ const Funcionario = () => {
     };
     registros.forEach(r => {
       if (r.extras?.startsWith('+')) stats.extras += min(r.extras.replace('+', ''));
-      if (r.negativos?.startsWith('-')) stats.negativos += min(r.negativos.replace('-', ''));
+      if (r.negativos?.startsWith('-') && !ehHoristaOuNoturno) stats.negativos += min(r.negativos.replace('-', ''));
       if (r.evento === 'Falta') stats.faltas++;
       if (r.evento === 'Feriado') {
-        const carga = funcionario?.tipo === 'Horista' ? 480 : 440;
+        const carga = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
         stats.feriados += carga;
         stats.dias_feriados++;
       }
-      if (r.total && r.evento !== 'Feriado') stats.trabalhado += min(r.total);
+      if (r.evento === 'DSR') stats.dias_dsr++;
+
+      const diaria = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
+      if (r.total) {
+        stats.trabalhado += min(r.total);
+      } else if (['Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
+        stats.trabalhado += diaria;
+      }
+
       if (r.noturno) stats.noturno += min(r.noturno);
       stats.noturnoPuro += calcNoturnoPuro(r.e1, r.s1);
       stats.noturnoPuro += calcNoturnoPuro(r.e2, r.s2);
@@ -242,7 +251,10 @@ const Funcionario = () => {
     };
     const saldo = stats.extras - stats.negativos;
     const diaria = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
-    const mensal = funcionario?.cargaHorariaMensal || (diaria * 30);
+    
+    // Carga Mensal = (Dias do Mês - DSR - Feriados) * Carga Diária
+    const totalDiasMes = new Date(ano, mes, 0).getDate();
+    const mensal = (totalDiasMes - stats.dias_dsr - stats.dias_feriados) * diaria;
 
     return {
       totalTrabalhado: fmt(stats.trabalhado),
@@ -379,7 +391,7 @@ const Funcionario = () => {
             <td>${r.total || ''}</td>
             <td>${r.noturno?.substring(0,5) || ''}</td>
             <td style="color: #2e7d32">${r.extras || ''}</td>
-            <td style="color: #d32f2f">${r.negativos || ''}</td>
+            ${!ehHoristaOuNoturno ? `<td style="color: #d32f2f">${r.negativos || ''}</td>` : ''}
             <td>${r.evento || ''}</td>
           </tr>
         `;
@@ -421,7 +433,7 @@ const Funcionario = () => {
                 <th class="col-total">Total</th>
                 <th class="col-total">Not.</th>
                 <th class="col-total">Ext.</th>
-                <th class="col-total">Neg.</th>
+                ${!ehHoristaOuNoturno ? '<th class="col-total">Neg.</th>' : ''}
                 <th class="col-evento">Evento</th>
               </tr>
             </thead>
@@ -537,7 +549,7 @@ const Funcionario = () => {
                 <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Total</th>
                 <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Noturno</th>
                 <th className="px-3 py-4 text-[9px] font-black text-brand-accent/60 uppercase tracking-[0.25em] text-center">Extras</th>
-                <th className="px-3 py-4 text-[9px] font-black text-rose-500/60 uppercase tracking-[0.25em] text-center">Neg.</th>
+                {!ehHoristaOuNoturno && <th className="px-3 py-4 text-[9px] font-black text-rose-500/60 uppercase tracking-[0.25em] text-center">Neg.</th>}
                 <th className="px-4 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-40">Evento</th>
                 <th className="px-6 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-right opacity-60">Ação</th>
               </tr>
@@ -566,7 +578,7 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text bg-brand-bg/20">{r.total || '—'}</td>
                         <td className="px-3 py-2 text-center">{r.noturno && r.noturno !== '00:00' ? (<span className="px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary text-[10px] font-black border border-brand-primary/20">{r.noturno.substring(0,5)}</span>) : '—'}</td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{r.extras || '—'}</td>
-                        <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{r.negativos || '—'}</td>
+                        {!ehHoristaOuNoturno && <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{r.negativos || '—'}</td>}
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
                         <td className="px-6 py-2 text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -617,8 +629,8 @@ const Funcionario = () => {
               <MiniCard label="Carga Horária Mensal" value={analytics.cargaMensal} />
               <MiniCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" />
               <MiniCard label="Extras" value={analytics.totalExtras} color="text-emerald-400" />
-              <MiniCard label="Negativas" value={analytics.totalNegativos} color="text-rose-400" />
-              <MiniCard label="Saldo" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
+              {!ehHoristaOuNoturno && <MiniCard label="Negativas" value={analytics.totalNegativos} color="text-rose-400" />}
+              <MiniCard label="Saldo" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : (analytics.saldoMin < 0 && !ehHoristaOuNoturno) ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
            </div>
         </div>
         {(funcionario?.tipo?.includes('Noturno') || analytics.noturno !== '00:00') && (

@@ -126,19 +126,25 @@ async function salvarRegistro(req, res) {
         let extrasMinutos = 0;
         let negativosMinutos = 0;
 
-        if (evento === "Férias" || evento === "Ferias" || evento === "Atestado" || evento === "Feriado" || evento === "Declaração" || evento === "Declaracao") {
+        if (evento === "Férias" || evento === "Ferias" || evento === "Atestado" || evento === "Declaração" || evento === "Declaracao" || evento === "Folga") {
             extrasMinutos = 0;
             negativosMinutos = 0;
-            totalMinutos = 0;
+            totalMinutos = cargaMinutos; // Conta como tempo trabalhado/remunerado
+        } else if (evento === "Feriado") {
+            extrasMinutos = 0;
+            negativosMinutos = 0;
+            totalMinutos = 0; // Feriado é pago mas não é "trabalhado" na soma bruta
         } else if (evento === "Falta") {
             negativosMinutos = ehHoristaOuNoturno ? 0 : (negativos_manual ? calcularMinutos(negativos_manual) : cargaMinutos);
             totalMinutos = 0;
             extrasMinutos = 0;
         } else if (evento === "Folga Banco") {
             negativosMinutos = ehHoristaOuNoturno ? 0 : cargaMinutos;
+            totalMinutos = 0;
         } else if (evento === "DSR") {
             extrasMinutos = 0;
             negativosMinutos = 0;
+            totalMinutos = 0;
         } else if (!evento && totalMinutos > 0) {
             if (totalMinutos > cargaMinutos) {
                 extrasMinutos = totalMinutos - cargaMinutos;

@@ -218,7 +218,9 @@ const Relatorio = () => {
                                         <td className={`px-6 py-4 text-center text-xs font-black ${f.faltas > 0 ? 'text-rose-500 underline decoration-rose-500/30' : 'text-brand-muted opacity-30'}`}>{f.faltas || 0}</td>
                                         <td className={`px-6 py-4 text-center text-xs font-black text-emerald-500 bg-emerald-500/5`}>{f.dias_feriados > 0 ? `${f.dias_feriados}d - ${f.total_feriados}` : '00:00'}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-accent bg-brand-accent/5">{f.total_extras}</td>
-                                        <td className="px-6 py-4 text-center text-xs font-black text-rose-400 bg-rose-500/5">{f.total_negativos}</td>
+                                        <td className="px-6 py-4 text-center text-xs font-black text-rose-400 bg-rose-500/5">
+                                            {f.tipo?.includes('Horista') ? '—' : f.total_negativos}
+                                        </td>
                                         <td className={`px-6 py-4 text-center text-sm font-black ${corSaldo}`}>{f.saldo_mes}</td>
                                         <td className={`px-6 py-4 text-center text-sm font-black ${corBanco} bg-brand-bg/30`}>
                                             <div className="flex flex-col items-center">
