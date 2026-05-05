@@ -246,6 +246,15 @@ const Funcionario = () => {
           stats.negativos += (cargaLinha - totalLinha);
         }
       }
+      // Falta e Folga Banco geram negativos para não-horistas
+      if ((r.evento === 'Falta' || r.evento === 'Folga Banco') && !ehHoristaOuNoturno) {
+        // Usa o valor salvo no campo 'negativos' do registro, que já foi calculado pelo backend
+        if (r.negativos && r.negativos.startsWith('-')) {
+          stats.negativos += min(r.negativos.slice(1));
+        } else {
+          stats.negativos += cargaLinha;
+        }
+      }
       if (r.evento === 'Falta') stats.faltas++;
       if (r.evento === 'Feriado') {
         const carga = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
@@ -297,7 +306,7 @@ const Funcionario = () => {
       baseCalculo: fmt(baseCalculoMin),
       totalFeriados: stats.dias_feriados > 0 ? `${stats.dias_feriados}d - ${fmt(stats.feriados)}` : '00:00'
     };
-  }, [registros]);
+  }, [registros, funcionario, mes, ano]);
 
   const handleEdit = (r) => {
     setSelectedRecord(r);
@@ -441,6 +450,22 @@ const Funcionario = () => {
       swalTheme({ title: 'Exportação', text: 'Gerando arquivo de impressão...', icon: 'info', timer: 2000, showConfirmButton: false });
       const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
       const labelMes = MESES[mes - 1] + " " + ano;
+      // Calcular saldo_anterior de forma consistente: banco_horas - saldo_mes_frontend
+      const _parseBalMin = (str) => {
+        if (!str || str === '00:00') return 0;
+        const sign = str.startsWith('+') ? 1 : str.startsWith('-') ? -1 : 1;
+        const parts = str.replace(/[+-]/, '').split(':');
+        return sign * (parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0));
+      };
+      const _fmtBal = (m) => {
+        if (m === 0) return '00:00';
+        const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
+        const mm = Math.abs(m % 60).toString().padStart(2, '0');
+        return (m > 0 ? '+' : '-') + `${h}:${mm}`;
+      };
+      const _bancoMin = _parseBalMin(relatorio?.banco_horas);
+      const _saldoAnteriorMin = relatorio?.banco_horas ? _bancoMin - analytics.saldoMin : null;
+      const _saldoAnteriorStr = _saldoAnteriorMin !== null ? _fmtBal(_saldoAnteriorMin) : '00:00';
       let rowsHtml = '';
       const daysInMonth = new Date(ano, mes, 0).getDate();
       const mapa = {};
@@ -507,7 +532,7 @@ const Funcionario = () => {
             <div class="card"><strong>Tipo</strong>${funcionario?.tipo}</div>
             <div class="card"><strong>Faltas</strong>${analytics.totalFaltas}</div>
             <div class="card"><strong>Feriados</strong>${analytics.totalFeriados}</div>
-            <div class="card"><strong>S. Anterior</strong>${relatorio?.saldo_anterior || '00:00'}</div>
+            <div class="card"><strong>S. Anterior</strong>${_saldoAnteriorStr}</div>
             <div class="card"><strong>S. Mês</strong>${analytics.saldo}</div>
             <div class="card"><strong>Consolidado</strong>${relatorio?.banco_horas || analytics.saldo}</div>
           </div>
@@ -624,9 +649,35 @@ const Funcionario = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <InfoCard label="Tipo de Contrato" value={funcionario?.tipo} />
-        <InfoCard label="Saldo Anterior" value={relatorio?.saldo_anterior || '00:00'} color={(relatorio?.saldo_anterior && relatorio.saldo_anterior.includes('+')) ? 'text-brand-accent' : (relatorio?.saldo_anterior && relatorio.saldo_anterior.includes('-') ? 'text-rose-400' : 'text-brand-muted opacity-40')} />
-        <InfoCard label="Saldo do Mês" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
-        <InfoCard label="Banco Consolidado" value={relatorio?.banco_horas || analytics.saldo} color={(relatorio?.banco_horas && relatorio.banco_horas.includes('+')) ? 'text-brand-accent' : (relatorio?.banco_horas && relatorio.banco_horas.includes('-') ? 'text-rose-400' : 'text-brand-muted opacity-40')} />
+        {(() => {
+          // Banco Consolidado vem do backend (ciclo completo). Saldo Anterior é derivado
+          // como (banco_horas - saldo_mes_frontend) para garantir consistência entre os 3 cartões.
+          const parseBalanceMin = (str) => {
+            if (!str || str === '00:00') return 0;
+            const sign = str.startsWith('+') ? 1 : str.startsWith('-') ? -1 : 1;
+            const parts = str.replace(/[+-]/, '').split(':');
+            return sign * (parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0));
+          };
+          const fmtBalance = (m) => {
+            if (m === 0) return '00:00';
+            const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
+            const mm = Math.abs(m % 60).toString().padStart(2, '0');
+            return (m > 0 ? '+' : '-') + `${h}:${mm}`;
+          };
+          const bancoMin = parseBalanceMin(relatorio?.banco_horas);
+          // Saldo Anterior = Banco Consolidado - Saldo do Mês (garante consistência)
+          const saldoAnteriorMin = relatorio?.banco_horas ? bancoMin - analytics.saldoMin : null;
+          const saldoAnteriorStr = saldoAnteriorMin !== null ? fmtBalance(saldoAnteriorMin) : '00:00';
+          const saldoAnteriorColor = saldoAnteriorMin === null ? 'text-brand-muted opacity-40' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
+          const bancoColor = !relatorio?.banco_horas ? 'text-brand-muted opacity-40' : bancoMin > 0 ? 'text-brand-accent' : bancoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
+          return (
+            <>
+              <InfoCard label="Saldo Anterior" value={saldoAnteriorStr} color={saldoAnteriorColor} />
+              <InfoCard label="Saldo do Mês" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
+              <InfoCard label="Banco Consolidado" value={relatorio?.banco_horas || analytics.saldo} color={bancoColor} />
+            </>
+          );
+        })()}
       </div>
 
       <div className="bg-brand-surface border border-brand-border rounded-3xl overflow-hidden shadow-2xl">

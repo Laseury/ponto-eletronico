@@ -1,6 +1,6 @@
-const prisma = require("../db/prisma");
+﻿const prisma = require("../db/prisma");
 
-// ── Funções auxiliares de cálculo e conversão ──────────────────────────────
+// â”€â”€ FunÃ§Ãµes auxiliares de cÃ¡lculo e conversÃ£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function calcularMinutos(horario) {
     if (!horario) return 0;
     const partes = horario.split(":");
@@ -65,7 +65,7 @@ function formatarRegistro(r) {
     };
 }
 
-// ── Rota 4 — buscar registros de um funcionário ────────────────────────────
+// â”€â”€ Rota 4 â€” buscar registros de um funcionÃ¡rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function listarRegistros(req, res) {
     try {
         const funcionario_id = parseInt(req.params.funcionario_id);
@@ -92,13 +92,13 @@ async function listarRegistros(req, res) {
     }
 }
 
-// ── Rota 5 — criar ou atualizar um registro ────────────────────────────────
+// â”€â”€ Rota 5 â€” criar ou atualizar um registro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function salvarRegistro(req, res) {
     try {
         const { funcionario_id, data, e1, s1, e2, s2, e3, s3, evento, negativos_manual } = req.body;
 
         if (!funcionario_id || !data) {
-            return res.status(400).json({ erro: "Funcionário e data são obrigatórios" });
+            return res.status(400).json({ erro: "FuncionÃ¡rio e data sÃ£o obrigatÃ³rios" });
         }
 
         const func = await prisma.funcionario.findUnique({
@@ -107,50 +107,42 @@ async function salvarRegistro(req, res) {
         });
         
         if (!func) {
-            return res.status(404).json({ erro: "Funcionário não encontrado" });
+            return res.status(404).json({ erro: "FuncionÃ¡rio nÃ£o encontrado" });
         }
 
         const tipo = func.tipo;
         let totalMinutos = 0;
-        
-        if (!evento) {
-            totalMinutos += calcularTurno(e1, s1);
-            totalMinutos += calcularTurno(e2, s2);
-            totalMinutos += calcularTurno(e3, s3);
-        }
+        totalMinutos += calcularTurno(e1, s1);
+        totalMinutos += calcularTurno(e2, s2);
+        totalMinutos += calcularTurno(e3, s3);
 
         const ehHoristaOuNoturno = tipo === "Horista" || tipo === "Horista Noturno";
         const ehHorista = tipo === "Horista"; 
-        // Horista Noturno e Mensalistas são 7h20 (440m). Apenas Horista Diurno é 8h (480m).
         const cargaMinutos = tipo === "Horista Noturno" ? 440 : (func.cargaHorariaDiaria || (ehHorista ? 480 : 440));
 
         let extrasMinutos = 0;
         let negativosMinutos = 0;
 
-        if (evento === "Férias" || evento === "Ferias" || evento === "Atestado" || evento === "Declaração" || evento === "Declaracao" || evento === "Folga") {
-            extrasMinutos = 0;
+        // Se houver evento JUSTIFICADO (nÃ£o Falta), o dia "vale" a carga horÃ¡ria em termos de saldo de horas (0 negativos).
+        // Se houver Falta ou Folga Banco, gera negativos do tamanho da carga.
+        // Se houver horas trabalhadas em qualquer evento, elas contam como Extras (exceto Falta).
+
+        if (evento === "FÃ©rias" || evento === "Ferias" || evento === "Atestado" || evento === "DeclaraÃ§Ã£o" || evento === "Declaracao" || evento === "Folga" || evento === "Feriado" || evento === "DSR") {
             negativosMinutos = 0;
-            totalMinutos = cargaMinutos; // Conta como tempo trabalhado/remunerado
-        } else if (evento === "Feriado") {
-            extrasMinutos = 0;
-            negativosMinutos = 0;
-            totalMinutos = 0; // Feriado é pago mas não é "trabalhado" na soma bruta
-        } else if (evento === "Falta") {
+            extrasMinutos = totalMinutos; // Tudo trabalhado em dia de abono/feriado/folga Ã© Extra
+            // Nota: totalMinutos (trabalhado) serÃ¡ exibido no campo 'total', mas nÃ£o afeta o 'negativo'.
+        } else if (evento === "Falta" || evento === "Folga Banco") {
             negativosMinutos = ehHoristaOuNoturno ? 0 : (negativos_manual ? calcularMinutos(negativos_manual) : cargaMinutos);
-            totalMinutos = 0;
             extrasMinutos = 0;
-        } else if (evento === "Folga Banco") {
-            negativosMinutos = ehHoristaOuNoturno ? 0 : cargaMinutos;
-            totalMinutos = 0;
-        } else if (evento === "DSR") {
-            extrasMinutos = 0;
-            negativosMinutos = 0;
-            totalMinutos = 0;
-        } else if (!evento && totalMinutos > 0) {
+            totalMinutos = 0; // Se Ã© falta, ignora punches para o total (embora idealmente nÃ£o devesse ter punches)
+        } else {
+            // Sem evento
             if (totalMinutos > cargaMinutos) {
                 extrasMinutos = totalMinutos - cargaMinutos;
-            } else if (totalMinutos < cargaMinutos && !ehHoristaOuNoturno) {
-                negativosMinutos = cargaMinutos - totalMinutos;
+                negativosMinutos = 0;
+            } else if (totalMinutos < cargaMinutos) {
+                extrasMinutos = 0;
+                negativosMinutos = ehHoristaOuNoturno ? 0 : (cargaMinutos - totalMinutos);
             }
         }
 
@@ -217,8 +209,8 @@ async function salvarRegistro(req, res) {
 
 // Auxiliar para LOGS
 async function registrarLog(funcionario_id, data, usuario, registro, foiCriacao) {
-    // Para simplificar, registramos uma ação de edição de registro de ponto.
-    // Em sistemas mais complexos, compararíamos o registro antigo com o novo para capturar o campo exato.
+    // Para simplificar, registramos uma aÃ§Ã£o de ediÃ§Ã£o de registro de ponto.
+    // Em sistemas mais complexos, compararÃ­amos o registro antigo com o novo para capturar o campo exato.
     await prisma.logRegistro.create({
         data: {
             funcionarioId: funcionario_id,
@@ -226,7 +218,7 @@ async function registrarLog(funcionario_id, data, usuario, registro, foiCriacao)
             usuario: usuario,
             acao: foiCriacao ? "criacao" : "edicao",
             campoAlterado: "dia",
-            valorNovo: registro.evento || "Horários"
+            valorNovo: registro.evento || "HorÃ¡rios"
         }
     });
 }
@@ -263,7 +255,7 @@ async function excluirRegistro(req, res) {
         });
         
         if (!registro) {
-            return res.status(404).json({ erro: "Registro não encontrado" });
+            return res.status(404).json({ erro: "Registro nÃ£o encontrado" });
         }
         
         await prisma.registroPonto.delete({
@@ -280,14 +272,74 @@ async function excluirRegistro(req, res) {
                 usuario: usuario,
                 acao: "edicao", // Reusing edicao for simplicity as per existing logic
                 campoAlterado: "exclusao",
-                valorNovo: "Registro Excluído"
+                valorNovo: "Registro ExcluÃ­do"
             }
         });
         
-        res.json({ mensagem: "Registro excluído com sucesso" });
+        res.json({ mensagem: "Registro excluÃ­do com sucesso" });
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     }
 }
 
-module.exports = { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro };
+
+async function loteEvento(req, res) {
+    try {
+        const { funcionario_ids, data_inicio, data_fim, evento, negativos_manual } = req.body;
+
+        if (!funcionario_ids || !Array.isArray(funcionario_ids) || !data_inicio || !data_fim || !evento) {
+            return res.status(400).json({ erro: "Dados incompletos para lancamento em lote" });
+        }
+
+        const usuario = req.headers["x-usuario"] || "lote_batch";
+
+        for (const fId of funcionario_ids) {
+            const func = await prisma.funcionario.findUnique({
+                where: { id: parseInt(fId) },
+                select: { tipo: true, cargaHorariaDiaria: true }
+            });
+            if (!func) continue;
+
+            const ehHoristaOuNoturno = func.tipo === "Horista" || func.tipo === "Horista Noturno";
+            const cargaMinutos = func.tipo === "Horista Noturno" ? 440 : (func.cargaHorariaDiaria || (func.tipo === "Horista" ? 480 : 440));
+
+            let current = new Date(data_inicio);
+            const end = new Date(data_fim);
+
+            while (current <= end) {
+                let extras = "00:00";
+                let negativos = "00:00";
+                let total = null;
+
+                if (evento === "Falta" || evento === "Folga Banco") {
+                    const negMin = ehHoristaOuNoturno ? 0 : (negativos_manual ? calcularMinutos(negativos_manual) : cargaMinutos);
+                    negativos = negMin > 0 ? "-" + minutosParaHorario(negMin) : "00:00";
+                }
+
+                const recordPayload = {
+                    evento,
+                    total,
+                    extras,
+                    negativos,
+                    noturno: "00:00",
+                    e1: null, s1: null, e2: null, s2: null, e3: null, s3: null
+                };
+
+                const resultado = await prisma.registroPonto.upsert({
+                    where: { funcionarioId_data: { funcionarioId: parseInt(fId), data: new Date(current) } },
+                    update: recordPayload,
+                    create: { funcionarioId: parseInt(fId), data: new Date(current), ...recordPayload }
+                });
+
+                await registrarLog(parseInt(fId), new Date(current), usuario, resultado, false);
+                current.setDate(current.getDate() + 1);
+            }
+        }
+
+        res.json({ mensagem: "Lancamento em lote concluido com sucesso" });
+    } catch (erro) {
+        console.error("Erro lote:", erro);
+        res.status(500).json({ erro: erro.message });
+    }
+}
+module.exports = { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro, loteEvento };
