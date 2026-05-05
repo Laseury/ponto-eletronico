@@ -228,8 +228,9 @@ const Funcionario = () => {
   };
 
   const fmt = (m) => {
-    const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
-    const mm = Math.abs(m % 60).toString().padStart(2, '0');
+    const absM = Math.abs(m);
+    const h = Math.floor(absM / 60).toString().padStart(2, '0');
+    const mm = (absM % 60).toString().padStart(2, '0');
     return `${h}:${mm}`;
   };
 
@@ -276,8 +277,9 @@ const Funcionario = () => {
       stats.noturnoPuro += calcNoturnoPuro(r.e3, r.s3);
     });
     const fmt = (m) => {
-      const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
-      const mm = Math.abs(m % 60).toString().padStart(2, '0');
+      const absM = Math.abs(m);
+      const h = Math.floor(absM / 60).toString().padStart(2, '0');
+      const mm = (absM % 60).toString().padStart(2, '0');
       return `${h}:${mm}`;
     };
     const saldo = stats.extras - stats.negativos;
