@@ -24,18 +24,20 @@ async function gerarRelatorio(req, res) {
                 COUNT(r.id) FILTER (WHERE r.evento = 'Feriado')                    AS dias_feriados,
                 COUNT(r.id) FILTER (WHERE r.evento = 'DSR')                        AS dias_dsr,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Folga' OR r.evento = 'Atestado' OR r.evento = 'Ferias' OR r.evento = 'Férias' OR r.evento = 'Declaração' OR r.evento = 'Declaracao') AS dias_abonados,
-                SUM(CASE WHEN r.total LIKE '%:%' AND r.evento IS NULL
-                    THEN 
-                        CASE WHEN (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)) > (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END)
-                        THEN (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)) - (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END)
-                        ELSE 0 END
-                    ELSE 0 END) AS total_extras_min,
-                SUM(CASE WHEN r.total LIKE '%:%' AND r.evento IS NULL AND f.tipo NOT IN ('Horista', 'Horista Noturno')
-                    THEN 
-                        CASE WHEN (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)) < (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END)
-                        THEN (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END) - (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT))
-                        ELSE 0 END
-                    ELSE 0 END) AS total_negativos_min,
+                -- Lê diretamente os campos calculados pelo registros.controller.js
+                -- (inclui eventos como Falta, Folga Banco etc. corretamente)
+                SUM(
+                    CASE WHEN r.extras LIKE '+%:%'
+                    THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
+                    ELSE 0 END
+                ) AS total_extras_min,
+                SUM(
+                    CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno')
+                    THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
+                    ELSE 0 END
+                ) AS total_negativos_min,
                 SUM(
                     CASE WHEN r.noturno LIKE '%:%'
                     THEN CAST(SPLIT_PART(r.noturno,':',1) AS INT)*60 +
@@ -70,18 +72,19 @@ async function gerarRelatorio(req, res) {
         const bancResult = await prisma.$queryRaw`
             SELECT
                 r.funcionario_id,
-                SUM(CASE WHEN r.total LIKE '%:%' AND r.evento IS NULL
-                    THEN 
-                        CASE WHEN (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)) > (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END)
-                        THEN (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)) - (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END)
-                        ELSE 0 END
-                    ELSE 0 END) AS banco_extras_min,
-                SUM(CASE WHEN r.total LIKE '%:%' AND r.evento IS NULL AND f.tipo NOT IN ('Horista', 'Horista Noturno')
-                    THEN 
-                        CASE WHEN (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)) < (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END)
-                        THEN (CASE WHEN f.tipo = 'Horista Noturno' THEN 440 ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END) END) - (CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT))
-                        ELSE 0 END
-                    ELSE 0 END) AS banco_negativos_min
+                -- Lê diretamente os campos calculados pelo registros.controller.js
+                SUM(
+                    CASE WHEN r.extras LIKE '+%:%'
+                    THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
+                    ELSE 0 END
+                ) AS banco_extras_min,
+                SUM(
+                    CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno')
+                    THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
+                    ELSE 0 END
+                ) AS banco_negativos_min
             FROM registros_ponto r
             JOIN funcionarios f ON r.funcionario_id = f.id
             WHERE EXTRACT(YEAR FROM r.data)  = ${ano}

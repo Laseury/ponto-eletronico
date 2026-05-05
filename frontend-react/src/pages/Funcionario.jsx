@@ -461,8 +461,9 @@ const Funcionario = () => {
       };
       const _fmtBal = (m) => {
         if (m === 0) return '00:00';
-        const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
-        const mm = Math.abs(m % 60).toString().padStart(2, '0');
+        const absM = Math.abs(m);
+        const h = Math.floor(absM / 60).toString().padStart(2, '0');
+        const mm = (absM % 60).toString().padStart(2, '0');
         return (m > 0 ? '+' : '-') + `${h}:${mm}`;
       };
       const _bancoMin = _parseBalMin(relatorio?.banco_horas);
@@ -662,8 +663,9 @@ const Funcionario = () => {
           };
           const fmtBalance = (m) => {
             if (m === 0) return '00:00';
-            const h = Math.abs(Math.floor(m / 60)).toString().padStart(2, '0');
-            const mm = Math.abs(m % 60).toString().padStart(2, '0');
+            const absM = Math.abs(m);
+            const h = Math.floor(absM / 60).toString().padStart(2, '0');
+            const mm = (absM % 60).toString().padStart(2, '0');
             return (m > 0 ? '+' : '-') + `${h}:${mm}`;
           };
           const bancoMin = parseBalanceMin(relatorio?.banco_horas);
