@@ -11,11 +11,338 @@ import {
   ExternalLink,
   Filter,
   CheckCircle2,
-  FileText
+  FileText,
+  X,
+  Printer
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
+
+const PdfModal = ({ isOpen, onClose, defaultAno }) => {
+    const [tipo, setTipo] = useState('resumido');
+    const [ano, setAno] = useState(defaultAno);
+    const [mesesSelecionados, setMesesSelecionados] = useState([]);
+    const [funcionarios, setFuncionarios] = useState([]);
+    const [colabsSelecionados, setColabsSelecionados] = useState([]);
+    const [loadingPdf, setLoadingPdf] = useState(false);
+    const [filtroNome, setFiltroNome] = useState('');
+
+    const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+    useEffect(() => {
+        if (isOpen) {
+            axios.get('/funcionarios').then(res => {
+                setFuncionarios(res.data);
+                setColabsSelecionados(res.data.map(f => f.id));
+            }).catch(() => {});
+        } else {
+            setMesesSelecionados([]);
+        }
+    }, [isOpen]);
+
+    const handleToggleMes = (mes) => {
+        setMesesSelecionados(prev => prev.includes(mes) ? prev.filter(m => m !== mes) : [...prev, mes]);
+    };
+
+    const handleToggleColab = (id) => {
+        setColabsSelecionados(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+    };
+
+    const handleToggleAllColabs = () => {
+        if (colabsSelecionados.length === funcionarios.length) {
+            setColabsSelecionados([]);
+        } else {
+            setColabsSelecionados(funcionarios.map(f => f.id));
+        }
+    };
+
+    const funcFiltrados = funcionarios.filter(f => f.nome.toLowerCase().includes(filtroNome.toLowerCase()));
+
+    const fmt = (m) => {
+        if (m === 0) return '00:00';
+        const absM = Math.abs(m);
+        const h = Math.floor(absM / 60).toString().padStart(2, '0');
+        const mm = (absM % 60).toString().padStart(2, '0');
+        return (m > 0 ? '+' : '-') + `${h}:${mm}`;
+    };
+    const fmtAbs = (m) => {
+        const absM = Math.abs(m);
+        const h = Math.floor(absM / 60).toString().padStart(2, '0');
+        const mm = (absM % 60).toString().padStart(2, '0');
+        return `${h}:${mm}`;
+    };
+    const _parseBalMin = (str) => {
+        if (!str || str === '00:00') return 0;
+        const sign = str.startsWith('-') ? -1 : 1;
+        const parts = str.replace(/[+-]/, '').split(':');
+        return sign * (parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0));
+    };
+
+    const gerarPdf = async () => {
+        if (mesesSelecionados.length === 0) return swalTheme({ title: 'Atenção', text: 'Selecione pelo menos um mês.', icon: 'warning' });
+        if (colabsSelecionados.length === 0) return swalTheme({ title: 'Atenção', text: 'Selecione pelo menos um colaborador.', icon: 'warning' });
+
+        setLoadingPdf(true);
+        try {
+            const mesesOrdenados = [...mesesSelecionados].sort((a,b) => a - b);
+            const colsSet = new Set(colabsSelecionados);
+            const selectedFuncs = funcionarios.filter(f => colsSet.has(f.id)).sort((a,b) => a.nome.localeCompare(b.nome));
+
+            let htmlContent = `
+                <html><head><style>
+                  @page { size: portrait; margin: 1cm; }
+                  body { font-family: sans-serif; font-size: 9px; color: #333; margin: 0; padding: 0; }
+                  .hdr { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+                  .hdr h1 { font-size: 16px; margin: 0; }
+                  .hdr p { font-size: 10px; margin: 5px 0 0 0; font-weight: bold; }
+                  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 15px; }
+                  .card { border: 1px solid #ddd; padding: 6px 4px; border-radius: 4px; background: #f9f9f9; text-align: center; }
+                  .card strong { font-size: 7px; text-transform: uppercase; color: #666; display: block; margin-bottom: 2px; }
+                  table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 30px; }
+                  th { background: #333; color: #fff; padding: 4px 2px; font-size: 8px; text-align: center; }
+                  td { border: 1px solid #ddd; padding: 3px 1px; text-align: center; font-size: 8.5px; }
+                  .page-break { page-break-before: always; }
+                </style></head><body>
+            `;
+
+            if (tipo === 'resumido') {
+                htmlContent += `<div class="hdr"><h1>RELATÓRIO CONSOLIDADO — RESUMO</h1><p>Ano de Referência: ${ano}</p></div>`;
+                
+                for (let func of selectedFuncs) {
+                    htmlContent += `
+                        <div style="background:#eee; padding:5px; margin-bottom:10px; font-weight:bold; font-size:12px;">
+                            ${func.nome} <span style="font-size:9px; font-weight:normal; color:#666;">(${func.tipo})</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mês</th>
+                                    <th>Dias</th>
+                                    <th>Faltas</th>
+                                    <th>Feriados</th>
+                                    <th>Extras</th>
+                                    <th>Negativos</th>
+                                    <th>Saldo Mês</th>
+                                    <th>Banco</th>
+                                    <th>Noturno</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    for (let m of mesesOrdenados) {
+                        const res = await axios.get(`/relatorio/${m}/${ano}?valor_hora=0`);
+                        const r = res.data.find(d => d.id === func.id);
+                        if (r) {
+                            htmlContent += `
+                                <tr>
+                                    <td>${MESES[m-1]}</td>
+                                    <td>${r.dias_trabalhados}</td>
+                                    <td>${r.faltas || 0}</td>
+                                    <td>${r.dias_feriados > 0 ? `${r.dias_feriados}d` : '-'}</td>
+                                    <td style="color: #2e7d32">${r.total_extras}</td>
+                                    <td style="color: #d32f2f">${r.tipo?.includes('Horista') ? '—' : r.total_negativos}</td>
+                                    <td><strong>${r.saldo_mes}</strong></td>
+                                    <td>${r.banco_horas}</td>
+                                    <td>${r.total_noturno && r.total_noturno !== '00:00' ? r.total_noturno : '—'}</td>
+                                </tr>
+                            `;
+                        } else {
+                            htmlContent += `<tr><td>${MESES[m-1]}</td><td colspan="8" style="color:#aaa;">Sem registros</td></tr>`;
+                        }
+                    }
+                    htmlContent += `</tbody></table>`;
+                }
+            } else {
+                let firstPage = true;
+                for (let func of selectedFuncs) {
+                    const ehHoristaOuNoturno = func.tipo === 'Horista' || func.tipo === 'Horista Noturno';
+                    
+                    for (let m of mesesOrdenados) {
+                        if (!firstPage) htmlContent += `<div class="page-break"></div>`;
+                        firstPage = false;
+
+                        const [relRes, regRes] = await Promise.all([
+                            axios.get(`/relatorio/${m}/${ano}?valor_hora=0`),
+                            axios.get(`/registros/${func.id}?mes=${m}&ano=${ano}`)
+                        ]);
+
+                        const relatorio = relRes.data.find(d => d.id === func.id) || {};
+                        const registros = regRes.data || [];
+
+                        const _bancoMin = _parseBalMin(relatorio.banco_horas);
+                        const _saldoMesMin = _parseBalMin(relatorio.saldo_mes);
+                        const _saldoAnteriorMin = relatorio.banco_horas ? _bancoMin - _saldoMesMin : null;
+                        const _saldoAnteriorStr = _saldoAnteriorMin !== null ? fmt(_saldoAnteriorMin) : '00:00';
+
+                        htmlContent += `
+                            <div class="hdr">
+                                <h1>VISO HOTEL — FICHA DE PONTO</h1>
+                                <p>Colaborador: ${func.nome} | Período: ${MESES[m-1]} ${ano}</p>
+                            </div>
+                            <div class="grid">
+                                <div class="card"><strong>Tipo</strong>${func.tipo}</div>
+                                <div class="card"><strong>Faltas</strong>${relatorio.faltas || 0}</div>
+                                <div class="card"><strong>Feriados</strong>${relatorio.dias_feriados > 0 ? `${relatorio.dias_feriados}d - ${relatorio.total_feriados || '00:00'}` : '00:00'}</div>
+                                <div class="card"><strong>S. Anterior</strong>${_saldoAnteriorStr}</div>
+                                <div class="card"><strong>S. Mês</strong>${relatorio.saldo_mes || '00:00'}</div>
+                                <div class="card"><strong>Consolidado</strong>${relatorio.banco_horas || '00:00'}</div>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 55px;">Data</th>
+                                        <th style="width: 35px;">E1</th><th style="width: 35px;">S1</th>
+                                        <th style="width: 35px;">E2</th><th style="width: 35px;">S2</th>
+                                        <th style="width: 35px;">E3</th><th style="width: 35px;">S3</th>
+                                        <th style="width: 40px;">Total</th>
+                                        <th style="width: 40px;">Not.</th>
+                                        <th style="width: 40px;">Ext.</th>
+                                        ${!ehHoristaOuNoturno ? '<th style="width: 40px;">Neg.</th>' : ''}
+                                        <th style="width: auto;">Evento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        const daysInMonth = new Date(ano, m, 0).getDate();
+                        const mapa = {};
+                        registros.forEach(r => mapa[r.data.substring(0, 10)] = r);
+
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            const chave = `${ano}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2,'0')}`;
+                            const r = mapa[chave] || {};
+                            const cargaExata = func.tipo === 'Horista Noturno' ? 440 : (func.cargaHorariaDiaria || (func.tipo === 'Horista' ? 480 : 440));
+                            const totalMin = r.total ? (parseInt(r.total.split(':')[0]) * 60 + parseInt(r.total.split(':')[1])) : 0;
+                            
+                            let displayExtras = r.extras || '';
+                            let displayNegativos = r.negativos || '';
+
+                            if (r.total && !r.evento) {
+                                if (totalMin > cargaExata) {
+                                    const diff = totalMin - cargaExata;
+                                    displayExtras = '+' + fmtAbs(diff);
+                                    displayNegativos = '00:00';
+                                } else {
+                                    const diff = cargaExata - totalMin;
+                                    displayExtras = '00:00';
+                                    displayNegativos = '-' + fmtAbs(diff);
+                                }
+                            }
+
+                            htmlContent += `
+                                <tr>
+                                    <td>${d.toString().padStart(2,'0')}/${m.toString().padStart(2,'0')}/${ano}</td>
+                                    <td>${r.e1?.substring(0,5) || ''}</td><td>${r.s1?.substring(0,5) || ''}</td>
+                                    <td>${r.e2?.substring(0,5) || ''}</td><td>${r.s2?.substring(0,5) || ''}</td>
+                                    <td>${r.e3?.substring(0,5) || ''}</td><td>${r.s3?.substring(0,5) || ''}</td>
+                                    <td>${r.total || ''}</td>
+                                    <td>${r.noturno?.substring(0,5) || ''}</td>
+                                    <td style="color: #2e7d32">${displayExtras}</td>
+                                    ${!ehHoristaOuNoturno ? `<td style="color: #d32f2f">${displayNegativos}</td>` : ''}
+                                    <td>${r.evento || ''}</td>
+                                </tr>
+                            `;
+                        }
+                        htmlContent += `</tbody></table>`;
+                    }
+                }
+            }
+
+            htmlContent += `</body></html>`;
+            const win = window.open('', '_blank');
+            win.document.write(htmlContent); win.document.close();
+            win.onload = () => win.print();
+            onClose();
+
+        } catch (err) {
+            console.error(err);
+            swalTheme({ title: 'Erro!', text: 'Falha ao gerar PDF.', icon: 'error' });
+        } finally {
+            setLoadingPdf(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-bg/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-brand-surface border border-brand-border w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-brand-border flex justify-between items-center bg-brand-surface/30">
+              <h3 className="text-xl font-black text-brand-text flex items-center gap-3 tracking-tight italic">
+                <Printer size={24} className="text-brand-primary" /> Gerador de Relatório PDF
+              </h3>
+              <button onClick={onClose} className="p-2 hover:bg-brand-bg rounded-lg text-brand-muted transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-6">
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] opacity-60">Tipo de Relatório</label>
+                     <div className="flex bg-brand-bg p-1.5 rounded-xl border border-brand-border">
+                        <button onClick={() => setTipo('resumido')} className={`flex-1 py-2 text-xs font-black rounded-lg transition-all ${tipo === 'resumido' ? 'bg-brand-surface text-brand-primary shadow-sm' : 'text-brand-muted hover:text-brand-text'}`}>Resumido</button>
+                        <button onClick={() => setTipo('detalhado')} className={`flex-1 py-2 text-xs font-black rounded-lg transition-all ${tipo === 'detalhado' ? 'bg-brand-surface text-brand-primary shadow-sm' : 'text-brand-muted hover:text-brand-text'}`}>Detalhado</button>
+                     </div>
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] opacity-60">Ano de Referência</label>
+                     <select value={ano} onChange={(e) => setAno(Number(e.target.value))} className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner">
+                        {[2024, 2025, 2026].map(a => <option key={a} value={a}>{a}</option>)}
+                     </select>
+                  </div>
+               </div>
+
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] opacity-60">Meses</label>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                     {MESES.map((m, idx) => {
+                         const mNum = idx + 1;
+                         const isSelected = mesesSelecionados.includes(mNum);
+                         return (
+                            <button key={mNum} onClick={() => handleToggleMes(mNum)} className={`py-2 text-[10px] font-black rounded-xl border transition-all uppercase tracking-widest ${isSelected ? 'bg-brand-primary/10 border-brand-primary/50 text-brand-primary' : 'bg-brand-bg border-brand-border text-brand-muted hover:border-brand-primary/30'}`}>
+                                {m.substring(0,3)}
+                            </button>
+                         );
+                     })}
+                  </div>
+               </div>
+
+               <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] opacity-60">Colaboradores</label>
+                      <button onClick={handleToggleAllColabs} className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:underline">
+                          {colabsSelecionados.length === funcionarios.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                      </button>
+                  </div>
+                  <input type="text" placeholder="Buscar colaborador..." value={filtroNome} onChange={(e) => setFiltroNome(e.target.value)} className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-2 text-xs font-black text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner" />
+                  
+                  <div className="max-h-40 overflow-y-auto bg-brand-bg rounded-xl border border-brand-border p-2 space-y-1 custom-scrollbar">
+                      {funcFiltrados.map(f => (
+                          <label key={f.id} className="flex items-center gap-3 p-2 hover:bg-brand-surface rounded-lg cursor-pointer transition-colors group">
+                              <input type="checkbox" checked={colabsSelecionados.includes(f.id)} onChange={() => handleToggleColab(f.id)} className="w-4 h-4 rounded text-brand-primary focus:ring-brand-primary bg-brand-surface border-brand-border" />
+                              <span className="text-xs font-black text-brand-text group-hover:text-brand-primary transition-colors">{f.nome}</span>
+                              <span className="text-[9px] text-brand-muted uppercase tracking-widest ml-auto opacity-50">{f.tipo}</span>
+                          </label>
+                      ))}
+                      {funcFiltrados.length === 0 && <div className="p-4 text-center text-xs font-black text-brand-muted opacity-50">Nenhum colaborador encontrado.</div>}
+                  </div>
+               </div>
+            </div>
+
+            <div className="p-6 bg-brand-surface/50 border-t border-brand-border flex gap-4">
+              <button onClick={onClose} disabled={loadingPdf} className="flex-1 py-4 bg-brand-bg hover:bg-brand-surface text-brand-muted font-black rounded-2xl border border-brand-border transition-all uppercase text-[10px] tracking-widest disabled:opacity-50">Cancelar</button>
+              <button onClick={gerarPdf} disabled={loadingPdf} className="flex-1 py-4 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl shadow-xl shadow-brand-primary/20 transition-all uppercase text-[10px] tracking-widest disabled:opacity-50 flex justify-center items-center gap-2">
+                 {loadingPdf ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <Printer size={16} />}
+                 {loadingPdf ? 'Gerando...' : 'Gerar Relatório'}
+              </button>
+            </div>
+          </div>
+        </div>
+    );
+};
 
 const Relatorio = () => {
     const navigate = useNavigate();
@@ -25,6 +352,7 @@ const Relatorio = () => {
     const [dados, setDados] = useState([]);
     const [filtroNome, setFiltroNome] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
     const fetchRelatorio = async () => {
         setLoading(true);
@@ -56,7 +384,7 @@ const Relatorio = () => {
         ]);
 
         const csvContent = [headers, ...rows].map(e => e.join(";")).join("\n");
-        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob(["\\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
@@ -68,6 +396,8 @@ const Relatorio = () => {
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <PdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} defaultAno={ano} />
+
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
@@ -113,6 +443,13 @@ const Relatorio = () => {
                             ))}
                         </select>
                      </div>
+
+                     <button 
+                        onClick={() => setIsPdfModalOpen(true)}
+                        className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg font-black py-4 px-8 rounded-[1.5rem] shadow-xl shadow-brand-primary/20 transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
+                     >
+                        <FileText size={18} /> Gerar PDF
+                     </button>
 
                      <button 
                         onClick={exportCSV}
