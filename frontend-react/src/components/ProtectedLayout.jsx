@@ -111,13 +111,11 @@ const ProtectedLayout = () => {
       title: 'Resumo dos Eventos',
       html: `
         <div style="text-align: left; font-size: 14px; line-height: 1.6; margin-top: 10px;">
-          <p><strong>🏖️ Folga:</strong> Dia de descanso semanal padrão.</p>
-          <p><strong>❌ Falta:</strong> Ausência não justificada. Desconta horas do banco ou salário.</p>
-          <p><strong>🏥 Atestado:</strong> Ausência justificada por motivos de saúde.</p>
-          <p><strong>🏄 Férias:</strong> Período de férias regulamentares.</p>
-          <p><strong>📅 DSR:</strong> Descanso Semanal Remunerado.</p>
-          <p><strong>🎉 Feriado:</strong> Feriado (ponto facultativo ou nacional).</p>
-          <p><strong>🏦 Folga Banco:</strong> Descanso utilizando horas do banco acumulado.</p>
+          <p><strong>🏖️ Folga / 📅 DSR:</strong> Dia de descanso. Zera as horas negativas. Se houver registro de ponto, o tempo trabalhado vira 100% Extra.</p>
+          <p><strong>❌ Falta:</strong> Ausência não justificada. Gera horas negativas iguais à carga diária (podendo ser manual), descontando do saldo/banco de horas.</p>
+          <p><strong>🏥 Atestado / 🏄 Férias / 📄 Declaração:</strong> Ausência justificada. O sistema anula as horas negativas para que não haja desconto no saldo.</p>
+          <p><strong>🎉 Feriado:</strong> Dia não útil. Não gera horas negativas e bloqueia o cálculo automático de horas extras caso haja marcação.</p>
+          <p><strong>🏦 Folga Banco:</strong> Descanso utilizando banco. Gera horas negativas propositalmente para descontar as horas tiradas do saldo acumulado do funcionário.</p>
         </div>
       `,
       icon: 'info',

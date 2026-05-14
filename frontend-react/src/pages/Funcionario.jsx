@@ -144,6 +144,7 @@ const Funcionario = () => {
   const [ajusteModalOpen, setAjusteModalOpen] = useState(false);
   const [commentData, setCommentData] = useState({ texto: '', tipo: 'GERAL', data_referencia: null });
   const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '' });
+  const [allFuncionarios, setAllFuncionarios] = useState([]);
 
   const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador'].includes(user?.perfil), [user]);
   const ehHoristaOuNoturno = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
@@ -206,6 +207,10 @@ const Funcionario = () => {
   useEffect(() => {
     fetchFuncionarioData();
   }, [fetchFuncionarioData]);
+
+  useEffect(() => {
+    axios.get('/funcionarios').then(res => setAllFuncionarios(res.data)).catch(console.error);
+  }, []);
 
   const min = (h) => {
     if (!h) return 0;
@@ -498,6 +503,10 @@ const Funcionario = () => {
           }
         }
 
+        if (r.evento === 'Feriado') {
+           displayExtras = '00:00';
+        }
+
         rowsHtml += `
           <tr>
             <td>${d.toString().padStart(2,'0')}/${mes.toString().padStart(2,'0')}/${ano}</td>
@@ -598,13 +607,30 @@ const Funcionario = () => {
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-2xl font-black text-brand-text tracking-tight flex items-center gap-3 italic">
-              {funcionario?.nome}
-              <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-full border tracking-widest ${funcionario?.ativo !== false ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
-                {funcionario?.ativo !== false ? 'Ativo' : 'Inativo'}
-              </span>
-            </h1>
-            <p className="text-brand-muted font-bold text-xs mt-0.5 opacity-60">Visualizando registro detalhado do ponto.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <h1 className="text-2xl font-black text-brand-text tracking-tight flex items-center gap-3 italic">
+                {funcionario?.nome}
+                <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-full border tracking-widest ${funcionario?.ativo !== false ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                  {funcionario?.ativo !== false ? 'Ativo' : 'Inativo'}
+                </span>
+              </h1>
+              <div className="bg-brand-surface border border-brand-border rounded-xl px-3 py-1 flex items-center shadow-sm">
+                 <span className="text-[9px] font-black text-brand-muted uppercase tracking-widest mr-2 opacity-50">Alternar:</span>
+                 <select 
+                   value={id || ""} 
+                   onChange={(e) => {
+                     if(e.target.value) navigate(`/funcionario?id=${e.target.value}&mes=${mes}&ano=${ano}`);
+                   }}
+                   className="bg-transparent text-brand-text text-xs font-black outline-none cursor-pointer w-40"
+                 >
+                   <option value="" disabled>Trocar de colaborador...</option>
+                   {allFuncionarios.map(f => (
+                     <option key={f.id} value={f.id} className="bg-brand-bg text-brand-text">{f.nome}</option>
+                   ))}
+                 </select>
+              </div>
+            </div>
+            <p className="text-brand-muted font-bold text-xs mt-1.5 opacity-60">Visualizando registro detalhado do ponto.</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -740,6 +766,10 @@ const Funcionario = () => {
                         displayExtras = '00:00';
                         displayNegativos = `-${h}:${m}`;
                       }
+                    }
+
+                    if (r.evento === 'Feriado') {
+                      displayExtras = '00:00';
                     }
 
                     const noturnoLinhaMin = calcNoturnoPuro(r.e1, r.s1) + calcNoturnoPuro(r.e2, r.s2) + calcNoturnoPuro(r.e3, r.s3);

@@ -1,4 +1,4 @@
-﻿const prisma = require("../db/prisma");
+const prisma = require("../db/prisma");
 
 // â”€â”€ FunÃ§Ãµes auxiliares de cÃ¡lculo e conversÃ£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function calcularMinutos(horario) {
@@ -127,10 +127,12 @@ async function salvarRegistro(req, res) {
         // Se houver Falta ou Folga Banco, gera negativos do tamanho da carga.
         // Se houver horas trabalhadas em qualquer evento, elas contam como Extras (exceto Falta).
 
-        if (evento === "FÃ©rias" || evento === "Ferias" || evento === "Atestado" || evento === "DeclaraÃ§Ã£o" || evento === "Declaracao" || evento === "Folga" || evento === "Feriado" || evento === "DSR") {
+        if (evento === "FÃ©rias" || evento === "Ferias" || evento === "Atestado" || evento === "DeclaraÃ§Ã£o" || evento === "Declaracao" || evento === "Folga" || evento === "DSR") {
             negativosMinutos = 0;
-            extrasMinutos = totalMinutos; // Tudo trabalhado em dia de abono/feriado/folga Ã© Extra
-            // Nota: totalMinutos (trabalhado) serÃ¡ exibido no campo 'total', mas nÃ£o afeta o 'negativo'.
+            extrasMinutos = totalMinutos;
+        } else if (evento === "Feriado") {
+            negativosMinutos = 0;
+            extrasMinutos = 0;
         } else if (evento === "Falta" || evento === "Folga Banco") {
             negativosMinutos = ehHoristaOuNoturno ? 0 : (negativos_manual ? calcularMinutos(negativos_manual) : cargaMinutos);
             extrasMinutos = 0;
