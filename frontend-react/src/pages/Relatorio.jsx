@@ -619,6 +619,16 @@ const Relatorio = () => {
                                 <p className="text-brand-muted text-sm font-medium mt-1 leading-relaxed opacity-80">O banco é o acumulado histórico até o ciclo atual. Faltas não justificadas e atrasos são debitados automaticamente do saldo acumulado.</p>
                             </div>
                         </div>
+                        <div className="flex gap-6">
+                            <div className="w-1.5 h-14 bg-emerald-500 rounded-full mt-1 shadow-lg shadow-emerald-500/30"></div>
+                            <div>
+                                <p className="text-brand-text font-black text-base uppercase tracking-tight">Eventos de Folga & Feriados</p>
+                                <p className="text-brand-muted text-sm font-medium mt-1 leading-relaxed opacity-80">
+                                    <strong>DSR/Feriado:</strong> Neutros para banco de horas. Horas trabalhadas não geram extras. <br/>
+                                    <strong>Folga Feriado / Pago:</strong> Eventos neutros para compensação de saldo ou folgas vinculadas a feriados.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
