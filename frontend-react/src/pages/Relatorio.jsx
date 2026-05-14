@@ -66,18 +66,6 @@ const PdfModal = ({ isOpen, onClose, defaultAno }) => {
         const mm = (absM % 60).toString().padStart(2, '0');
         return (m > 0 ? '+' : '-') + `${h}:${mm}`;
     };
-    const fmtAbs = (m) => {
-        const absM = Math.abs(m);
-        const h = Math.floor(absM / 60).toString().padStart(2, '0');
-        const mm = (absM % 60).toString().padStart(2, '0');
-        return `${h}:${mm}`;
-    };
-    const _parseBalMin = (str) => {
-        if (!str || str === '00:00') return 0;
-        const sign = str.startsWith('-') ? -1 : 1;
-        const parts = str.replace(/[+-]/, '').split(':');
-        return sign * (parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0));
-    };
 
     const gerarPdf = async () => {
         if (mesesSelecionados.length === 0) return swalTheme({ title: 'Atenção', text: 'Selecione pelo menos um mês.', icon: 'warning' });
@@ -171,10 +159,9 @@ const PdfModal = ({ isOpen, onClose, defaultAno }) => {
                         const relatorio = relRes.data.find(d => d.id === func.id) || {};
                         const registros = regRes.data || [];
 
-                        const _bancoMin = _parseBalMin(relatorio.banco_horas);
-                        const _saldoMesMin = _parseBalMin(relatorio.saldo_mes);
-                        const _saldoAnteriorMin = relatorio.banco_horas ? _bancoMin - _saldoMesMin : null;
-                        const _saldoAnteriorStr = _saldoAnteriorMin !== null ? fmt(_saldoAnteriorMin) : '00:00';
+                        // Usar campos já calculados pelo backend (mesmo motor do JSON detalhado)
+                        // saldo_anterior vem diretamente do relatorio.controller
+                        const _saldoAnteriorStr = relatorio.saldo_anterior || '00:00';
 
                         htmlContent += `
                             <div class="hdr">
@@ -213,27 +200,11 @@ const PdfModal = ({ isOpen, onClose, defaultAno }) => {
                         for (let d = 1; d <= daysInMonth; d++) {
                             const chave = `${ano}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2,'0')}`;
                             const r = mapa[chave] || {};
-                            const cargaExata = func.tipo === 'Horista Noturno' ? 440 : (func.cargaHorariaDiaria || (func.tipo === 'Horista' ? 480 : 440));
-                            const totalMin = r.total ? (parseInt(r.total.split(':')[0]) * 60 + parseInt(r.total.split(':')[1])) : 0;
-                            
-                            let displayExtras = r.extras || '';
-                            let displayNegativos = r.negativos || '';
 
-                            if (r.total && !r.evento) {
-                                if (totalMin > cargaExata) {
-                                    const diff = totalMin - cargaExata;
-                                    displayExtras = '+' + fmtAbs(diff);
-                                    displayNegativos = '00:00';
-                                } else {
-                                    const diff = cargaExata - totalMin;
-                                    displayExtras = '00:00';
-                                    displayNegativos = '-' + fmtAbs(diff);
-                                }
-                            }
-
-                            if (r.evento === 'Feriado') {
-                                displayExtras = '00:00';
-                            }
+                            // Usar os campos extras/negativos gravados no banco pelo registros.controller
+                            // (lógica correta: DSR/Folga/Feriado/Atestado não geram débito automático)
+                            const displayExtras    = r.extras    || '';
+                            const displayNegativos = r.negativos || '';
 
                             htmlContent += `
                                 <tr>

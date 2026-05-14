@@ -243,25 +243,17 @@ const Funcionario = () => {
   const analytics = useMemo(() => {
     let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0 };
     registros.forEach(r => {
-      const cargaLinha = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
-      const totalLinha = r.total ? min(r.total) : 0;
-      
-      if (r.total && !r.evento) {
-        if (totalLinha > cargaLinha) {
-          stats.extras += (totalLinha - cargaLinha);
-        } else if (!ehHoristaOuNoturno) {
-          stats.negativos += (cargaLinha - totalLinha);
-        }
+      const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
+
+      // Ler extras/negativos diretamente dos campos gravados pelo registros.controller
+      // (lógica correta: DSR/Folga/Feriado/Atestado não geram débito automático)
+      if (r.extras && r.extras.startsWith('+')) {
+        stats.extras += min(r.extras.slice(1));
       }
-      // Falta e Folga Banco geram negativos para não-horistas
-      if ((r.evento === 'Falta' || r.evento === 'Folga Banco') && !ehHoristaOuNoturno) {
-        // Usa o valor salvo no campo 'negativos' do registro, que já foi calculado pelo backend
-        if (r.negativos && r.negativos.startsWith('-')) {
-          stats.negativos += min(r.negativos.slice(1));
-        } else {
-          stats.negativos += cargaLinha;
-        }
+      if (r.negativos && r.negativos.startsWith('-') && !ehHoristaOuNoturno) {
+        stats.negativos += min(r.negativos.slice(1));
       }
+
       if (r.evento === 'Falta') stats.faltas++;
       if (r.evento === 'Feriado') {
         const carga = funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440);
@@ -270,7 +262,6 @@ const Funcionario = () => {
       }
       if (r.evento === 'DSR') stats.dias_dsr++;
 
-      const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
       if (r.total) {
         stats.trabalhado += min(r.total);
       } else if (['Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
@@ -315,6 +306,7 @@ const Funcionario = () => {
       totalFeriados: stats.dias_feriados > 0 ? `${stats.dias_feriados}d - ${fmt(stats.feriados)}` : '00:00'
     };
   }, [registros, funcionario, mes, ano]);
+
 
   const handleEdit = (r) => {
     setSelectedRecord(r);
@@ -458,23 +450,14 @@ const Funcionario = () => {
       swalTheme({ title: 'Exportação', text: 'Gerando arquivo de impressão...', icon: 'info', timer: 2000, showConfirmButton: false });
       const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
       const labelMes = MESES[mes - 1] + " " + ano;
-      // Calcular saldo_anterior de forma consistente: banco_horas - saldo_mes_frontend
-      const _parseBalMin = (str) => {
-        if (!str || str === '00:00') return 0;
-        const sign = str.startsWith('+') ? 1 : str.startsWith('-') ? -1 : 1;
-        const parts = str.replace(/[+-]/, '').split(':');
-        return sign * (parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0));
-      };
-      const _fmtBal = (m) => {
-        if (m === 0) return '00:00';
-        const absM = Math.abs(m);
-        const h = Math.floor(absM / 60).toString().padStart(2, '0');
-        const mm = (absM % 60).toString().padStart(2, '0');
-        return (m > 0 ? '+' : '-') + `${h}:${mm}`;
-      };
-      const _bancoMin = _parseBalMin(relatorio?.banco_horas);
-      const _saldoAnteriorMin = relatorio?.banco_horas ? _bancoMin - analytics.saldoMin : null;
-      const _saldoAnteriorStr = _saldoAnteriorMin !== null ? _fmtBal(_saldoAnteriorMin) : '00:00';
+
+      // ── Usar valores já calculados pelo backend (mesmo motor do JSON detalhado) ──
+      // saldo_mes  = totalExtras - totalNegativos  (calculado pelo relatorio.controller)
+      // saldo_anterior e banco_horas também vêm do backend
+      const _saldoMesStr       = relatorio?.saldo_mes       || analytics.saldo;
+      const _saldoAnteriorStr  = relatorio?.saldo_anterior  || '00:00';
+      const _consolidadoStr    = relatorio?.banco_horas     || analytics.saldo;
+
       let rowsHtml = '';
       const daysInMonth = new Date(ano, mes, 0).getDate();
       const mapa = {};
@@ -482,31 +465,11 @@ const Funcionario = () => {
       for (let d = 1; d <= daysInMonth; d++) {
         const chave = `${ano}-${mes.toString().padStart(2, '0')}-${d.toString().padStart(2,'0')}`;
         const r = mapa[chave] || {};
-        const cargaExata = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
-        const totalMin = r.total ? (parseInt(r.total.split(':')[0]) * 60 + parseInt(r.total.split(':')[1])) : 0;
-        
-        let displayExtras = r.extras || '';
-        let displayNegativos = r.negativos || '';
 
-        if (r.total && !r.evento) {
-          if (totalMin > cargaExata) {
-            const diff = totalMin - cargaExata;
-            const h = Math.floor(diff / 60).toString().padStart(2, '0');
-            const m = (diff % 60).toString().padStart(2, '0');
-            displayExtras = `+${h}:${m}`;
-            displayNegativos = '00:00';
-          } else {
-            const diff = cargaExata - totalMin;
-            const h = Math.floor(diff / 60).toString().padStart(2, '0');
-            const m = (diff % 60).toString().padStart(2, '0');
-            displayExtras = '00:00';
-            displayNegativos = `-${h}:${m}`;
-          }
-        }
-
-        if (r.evento === 'Feriado') {
-           displayExtras = '00:00';
-        }
+        // Usar os campos extras/negativos já gravados no banco pelo registros.controller
+        // (contêm a lógica correta: DSR/Folga/Feriado não geram débito automático)
+        const displayExtras    = r.extras    || '';
+        const displayNegativos = r.negativos || '';
 
         rowsHtml += `
           <tr>
@@ -546,8 +509,8 @@ const Funcionario = () => {
             <div class="card"><strong>Faltas</strong>${analytics.totalFaltas}</div>
             <div class="card"><strong>Feriados</strong>${analytics.totalFeriados}</div>
             <div class="card"><strong>S. Anterior</strong>${_saldoAnteriorStr}</div>
-            <div class="card"><strong>S. Mês</strong>${analytics.saldo}</div>
-            <div class="card"><strong>Consolidado</strong>${relatorio?.banco_horas || analytics.saldo}</div>
+            <div class="card"><strong>S. Mês</strong>${_saldoMesStr}</div>
+            <div class="card"><strong>Consolidado</strong>${_consolidadoStr}</div>
           </div>
           <table>
             <thead>
@@ -680,32 +643,36 @@ const Funcionario = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <InfoCard label="Tipo de Contrato" value={funcionario?.tipo} />
         {(() => {
-          // Banco Consolidado vem do backend (ciclo completo). Saldo Anterior é derivado
-          // como (banco_horas - saldo_mes_frontend) para garantir consistência entre os 3 cartões.
+          // Usar valores do backend (mesmo motor do JSON/relatorio.controller):
+          // saldo_mes = totalExtras - totalNegativos (lido dos campos gravados no banco)
+          // saldo_anterior e banco_horas já calculados pelo relatorio.controller
           const parseBalanceMin = (str) => {
             if (!str || str === '00:00') return 0;
             const sign = str.startsWith('+') ? 1 : str.startsWith('-') ? -1 : 1;
             const parts = str.replace(/[+-]/, '').split(':');
             return sign * (parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0));
           };
-          const fmtBalance = (m) => {
-            if (m === 0) return '00:00';
-            const absM = Math.abs(m);
-            const h = Math.floor(absM / 60).toString().padStart(2, '0');
-            const mm = (absM % 60).toString().padStart(2, '0');
-            return (m > 0 ? '+' : '-') + `${h}:${mm}`;
-          };
-          const bancoMin = parseBalanceMin(relatorio?.banco_horas);
-          // Saldo Anterior = Banco Consolidado - Saldo do Mês (garante consistência)
-          const saldoAnteriorMin = relatorio?.banco_horas ? bancoMin - analytics.saldoMin : null;
-          const saldoAnteriorStr = saldoAnteriorMin !== null ? fmtBalance(saldoAnteriorMin) : '00:00';
-          const saldoAnteriorColor = saldoAnteriorMin === null ? 'text-brand-muted opacity-40' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
+
+          // Saldo do Mês: preferir backend (correto), fallback para frontend
+          const saldoMesStr = relatorio?.saldo_mes || analytics.saldo;
+          const saldoMesMin = parseBalanceMin(saldoMesStr);
+
+          // Saldo Anterior: vem diretamente do backend
+          const saldoAnteriorStr = relatorio?.saldo_anterior || '00:00';
+          const saldoAnteriorMin = parseBalanceMin(saldoAnteriorStr);
+
+          // Banco Consolidado: saldo acumulado do ciclo (backend)
+          const bancoStr = relatorio?.banco_horas || analytics.saldo;
+          const bancoMin = parseBalanceMin(bancoStr);
+
+          const saldoMesColor = saldoMesMin > 0 ? 'text-brand-accent' : saldoMesMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
+          const saldoAnteriorColor = !relatorio?.saldo_anterior ? 'text-brand-muted opacity-40' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
           const bancoColor = !relatorio?.banco_horas ? 'text-brand-muted opacity-40' : bancoMin > 0 ? 'text-brand-accent' : bancoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
           return (
             <>
               <InfoCard label="Saldo Anterior" value={saldoAnteriorStr} color={saldoAnteriorColor} />
-              <InfoCard label="Saldo do Mês" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : analytics.saldoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
-              <InfoCard label="Banco Consolidado" value={relatorio?.banco_horas || analytics.saldo} color={bancoColor} />
+              <InfoCard label="Saldo do Mês" value={saldoMesStr} color={saldoMesColor} />
+              <InfoCard label="Banco Consolidado" value={bancoStr} color={bancoColor} />
             </>
           );
         })()}
@@ -747,31 +714,11 @@ const Funcionario = () => {
                     const r = mapa[dateStr] || { data: dateStr, e1: '', s1: '', e2: '', s2: '', e3: '', s3: '', extras: '', negativos: '', total: '', noturno: '', evento: '' };
                     const isToday = new Date().toISOString().substring(0, 10) === dateStr;
                     const dateObj = new Date(dateStr + 'T12:00:00');
-                    const cargaExata = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
-                    const totalMin = r.total ? (parseInt(r.total.split(':')[0]) * 60 + parseInt(r.total.split(':')[1])) : 0;
-                    
-                    let displayExtras = r.extras;
-                    let displayNegativos = r.negativos;
 
-                    if (r.total && !r.evento) {
-                      if (totalMin > cargaExata) {
-                        const diff = totalMin - cargaExata;
-                        const h = Math.floor(diff / 60).toString().padStart(2, '0');
-                        const m = (diff % 60).toString().padStart(2, '0');
-                        displayExtras = `+${h}:${m}`;
-                        displayNegativos = '00:00';
-                      } else {
-                        const diff = cargaExata - totalMin;
-                        const h = Math.floor(diff / 60).toString().padStart(2, '0');
-                        const m = (diff % 60).toString().padStart(2, '0');
-                        displayExtras = '00:00';
-                        displayNegativos = `-${h}:${m}`;
-                      }
-                    }
-
-                    if (r.evento === 'Feriado') {
-                      displayExtras = '00:00';
-                    }
+                    // Usar os campos extras/negativos gravados no banco pelo registros.controller
+                    // (lógica correta: DSR/Folga/Feriado/Atestado não geram débito automático)
+                    const displayExtras    = r.extras    || '';
+                    const displayNegativos = r.negativos || '';
 
                     const noturnoLinhaMin = calcNoturnoPuro(r.e1, r.s1) + calcNoturnoPuro(r.e2, r.s2) + calcNoturnoPuro(r.e3, r.s3);
                     const noturnoDisplay = noturnoLinhaMin > 0 ? fmt(noturnoLinhaMin) : '—';
