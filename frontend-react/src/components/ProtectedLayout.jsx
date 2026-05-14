@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
+import ToastContainer from './ToastContainer';
 import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
@@ -349,6 +350,9 @@ const ProtectedLayout = () => {
           </div>
         </div>
       )}
+
+      {/* Toast Notifications Globais */}
+      <ToastContainer />
     </div>
   );
 };

@@ -14,6 +14,70 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import swalTheme from '../utils/swalTheme';
+import toast from '../utils/toast';
+
+// Gera cor de avatar baseada no nome (determinístico)
+const AVATAR_COLORS = [
+  ['from-violet-500 to-purple-600', 'shadow-violet-500/30'],
+  ['from-blue-500 to-cyan-600',     'shadow-blue-500/30'],
+  ['from-emerald-500 to-teal-600',  'shadow-emerald-500/30'],
+  ['from-rose-500 to-pink-600',     'shadow-rose-500/30'],
+  ['from-amber-500 to-orange-600',  'shadow-amber-500/30'],
+  ['from-indigo-500 to-blue-600',   'shadow-indigo-500/30'],
+  ['from-teal-500 to-green-600',    'shadow-teal-500/30'],
+  ['from-fuchsia-500 to-violet-600','shadow-fuchsia-500/30'],
+];
+
+const getAvatarColor = (nome = '') => {
+  let hash = 0;
+  for (let i = 0; i < nome.length; i++) hash = (hash * 31 + nome.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
+const getInitials = (nome = '') => {
+  const parts = nome.trim().split(' ').filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+// Parse saldo para minutos (positivo ou negativo)
+const parseSaldoMin = (saldo = '') => {
+  if (!saldo) return 0;
+  const neg = saldo.startsWith('-');
+  const clean = saldo.replace('-', '');
+  const [h, m] = clean.split(':').map(Number);
+  const total = (h || 0) * 60 + (m || 0);
+  return neg ? -total : total;
+};
+
+// Retorna config do heatmap baseado no saldo em minutos
+const getHeatmap = (saldoMin) => {
+  if (saldoMin >= 120)  return { border: 'border-emerald-500/40', glow: 'shadow-emerald-500/10', tag: null };
+  if (saldoMin >= 0)    return { border: 'border-brand-border',   glow: '',                      tag: null };
+  if (saldoMin >= -120) return { border: 'border-amber-500/40',   glow: 'shadow-amber-500/10',   tag: { label: 'Atenção',  cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20' } };
+  return                       { border: 'border-rose-500/40',    glow: 'shadow-rose-500/15',    tag: { label: 'Crítico',  cls: 'bg-rose-500/10 text-rose-400 border-rose-500/20' } };
+};
+
+// Skeleton de card de funcionário
+const FuncSkeleton = () => (
+  <div className="bg-brand-bg/40 border border-brand-border rounded-2xl p-6 animate-pulse">
+    <div className="flex gap-3 mb-6">
+      <div className="w-11 h-11 rounded-2xl bg-brand-border/60" />
+      <div className="flex-1 space-y-2 pt-1">
+        <div className="h-4 bg-brand-border/60 rounded-lg w-3/4" />
+        <div className="h-3 bg-brand-border/40 rounded-lg w-1/2" />
+      </div>
+    </div>
+    <div className="grid grid-cols-3 gap-4 mb-8">
+      {[1,2,3].map(i => <div key={i} className="h-16 bg-brand-border/40 rounded-[2rem]" />)}
+    </div>
+    <div className="flex justify-between pt-5 border-t border-brand-border/40">
+      <div className="w-8 h-8 bg-brand-border/40 rounded-xl" />
+      <div className="h-4 bg-brand-border/40 rounded-lg w-24" />
+    </div>
+  </div>
+);
 
 const DashboardCard = ({ label, value, icon: Icon, color, trend }) => (
   <div className="bg-brand-surface border border-brand-border rounded-2xl p-4 hover:border-brand-primary/30 transition-all group shadow-md">
@@ -96,10 +160,10 @@ const Dashboard = () => {
       if (result.isConfirmed) {
         try {
           await axios.patch(`/funcionarios/${id}/ativo`);
-          swalTheme({ title: 'Inativado!', text: 'Funcionário inativado com sucesso.', icon: 'success' });
+          toast.success('Funcionário inativado com sucesso.');
           fetchDashboardData();
         } catch (error) {
-          swalTheme({ title: 'Erro!', text: 'Não foi possível inativar o funcionário.', icon: 'error' });
+          toast.error('Não foi possível inativar o funcionário.');
         }
       }
     });
@@ -112,14 +176,14 @@ const Dashboard = () => {
   };
 
   const saveQuickEdit = async () => {
-    if (!editNome) return swalTheme({ title: 'Erro', text: 'Nome é obrigatório', icon: 'error' });
+    if (!editNome) return toast.error('Nome é obrigatório');
     try {
       await axios.put(`/funcionarios/${editingFunc.id}`, { nome: editNome, tipo: editTipo });
-      swalTheme({ title: 'Sucesso', text: 'Funcionário atualizado!', icon: 'success' });
+      toast.success('Funcionário atualizado com sucesso!');
       setEditingFunc(null);
       fetchDashboardData();
     } catch (error) {
-      swalTheme({ title: 'Erro', text: 'Não foi possível salvar.', icon: 'error' });
+      toast.error('Não foi possível salvar as alterações.');
     }
   };
 
@@ -218,38 +282,46 @@ const Dashboard = () => {
         </div>
 
         {loading ? (
-          <div className="py-24 flex flex-col items-center gap-5">
-            <div className="w-16 h-16 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
-            <p className="text-brand-muted font-black uppercase tracking-widest text-[10px] opacity-60">Sincronizando Dados...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, i) => <FuncSkeleton key={i} />)}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {funcionariosFiltrados.map((f) => {
-              const saldoNegativo = f.saldo_mes?.startsWith('-');
-              const criticalBank = saldoNegativo && parseInt(f.saldo_mes.split(':')[0]) <= -5; // +- 5h
+              const saldoMin = parseSaldoMin(f.saldo_mes);
+              const heatmap  = getHeatmap(saldoMin);
+              const [avatarGrad, avatarShadow] = getAvatarColor(f.nome);
+              const initials = getInitials(f.nome);
               
               return (
                 <div 
                   key={f.id} 
-                  className={`group relative bg-brand-bg/40 border-[1px] rounded-2xl p-6 hover:bg-brand-bg transition-all cursor-pointer shadow-md active:scale-[0.98] ${
-                    criticalBank ? 'border-rose-500/30' : 'border-brand-border'
-                  }`}
+                  className={`group relative bg-brand-bg/40 border rounded-2xl p-6 hover:bg-brand-bg transition-all cursor-pointer active:scale-[0.98] shadow-lg ${heatmap.border} ${heatmap.glow}`}
                   onClick={() => window.location.href = `/funcionario?id=${f.id}&mes=${mes}&ano=${ano}`}
                 >
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h4 className="text-brand-text font-black text-lg group-hover:text-brand-primary transition-colors tracking-tight italic">{f.nome}</h4>
+                  <div className="flex items-start gap-3 mb-6">
+                    {/* Avatar com iniciais */}
+                    <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${avatarGrad} flex items-center justify-center flex-shrink-0 shadow-lg ${avatarShadow} text-white font-black text-sm tracking-wider`}>
+                      {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-brand-text font-black text-base group-hover:text-brand-primary transition-colors tracking-tight italic truncate">{f.nome}</h4>
                       <p className="text-[10px] text-brand-muted font-bold uppercase tracking-wider mt-0.5 opacity-60">{f.tipo}</p>
                     </div>
-                    {f.ativo === false && (
-                      <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[9px] font-black uppercase border border-rose-500/20">Inativo</span>
-                    )}
+                    <div className="flex flex-col items-end gap-1">
+                      {f.ativo === false && (
+                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[9px] font-black uppercase border border-rose-500/20">Inativo</span>
+                      )}
+                      {heatmap.tag && (
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${heatmap.tag.cls}`}>{heatmap.tag.label}</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 mb-8">
                     <div className="bg-brand-surface border border-brand-border/50 p-5 rounded-[2rem] text-center shadow-inner">
                       <p className="text-brand-muted text-[10px] uppercase font-black tracking-widest mb-2 opacity-60">Saldo</p>
-                      <p className={`text-lg font-black ${saldoNegativo ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      <p className={`text-lg font-black ${saldoMin < 0 ? 'text-rose-400' : saldoMin > 0 ? 'text-emerald-400' : 'text-brand-muted opacity-50'}`}>
                         {f.saldo_mes || '00:00'}
                       </p>
                     </div>
@@ -278,10 +350,12 @@ const Dashboard = () => {
                     </div>
                   </div>
                   
-                  {criticalBank && (
-                    <div className="absolute -top-3 -right-2 bg-rose-600 text-white text-[10px] font-black px-4 py-1.5 rounded-xl shadow-2xl shadow-rose-900/40 animate-pulse border-2 border-slate-900">
-                      BANCO CRÍTICO
-                    </div>
+                  {/* Heatmap glow de fundo decorativo */}
+                  {saldoMin >= 120 && (
+                    <div className="absolute inset-0 rounded-2xl bg-emerald-500/[0.03] pointer-events-none" />
+                  )}
+                  {saldoMin < -120 && (
+                    <div className="absolute inset-0 rounded-2xl bg-rose-500/[0.04] pointer-events-none" />
                   )}
                 </div>
               );
