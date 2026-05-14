@@ -19,7 +19,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 
-const PdfModal = ({ isOpen, onClose, defaultAno }) => {
+const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
     const [tipo, setTipo] = useState('resumido');
     const [ano, setAno] = useState(defaultAno);
     const [mesesSelecionados, setMesesSelecionados] = useState([]);
@@ -34,7 +34,12 @@ const PdfModal = ({ isOpen, onClose, defaultAno }) => {
         if (isOpen) {
             axios.get('/funcionarios').then(res => {
                 setFuncionarios(res.data);
-                setColabsSelecionados(res.data.map(f => f.id));
+                // Se houver pré-selecionados na tabela principal, usa eles. Caso contrário, seleciona todos.
+                if (preSelecionados && preSelecionados.length > 0) {
+                    setColabsSelecionados(preSelecionados);
+                } else {
+                    setColabsSelecionados(res.data.map(f => f.id));
+                }
             }).catch(() => {});
         } else {
             setMesesSelecionados([]);
@@ -328,6 +333,19 @@ const Relatorio = () => {
     const [filtroNome, setFiltroNome] = useState('');
     const [loading, setLoading] = useState(true);
     const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+    const [selecionados, setSelecionados] = useState([]);
+
+    const toggleSelecionado = (id) => {
+        setSelecionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const toggleTodos = () => {
+        if (selecionados.length === dadosFiltrados.length) {
+            setSelecionados([]);
+        } else {
+            setSelecionados(dadosFiltrados.map(f => f.id));
+        }
+    };
 
     const fetchRelatorio = async () => {
         setLoading(true);
@@ -351,10 +369,14 @@ const Relatorio = () => {
     }, [dados, filtroNome]);
 
     const exportCSV = () => {
-        if (dadosFiltrados.length === 0) return;
+        const alvos = selecionados.length > 0 
+            ? dados.filter(f => selecionados.includes(f.id))
+            : dadosFiltrados;
+
+        if (alvos.length === 0) return;
         
         const headers = ["Nome", "Tipo", "Dias Trab.", "Faltas", "Feriados", "Extras", "Negativos", "Saldo", "Banco", "Noturno", "Valor Noturno"];
-        const rows = dadosFiltrados.map(f => [
+        const rows = alvos.map(f => [
             f.nome, f.tipo, f.dias_trabalhados, f.faltas, `${f.dias_feriados}d - ${f.total_feriados}`, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno
         ]);
 
@@ -371,7 +393,7 @@ const Relatorio = () => {
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <PdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} defaultAno={ano} />
+            <PdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} defaultAno={ano} preSelecionados={selecionados} />
 
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -419,12 +441,12 @@ const Relatorio = () => {
                         </select>
                      </div>
 
-                     <button 
+                      <button 
                         onClick={() => setIsPdfModalOpen(true)}
                         className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg font-black py-4 px-8 rounded-[1.5rem] shadow-xl shadow-brand-primary/20 transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
-                     >
-                        <FileText size={18} /> Gerar PDF
-                     </button>
+                      >
+                        <FileText size={18} /> {selecionados.length > 0 ? `PDF (${selecionados.length})` : 'Gerar PDF'}
+                      </button>
 
                      <button 
                         onClick={exportCSV}
@@ -474,6 +496,14 @@ const Relatorio = () => {
                     <table className="w-full text-left border-collapse">
                         <thead className="sticky top-0 z-10">
                             <tr className="bg-brand-bg border-b border-brand-border">
+                                <th className="px-6 py-5 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selecionados.length > 0 && selecionados.length === dadosFiltrados.length}
+                                        onChange={toggleTodos}
+                                        className="w-4 h-4 rounded text-brand-primary focus:ring-brand-primary bg-brand-surface border-brand-border"
+                                    />
+                                </th>
                                 <th className="px-8 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60">Colaborador</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60">Tipo</th>
                                 <th className="px-6 py-5 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] opacity-60 text-center">Dias</th>
@@ -510,7 +540,15 @@ const Relatorio = () => {
                                 const corSaldo = f.saldo_mes?.startsWith('+') ? 'text-brand-accent' : f.saldo_mes?.startsWith('-') ? 'text-rose-400' : 'text-brand-muted';
                                 const corBanco = f.banco_horas?.startsWith('+') ? 'text-brand-accent' : f.banco_horas?.startsWith('-') ? 'text-rose-400' : 'text-brand-muted';
                                 return (
-                                <tr key={f.id} className="hover:bg-brand-bg transition-colors group">
+                                 <tr key={f.id} className={`hover:bg-brand-bg transition-colors group ${selecionados.includes(f.id) ? 'bg-brand-primary/5' : ''}`}>
+                                        <td className="px-6 py-4 text-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selecionados.includes(f.id)}
+                                                onChange={() => toggleSelecionado(f.id)}
+                                                className="w-4 h-4 rounded text-brand-primary focus:ring-brand-primary bg-brand-surface border-brand-border"
+                                            />
+                                        </td>
                                         <td className="px-8 py-4">
                                             <Link to={`/funcionario?id=${f.id}&mes=${mes}&ano=${ano}`} className="text-sm font-black text-brand-text hover:text-brand-primary flex items-center gap-2 transition-colors italic tracking-tight">
                                                 {f.nome}

@@ -81,6 +81,8 @@ const EditRecordModal = ({ isOpen, onClose, record, onSave }) => {
               <option value="DSR">DSR</option>
               <option value="Folga">Folga</option>
               <option value="Folga Banco">Folga Banco</option>
+              <option value="Folga Feriado">Folga Feriado</option>
+              <option value="Pago">Pago</option>
               <option value="Falta">Falta</option>
               <option value="Atestado">Atestado</option>
               <option value="Declaração">Declaração</option>
@@ -367,13 +369,26 @@ const Funcionario = () => {
   };
 
   const handleAddAjuste = async () => {
-    if (!ajusteData.valor || !ajusteData.motivo) {
-        return swalTheme({ title: 'Atenção', text: 'Informe um valor válido e o motivo.', icon: 'warning' });
+    // Validar formato HH:mm se o usuário digitar livremente ou se for formatado pelo novo input
+    const regex = /^[+-]?\d+:\d{2}$/;
+    if (!regex.test(ajusteData.valor)) {
+        return swalTheme({ title: 'Atenção', text: 'Informe o valor no formato HH:mm (ex: 30:00).', icon: 'warning' });
     }
+    if (!ajusteData.motivo) {
+        return swalTheme({ title: 'Atenção', text: 'Informe o motivo.', icon: 'warning' });
+    }
+    
+    // Garantir que o valor tenha o sinal (+ ou -)
+    let finalValor = ajusteData.valor;
+    if (!finalValor.startsWith('+') && !finalValor.startsWith('-')) {
+        finalValor = '+' + finalValor;
+    }
+
     try {
       await axios.post('/ajustes', {
         funcionario_id: id,
-        ...ajusteData
+        valor: finalValor,
+        motivo: ajusteData.motivo
       });
       setAjusteModalOpen(false);
       setAjusteData({ valor: '+00:00', motivo: '' });
@@ -945,17 +960,24 @@ const Funcionario = () => {
                 <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60 text-center">Valor do Ajuste (HH:mm)</label>
                 <div className="flex items-center gap-4">
                   <select 
-                    value={ajusteData.valor.substring(0,1)}
-                    onChange={(e) => setAjusteData({...ajusteData, valor: e.target.value + ajusteData.valor.substring(1)})}
+                    value={ajusteData.valor.startsWith('-') ? '-' : '+'}
+                    onChange={(e) => {
+                      const currentVal = ajusteData.valor.replace(/[+-]/, '');
+                      setAjusteData({...ajusteData, valor: e.target.value + currentVal});
+                    }}
                     className="bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text font-black"
                   >
                     <option value="+">+</option>
                     <option value="-">-</option>
                   </select>
                   <input 
-                    type="time" 
-                    value={ajusteData.valor.substring(1)}
-                    onChange={(e) => setAjusteData({...ajusteData, valor: ajusteData.valor.substring(0,1) + e.target.value})}
+                    type="text" 
+                    placeholder="HH:mm (ex: 30:00)"
+                    value={ajusteData.valor.replace(/[+-]/, '')}
+                    onChange={(e) => {
+                      const sign = ajusteData.valor.startsWith('-') ? '-' : '+';
+                      setAjusteData({...ajusteData, valor: sign + e.target.value});
+                    }}
                     className="flex-1 bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 text-brand-text text-xl font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all text-center shadow-inner"
                   />
                 </div>

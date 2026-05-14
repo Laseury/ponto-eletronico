@@ -130,7 +130,7 @@ async function salvarRegistro(req, res) {
         if (evento === "FÃ©rias" || evento === "Ferias" || evento === "Atestado" || evento === "DeclaraÃ§Ã£o" || evento === "Declaracao" || evento === "Folga" || evento === "DSR") {
             negativosMinutos = 0;
             extrasMinutos = totalMinutos;
-        } else if (evento === "Feriado") {
+        } else if (evento === "Feriado" || evento === "Folga Feriado" || evento === "Pago") {
             negativosMinutos = 0;
             extrasMinutos = 0;
         } else if (evento === "Falta" || evento === "Folga Banco") {
