@@ -146,7 +146,8 @@ const Funcionario = () => {
   const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '' });
   const [allFuncionarios, setAllFuncionarios] = useState([]);
 
-  const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador'].includes(user?.perfil), [user]);
+  const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador', 'RH'].includes(user?.perfil), [user]);
+  const canComment = true;
   const ehHoristaOuNoturno = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
 
   const formatDateSafe = (date, includeTime = false) => {
@@ -812,7 +813,7 @@ const Funcionario = () => {
                                   <MessageSquare size={14} />
                                 </button>
                               )}
-                             {canEdit && (
+                             {canComment && (
                                <button 
                                  onClick={() => {
                                    setCommentData({ texto: '', tipo: 'DIARIO', data_referencia: dateStr });
@@ -876,7 +877,7 @@ const Funcionario = () => {
             <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] flex items-center gap-3 opacity-60">
               <MessageSquare size={20} className="text-brand-primary" /> Histórico de Comentários
             </h3>
-            {canEdit && (
+            {canComment && (
               <button 
                 onClick={() => {
                   setCommentData({ texto: '', tipo: 'GERAL', data_referencia: null });
@@ -907,7 +908,7 @@ const Funcionario = () => {
                         </span>
                       </div>
                     </div>
-                    {canEdit && (
+                    {(user?.perfil === 'Admin' || c.usuario?.nome === user?.nome || c.usuarioId === user?.id) && (
                       <button onClick={() => handleDeleteComment(c.id)} className="text-rose-500/0 group-hover:text-rose-500 transition-all p-2 hover:bg-rose-500/10 rounded-xl">
                         <Trash2 size={16} />
                       </button>
