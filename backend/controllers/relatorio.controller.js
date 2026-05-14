@@ -27,13 +27,13 @@ async function gerarRelatorio(req, res) {
                 -- Lê diretamente os campos calculados pelo registros.controller.js
                 -- (inclui eventos como Falta, Folga Banco etc. corretamente)
                 SUM(
-                    CASE WHEN r.extras LIKE '+%:%'
+                    CASE WHEN r.extras LIKE '+%:%' AND (r.evento IS NULL OR r.evento NOT IN ('Feriado', 'Folga Feriado', 'Pago'))
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
                     ELSE 0 END
                 ) AS total_extras_min,
                 SUM(
-                    CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno')
+                    CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno') AND (r.evento IS NULL OR r.evento NOT IN ('Feriado', 'Folga Feriado', 'Pago'))
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END
@@ -46,8 +46,10 @@ async function gerarRelatorio(req, res) {
                 ) AS total_noturno_min,
                 SUM(
                     CASE 
-                        WHEN r.total LIKE '%:%' THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)
-                        WHEN r.evento IN ('Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
+                        WHEN r.total LIKE '%:%' AND (r.evento IS NULL OR r.evento NOT IN ('DSR', 'Feriado', 'Folga Feriado', 'Pago')) 
+                        THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)
+                        
+                        WHEN (r.total IS NULL OR r.total = '') AND r.evento IN ('Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
                         THEN CASE 
                             WHEN f.tipo = 'Horista Noturno' THEN 440
                             ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
@@ -74,13 +76,13 @@ async function gerarRelatorio(req, res) {
                 r.funcionario_id,
                 -- Lê diretamente os campos calculados pelo registros.controller.js
                 SUM(
-                    CASE WHEN r.extras LIKE '+%:%'
+                    CASE WHEN r.extras LIKE '+%:%' AND (r.evento IS NULL OR r.evento NOT IN ('Feriado', 'Folga Feriado', 'Pago'))
                     THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
                     ELSE 0 END
                 ) AS banco_extras_min,
                 SUM(
-                    CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno')
+                    CASE WHEN r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno') AND (r.evento IS NULL OR r.evento NOT IN ('Feriado', 'Folga Feriado', 'Pago'))
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END

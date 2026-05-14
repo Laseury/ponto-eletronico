@@ -249,10 +249,13 @@ const Funcionario = () => {
 
       // Ler extras/negativos diretamente dos campos gravados pelo registros.controller
       // (lógica correta: DSR/Folga/Feriado/Atestado não geram débito automático)
-      if (r.extras && r.extras.startsWith('+')) {
+      // REGRA EXPLÍCITA: Feriados não geram saldo para banco de horas
+      const isNeutralEvent = ['Feriado', 'Folga Feriado', 'Pago'].includes(r.evento);
+
+      if (r.extras && r.extras.startsWith('+') && !isNeutralEvent) {
         stats.extras += min(r.extras.slice(1));
       }
-      if (r.negativos && r.negativos.startsWith('-') && !ehHoristaOuNoturno) {
+      if (r.negativos && r.negativos.startsWith('-') && !ehHoristaOuNoturno && !isNeutralEvent) {
         stats.negativos += min(r.negativos.slice(1));
       }
 
@@ -264,9 +267,13 @@ const Funcionario = () => {
       }
       if (r.evento === 'DSR') stats.dias_dsr++;
 
-      if (r.total) {
+      // Horas Trabalhadas: Não soma o total se for DSR, Feriado ou eventos neutros (Folga Feriado, Pago)
+      // conforme solicitação: "não some as horas 'Total' nas 'Horas Trabalhadas'"
+      const eExcluido = ['DSR', 'Feriado', 'Folga Feriado', 'Pago'].includes(r.evento);
+
+      if (r.total && !eExcluido) {
         stats.trabalhado += min(r.total);
-      } else if (['Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
+      } else if (!r.total && ['Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
         stats.trabalhado += diaria;
       }
 
@@ -295,7 +302,7 @@ const Funcionario = () => {
     return {
       totalTrabalhado: fmt(stats.trabalhado),
       cargaMensal: fmt(mensal),
-      totalNormal: fmt(stats.trabalhado - stats.extras),
+      totalNormal: fmt(Math.max(0, stats.trabalhado - stats.extras)),
       totalExtras: stats.extras > 0 ? `+${fmt(stats.extras)}` : '00:00',
       totalNegativos: stats.negativos > 0 ? `-${fmt(stats.negativos)}` : '00:00',
       totalFaltas: stats.faltas,
