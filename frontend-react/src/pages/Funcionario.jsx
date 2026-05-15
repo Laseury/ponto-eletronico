@@ -95,7 +95,7 @@ const EditRecordModal = ({ isOpen, onClose, record, onSave }) => {
             {['1', '2', '3'].map(turno => (
               <React.Fragment key={turno}>
                 <div>
-                  <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 text-center opacity-40">Entrada {turno}</label>
+                  <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 text-center opacity-60">Entrada {turno}</label>
                   <input 
                     type="time" 
                     value={formData[`e${turno}`]}
@@ -104,7 +104,7 @@ const EditRecordModal = ({ isOpen, onClose, record, onSave }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-1 text-center opacity-40">Saída {turno}</label>
+                  <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-1 text-center opacity-60">Saída {turno}</label>
                   <input 
                     type="time" 
                     value={formData[`s${turno}`]}
@@ -808,8 +808,8 @@ const Funcionario = () => {
           const bancoStr = relatorio?.banco_horas || analytics.saldo;
           const bancoMin = parseBalanceMin(bancoStr);
 
-          const saldoMesColor = saldoMesMin > 0 ? 'text-brand-accent' : saldoMesMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
-          const saldoAnteriorColor = !relatorio?.saldo_anterior ? 'text-brand-muted opacity-40' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
+          const saldoMesColor = saldoMesMin > 0 ? 'text-brand-accent' : saldoMesMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-60';
+          const saldoAnteriorColor = !relatorio?.saldo_anterior ? 'text-brand-muted opacity-60' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-60';
           
           return (
             <>
@@ -826,8 +826,8 @@ const Funcionario = () => {
         <div className="p-6 border-b border-brand-border flex justify-between items-center bg-brand-surface/50">
           <h2 className="text-xl font-black text-brand-text flex items-center gap-3 tracking-tighter italic"><Calendar className="text-brand-primary" size={20} /> Espelho de Ponto</h2>
           <div className="flex gap-4">
-             <div className="flex items-center gap-2 text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-40"><div className="w-2 h-2 bg-brand-accent rounded-full"></div> Positivo</div>
-             <div className="flex items-center gap-2 text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-40"><div className="w-2 h-2 bg-rose-500 rounded-full"></div> Negativo</div>
+             <div className="flex items-center gap-2 text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60"><div className="w-2 h-2 bg-brand-accent rounded-full"></div> Positivo</div>
+             <div className="flex items-center gap-2 text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60"><div className="w-2 h-2 bg-rose-500 rounded-full"></div> Negativo</div>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -842,7 +842,7 @@ const Funcionario = () => {
                 <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Noturno</th>
                 <th className="px-3 py-4 text-[9px] font-black text-brand-accent/60 uppercase tracking-[0.25em] text-center">Extras</th>
                 {!ehHoristaOuNoturno && <th className="px-3 py-4 text-[9px] font-black text-rose-500/60 uppercase tracking-[0.25em] text-center">Neg.</th>}
-                <th className="px-4 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-40">Evento</th>
+                <th className="px-4 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Evento</th>
                 <th className="px-6 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-right opacity-60">Ação</th>
               </tr>
             </thead>
@@ -880,7 +880,7 @@ const Funcionario = () => {
                             </div>
                           )}
                           <p className="text-sm font-black text-brand-text italic mb-0.5">{day.toString().padStart(2, '0')}/{mes.toString().padStart(2, '0')}</p>
-                          <p className="text-[8px] text-brand-muted font-black uppercase tracking-widest opacity-30">{dateObj.toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '')}</p>
+                          <p className="text-[8px] text-brand-muted font-black uppercase tracking-widest opacity-50">{dateObj.toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '')}</p>
                         </td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e1?.substring(0,5) || '—'}</span><span>{r.s1?.substring(0,5) || '—'}</span></div></td>
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e2?.substring(0,5) || '—'}</span><span>{r.s2?.substring(0,5) || '—'}</span></div></td>
@@ -940,7 +940,7 @@ const Funcionario = () => {
               <MiniCard label="Carga Horária Mensal" value={analytics.cargaMensal} />
               <MiniCard label="Extras" value={analytics.totalExtras} color="text-emerald-400" />
               {!ehHoristaOuNoturno && <MiniCard label="Negativas" value={analytics.totalNegativos} color="text-rose-400" />}
-              <MiniCard label="Saldo" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : (analytics.saldoMin < 0 && !ehHoristaOuNoturno) ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
+              <MiniCard label="Saldo" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : (analytics.saldoMin < 0 && !ehHoristaOuNoturno) ? 'text-rose-400' : 'text-brand-muted opacity-60'} />
            </div>
         </div>
         {(funcionario?.tipo?.includes('Noturno') || analytics.noturno !== '00:00') && (
@@ -985,7 +985,7 @@ const Funcionario = () => {
           </div>
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
             {comentarios.length === 0 ? (
-              <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-40">Nenhum comentário registrado.</p>
+              <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-60">Nenhum comentário registrado.</p>
             ) : (
               comentarios.map(c => (
                 <div key={c.id} className="bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5 hover:border-brand-primary/20 transition-all group">
@@ -1026,7 +1026,7 @@ const Funcionario = () => {
           </h3>
           <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {groupedAjustes.length === 0 ? (
-              <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-40">Nenhum ajuste de saldo registrado.</p>
+              <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-60">Nenhum ajuste de saldo registrado.</p>
             ) : (
               groupedAjustes.map(group => (
                 <div key={group.key} className="space-y-3">

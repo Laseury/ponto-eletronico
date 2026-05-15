@@ -159,7 +159,7 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, registrosCadastrados, func
             </thead>
             <tbody className="divide-y divide-slate-800/30">
               {items.map((item, idx) => (
-                <tr key={idx} className={`hover:bg-slate-800/20 transition-colors ${!item.selecionado ? 'opacity-40' : ''}`}>
+                <tr key={idx} className={`hover:bg-slate-800/20 transition-colors ${!item.selecionado ? 'opacity-60' : ''}`}>
                   <td className="px-4 py-4 text-center">
                     <input 
                       type="checkbox" 
@@ -173,7 +173,7 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, registrosCadastrados, func
                       <p className="text-xs font-black text-brand-text leading-none opacity-90">{new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR').substring(0, 5)}</p>
                       {item.jaPreenchido && <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-md text-[7px] font-black uppercase tracking-widest" title="Já existe um lançamento para este dia.">Já no sistema</span>}
                     </div>
-                    <p className="text-[9px] text-brand-muted font-black uppercase opacity-40">{new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR', {weekday: 'short'})}</p>
+                    <p className="text-[9px] text-brand-muted font-black uppercase opacity-60">{new Date(item.data + 'T12:00:00').toLocaleDateString('pt-BR', {weekday: 'short'})}</p>
                   </td>
                   {['1', '2', '3'].map(turno => (
                     <td key={turno} className="px-2 py-4">
@@ -451,7 +451,7 @@ const Lancamento = () => {
                 {/* 1. Contexto */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="md:col-span-1">
-                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Colaborador</label>
+                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Colaborador</label>
                         <select 
                             value={fId} 
                             onChange={(e) => setFId(e.target.value)}
@@ -464,7 +464,7 @@ const Lancamento = () => {
                         </select>
                     </div>
                     <div className="md:col-span-1">
-                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Mês</label>
+                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Mês</label>
                         <select 
                             value={mesSelect}
                             onChange={(e) => setMesSelect(e.target.value)}
@@ -486,7 +486,7 @@ const Lancamento = () => {
                         </select>
                     </div>
                     <div className="md:col-span-1">
-                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Ano</label>
+                        <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Ano</label>
                         <select 
                             value={anoSelect}
                             onChange={(e) => setAnoSelect(e.target.value)}
@@ -541,14 +541,14 @@ const Lancamento = () => {
                 {/* Linha Divisória */}
                 <div className="flex items-center gap-4 mb-8">
                     <div className="h-px bg-brand-border/60 flex-1"></div>
-                    <span className="text-brand-muted text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Apontamento Manual (Isolado)</span>
+                    <span className="text-brand-muted text-[9px] font-black uppercase tracking-[0.2em] opacity-60">Apontamento Manual (Isolado)</span>
                     <div className="h-px bg-brand-border/60 flex-1"></div>
                 </div>
 
                 {/* 3. Lançamento Diário */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="md:col-span-1">
-                      <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Dia (Manual)</label>
+                      <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Dia (Manual)</label>
                       <input 
                         type="number" 
                         min="1" max="31"
@@ -559,7 +559,7 @@ const Lancamento = () => {
                       />
                     </div>
                     <div className="md:col-span-1">
-                      <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-40">Evento Especial</label>
+                      <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-3 px-1 opacity-60">Evento Especial</label>
                       <select 
                         value={evento}
                         onChange={(e) => setEvento(e.target.value)}
@@ -606,11 +606,11 @@ const Lancamento = () => {
                             <div key={turno} className="space-y-4">
                                 <div className="flex items-center gap-2 mb-1 px-1">
                                     <div className="w-8 h-8 bg-brand-surface rounded-lg flex items-center justify-center text-brand-primary font-black border border-brand-border text-xs shadow-lg italic">{turno}</div>
-                                    <span className="text-xs font-black text-brand-muted uppercase tracking-widest opacity-40">Turno {turno}</span>
+                                    <span className="text-xs font-black text-brand-muted uppercase tracking-widest opacity-60">Turno {turno}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-30">Entrada</label>
+                                        <label className="text-[9px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-50">Entrada</label>
                                         <input 
                                             type="time" 
                                             value={horarios[`e${turno}`]}
@@ -619,7 +619,7 @@ const Lancamento = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-30">Saída</label>
+                                        <label className="text-[9px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-50">Saída</label>
                                         <input 
                                             type="time" 
                                             value={horarios[`s${turno}`]}
@@ -732,7 +732,7 @@ const Lancamento = () => {
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
                                                     <p className="text-sm font-black text-brand-text mb-0.5">{diaApenas}</p>
-                                                    <p className="text-[8px] font-black text-brand-muted uppercase tracking-widest opacity-40">{diaExtenso}</p>
+                                                    <p className="text-[8px] font-black text-brand-muted uppercase tracking-widest opacity-60">{diaExtenso}</p>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
                                                     {r.evento && !r.e1 ? (

@@ -590,7 +590,7 @@ const Relatorio = () => {
                                     <td colSpan="10" className="py-40 text-center">
                                          <div className="flex flex-col items-center gap-6">
                                             <div className="w-20 h-20 bg-brand-bg rounded-[2rem] flex items-center justify-center text-brand-muted/30 shadow-inner border border-brand-border"><AlertCircle size={40}/></div>
-                                            <p className="text-lg font-black text-brand-muted uppercase tracking-widest opacity-30">Nenhum registro para este período.</p>
+                                            <p className="text-lg font-black text-brand-muted uppercase tracking-widest opacity-50">Nenhum registro para este período.</p>
                                          </div>
                                     </td>
                                 </tr>
@@ -623,7 +623,7 @@ const Relatorio = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-text bg-brand-bg/20">{f.dias_trabalhados}</td>
-                                        <td className={`px-6 py-4 text-center text-xs font-black ${f.faltas > 0 ? 'text-rose-500 underline decoration-rose-500/30' : 'text-brand-muted opacity-30'}`}>{f.faltas || 0}</td>
+                                        <td className={`px-6 py-4 text-center text-xs font-black ${f.faltas > 0 ? 'text-rose-500 underline decoration-rose-500/30' : 'text-brand-muted opacity-50'}`}>{f.faltas || 0}</td>
                                         <td className={`px-6 py-4 text-center text-xs font-black text-emerald-500 bg-emerald-500/5`}>{f.dias_feriados > 0 ? `${f.dias_feriados}d - ${f.total_feriados}` : '00:00'}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-brand-accent bg-brand-accent/5">{f.total_extras}</td>
                                         <td className="px-6 py-4 text-center text-xs font-black text-rose-400 bg-rose-500/5">
