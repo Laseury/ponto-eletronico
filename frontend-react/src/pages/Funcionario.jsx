@@ -22,10 +22,10 @@ import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 import { useAuth } from '../context/AuthContext';
 
-const InfoCard = ({ label, value, color }) => (
-  <div className="bg-brand-surface border border-brand-border rounded-[1.5rem] p-6 flex flex-col items-center justify-center text-center shadow-lg group hover:border-brand-primary/30 transition-all">
-    <p className="text-xs font-black text-brand-muted uppercase tracking-widest mb-2 opacity-60">{label}</p>
-    <p className={`text-2xl font-black ${color || 'text-brand-text'}`}>{value || '—'}</p>
+const InfoCard = ({ label, value, color, isProminent }) => (
+  <div className={`border rounded-[1.5rem] p-6 flex flex-col items-center justify-center text-center shadow-lg group transition-all ${isProminent ? 'bg-brand-primary border-brand-primary shadow-brand-primary/20 scale-105' : 'bg-brand-surface border-brand-border hover:border-brand-primary/30'}`}>
+    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isProminent ? 'text-white/60' : 'text-brand-muted opacity-60'}`}>{label}</p>
+    <p className={`text-2xl font-black ${isProminent ? 'text-white' : (color || 'text-brand-text')}`}>{value || '—'}</p>
   </div>
 );
 
@@ -529,6 +529,7 @@ const Funcionario = () => {
       swalTheme({ title: 'Exportação', text: 'Gerando arquivo de impressão...', icon: 'info', timer: 2000, showConfirmButton: false });
       const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
       const labelMes = MESES[mes - 1] + " " + ano;
+      const pdfTitle = `Relatorio_Ponto_${funcionario?.nome.replace(/\s+/g, '_')}_${mes.toString().padStart(2, '0')}_${ano}`;
 
       // ── Usar valores já calculados pelo backend (mesmo motor do JSON detalhado) ──
       // saldo_mes  = totalExtras - totalNegativos  (calculado pelo relatorio.controller)
@@ -536,6 +537,19 @@ const Funcionario = () => {
       const _saldoMesStr       = relatorio?.saldo_mes       || analytics.saldo;
       const _saldoAnteriorStr  = relatorio?.saldo_anterior  || '00:00';
       const _consolidadoStr    = relatorio?.banco_horas     || analytics.saldo;
+
+      // Filtrar comentários e ajustes do mês para o PDF
+      const comentariosMes = comentarios.filter(c => {
+        const d = c.dataReferencia ? new Date(c.dataReferencia) : new Date(c.criadoEm);
+        // Usar UTC para evitar problemas de fuso horário
+        return (d.getUTCMonth() + 1 === mes && d.getUTCFullYear() === ano) ||
+               (new Date(c.criadoEm).getUTCMonth() + 1 === mes && new Date(c.criadoEm).getUTCFullYear() === ano);
+      });
+
+      const ajustesMes = ajustes.filter(a => {
+        const d = new Date(a.data);
+        return d.getUTCMonth() + 1 === mes && d.getUTCFullYear() === ano;
+      });
 
       let rowsHtml = '';
       const daysInMonth = new Date(ano, mes, 0).getDate();
@@ -581,6 +595,11 @@ const Funcionario = () => {
           .col-hora { width: 35px; }
           .col-total { width: 40px; }
           .col-evento { width: auto; }
+          .notes-box { margin-top: 20px; border: 1px solid #eee; border-radius: 8px; padding: 12px; page-break-inside: avoid; background: #fafafa; }
+          .notes-title { font-size: 9px; font-weight: 900; border-bottom: 2px solid #333; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; color: #333; letter-spacing: 0.5px; }
+          .note-item { font-size: 8px; margin-bottom: 6px; color: #444; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; }
+          .note-item:last-child { border-bottom: none; }
+          .note-date { font-weight: 900; min-width: 65px; display: inline-block; color: #666; }
         </style></head><body>
           <div class="hdr"><h1>VISO HOTEL — FICHA DE PONTO</h1><p>Colaborador: ${funcionario?.nome} | Período: ${labelMes}</p></div>
           <div class="grid">
@@ -607,12 +626,44 @@ const Funcionario = () => {
             </thead>
             <tbody>${rowsHtml}</tbody>
           </table>
+
+          ${comentariosMes.length > 0 ? `
+            <div class="notes-box">
+              <div class="notes-title">Comentários e Observações do Mês</div>
+              ${comentariosMes.map(c => `
+                <div class="note-item">
+                  <span class="note-date">${c.dataReferencia ? formatDateSafe(c.dataReferencia) : formatDateSafe(c.criadoEm)}</span>
+                  <span><strong>${c.usuario?.nome || 'Sistema'}:</strong> ${c.texto}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${ajustesMes.length > 0 ? `
+            <div class="notes-box">
+              <div class="notes-title">Ajustes de Saldo Realizados no Mês</div>
+              ${ajustesMes.map(a => `
+                <div class="note-item">
+                  <span class="note-date">${formatDateSafe(a.data)}</span>
+                  <span><strong>${a.valor}</strong> — ${a.motivo} (${a.usuario?.nome || 'Sistema'})</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <div style="margin-top: 50px; display: flex; justify-content: space-around;">
+            <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Assinatura do Colaborador</div>
+            <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Assinatura do Responsável</div>
+          </div>
         </body></html>
       `;
       const win = window.open('', '_blank');
-      win.document.write(htmlContent); win.document.close();
+      win.document.write(htmlContent);
+      win.document.title = pdfTitle;
+      win.document.close();
       win.onload = () => win.print();
     } catch (error) {
+      console.error(error);
       swalTheme({ title: 'Erro!', text: 'Ocorreu um problema ao gerar o PDF.', icon: 'error' });
     }
   };
@@ -720,7 +771,6 @@ const Funcionario = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <InfoCard label="Tipo de Contrato" value={funcionario?.tipo} />
         {(() => {
           // Usar valores do backend (mesmo motor do JSON/relatorio.controller):
           // saldo_mes = totalExtras - totalNegativos (lido dos campos gravados no banco)
@@ -746,12 +796,13 @@ const Funcionario = () => {
 
           const saldoMesColor = saldoMesMin > 0 ? 'text-brand-accent' : saldoMesMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
           const saldoAnteriorColor = !relatorio?.saldo_anterior ? 'text-brand-muted opacity-40' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
-          const bancoColor = !relatorio?.banco_horas ? 'text-brand-muted opacity-40' : bancoMin > 0 ? 'text-brand-accent' : bancoMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-40';
+          
           return (
             <>
               <InfoCard label="Saldo Anterior" value={saldoAnteriorStr} color={saldoAnteriorColor} />
               <InfoCard label="Saldo do Mês" value={saldoMesStr} color={saldoMesColor} />
-              <InfoCard label="Banco Consolidado" value={bancoStr} color={bancoColor} />
+              <InfoCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" />
+              <InfoCard label="Banco Consolidado" value={bancoStr} isProminent />
             </>
           );
         })()}
@@ -866,10 +917,10 @@ const Funcionario = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className="bg-brand-surface border border-brand-border rounded-[3rem] p-8 shadow-xl transition-all">
            <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 flex items-center gap-3 opacity-60"><Clock size={20} className="text-brand-primary" /> Detalhamento</h3>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <MiniCard label="Tipo de Contrato" value={funcionario?.tipo} />
               <MiniCard label="Horas Trabalhadas" value={analytics.totalTrabalhado} />
               <MiniCard label="Carga Horária Mensal" value={analytics.cargaMensal} />
-              <MiniCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" />
               <MiniCard label="Extras" value={analytics.totalExtras} color="text-emerald-400" />
               {!ehHoristaOuNoturno && <MiniCard label="Negativas" value={analytics.totalNegativos} color="text-rose-400" />}
               <MiniCard label="Saldo" value={analytics.saldo} color={analytics.saldoMin > 0 ? 'text-brand-accent' : (analytics.saldoMin < 0 && !ehHoristaOuNoturno) ? 'text-rose-400' : 'text-brand-muted opacity-40'} />
