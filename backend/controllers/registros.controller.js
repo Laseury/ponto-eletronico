@@ -127,7 +127,7 @@ async function salvarRegistro(req, res) {
         // Se houver Falta ou Folga Banco, gera negativos do tamanho da carga.
         // Se houver horas trabalhadas em qualquer evento, elas contam como Extras (exceto Falta).
 
-        if (evento === "FÃ©rias" || evento === "Ferias" || evento === "Atestado" || evento === "DeclaraÃ§Ã£o" || evento === "Declaracao" || evento === "Folga" || evento === "DSR") {
+        if (evento === "FÃ©rias" || evento === "Ferias" || evento === "Atestado" || evento === "DeclaraÃ§Ã£o" || evento === "Declaracao" || evento === "Folga" || evento === "Folga Domingo" || evento === "DSR") {
             negativosMinutos = 0;
             extrasMinutos = totalMinutos;
         } else if (evento === "Feriado" || evento === "Folga Feriado" || evento === "Pago") {

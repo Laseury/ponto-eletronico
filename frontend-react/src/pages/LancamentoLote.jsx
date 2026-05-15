@@ -154,7 +154,7 @@ const LancamentoLote = () => {
                                 >
                                     <option value="" className="bg-brand-surface">Selecione...</option>
                                     <option value="DSR" className="bg-brand-surface">📆 DSR</option>
-                                    <option value="Folga" className="bg-brand-surface">🏖️ Folga</option>
+                                    <option value="Folga Domingo" className="bg-brand-surface">🏖️ Folga Domingo</option>
                                     <option value="Folga Banco" className="bg-brand-surface">🏦 Folga Banco</option>
                                     <option value="Falta" className="bg-brand-surface">❌ Falta</option>
                                     <option value="Atestado" className="bg-brand-surface">🏥 Atestado</option>

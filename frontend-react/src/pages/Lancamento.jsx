@@ -200,7 +200,7 @@ const RevisaoIAModal = ({ isOpen, onClose, registros, registrosCadastrados, func
                       className="bg-brand-bg border border-brand-border/30 rounded-lg px-2 py-1.5 text-[10px] font-black text-brand-text w-full outline-none focus:ring-2 focus:ring-brand-primary shadow-inner"
                     >
                       <option value="">Trabalho</option>
-                      <option value="Folga">Folga</option>
+                      <option value="Folga Domingo">Folga Domingo</option>
                       <option value="Falta">Falta</option>
                       <option value="Atestado">Atestado</option>
                       <option value="Declaração">Declaração</option>
@@ -566,7 +566,7 @@ const Lancamento = () => {
                         className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner cursor-pointer"
                       >
                         <option value="" className="bg-brand-surface">Trabalho Normal</option>
-                        <option value="Folga" className="bg-brand-surface">🏖️ Folga</option>
+                        <option value="Folga Domingo" className="bg-brand-surface">🏖️ Folga Domingo</option>
                         <option value="Falta" className="bg-brand-surface">❌ Falta</option>
                         <option value="Atestado" className="bg-brand-surface">🏥 Atestado</option>
                         <option value="Declaração" className="bg-brand-surface">📄 Declaração</option>

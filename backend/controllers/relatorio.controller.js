@@ -23,7 +23,7 @@ async function gerarRelatorio(req, res) {
                 COUNT(r.id) FILTER (WHERE r.evento = 'Falta')                      AS faltas,
                 COUNT(r.id) FILTER (WHERE r.evento = 'Feriado')                    AS dias_feriados,
                 COUNT(r.id) FILTER (WHERE r.evento = 'DSR')                        AS dias_dsr,
-                COUNT(r.id) FILTER (WHERE r.evento = 'Folga' OR r.evento = 'Atestado' OR r.evento = 'Ferias' OR r.evento = 'Férias' OR r.evento = 'Declaração' OR r.evento = 'Declaracao') AS dias_abonados,
+                COUNT(r.id) FILTER (WHERE r.evento IN ('Folga', 'Folga Domingo', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao')) AS dias_abonados,
                 -- Lê diretamente os campos calculados pelo registros.controller.js
                 -- (inclui eventos como Falta, Folga Banco etc. corretamente)
                 SUM(
@@ -49,7 +49,7 @@ async function gerarRelatorio(req, res) {
                         WHEN r.total LIKE '%:%' AND (r.evento IS NULL OR r.evento NOT IN ('DSR', 'Feriado', 'Folga Feriado', 'Pago')) 
                         THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)
                         
-                        WHEN (r.total IS NULL OR r.total = '') AND r.evento IN ('Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
+                        WHEN (r.total IS NULL OR r.total = '') AND r.evento IN ('Folga', 'Folga Domingo', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
                         THEN CASE 
                             WHEN f.tipo = 'Horista Noturno' THEN 440
                             ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)

@@ -79,7 +79,7 @@ const EditRecordModal = ({ isOpen, onClose, record, onSave }) => {
             >
               <option value="">Nenhum</option>
               <option value="DSR">DSR</option>
-              <option value="Folga">Folga</option>
+              <option value="Folga Domingo">Folga Domingo</option>
               <option value="Folga Banco">Folga Banco</option>
               <option value="Folga Feriado">Folga Feriado</option>
               <option value="Pago">Pago</option>
@@ -308,7 +308,7 @@ const Funcionario = () => {
 
       if (r.total && !eExcluido) {
         stats.trabalhado += min(r.total);
-      } else if (!r.total && ['Folga', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
+      } else if (!r.total && ['Folga', 'Folga Domingo', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao'].includes(r.evento)) {
         stats.trabalhado += diaria;
       }
 

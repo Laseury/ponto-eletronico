@@ -632,7 +632,7 @@ const LancamentoHoras = () => {
                           className="w-full bg-brand-bg/60 border border-brand-border/30 rounded-lg px-2 py-1.5 text-[10px] font-black text-brand-text outline-none focus:ring-2 focus:ring-brand-primary/30 transition-all shadow-inner cursor-pointer"
                         >
                           <option value="">—</option>
-                          <option value="Folga">🏖️ Folga</option>
+                          <option value="Folga Domingo">🏖️ Folga Domingo</option>
                           <option value="Falta">❌ Falta</option>
                           <option value="Atestado">🏥 Atestado</option>
                           <option value="Declaração">📄 Declaração</option>
