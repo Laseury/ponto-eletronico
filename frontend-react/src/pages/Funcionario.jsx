@@ -152,6 +152,20 @@ const Funcionario = () => {
   const canComment = true;
   const ehHoristaOuNoturno = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
 
+  const dailyCommentsMap = useMemo(() => {
+    const map = {};
+    comentarios.forEach(c => {
+      if (c.dataReferencia) {
+        try {
+          const dStr = typeof c.dataReferencia === 'string' ? c.dataReferencia.substring(0, 10) : new Date(c.dataReferencia).toISOString().substring(0, 10);
+          if (!map[dStr]) map[dStr] = [];
+          map[dStr].push(c);
+        } catch (e) {}
+      }
+    });
+    return map;
+  }, [comentarios]);
+
   const groupedAjustes = useMemo(() => {
     const groups = {};
     ajustes.forEach(a => {
@@ -855,7 +869,16 @@ const Funcionario = () => {
 
                     return (
                       <tr key={dateStr} className={`hover:bg-brand-bg/30 transition-colors ${isToday ? 'bg-brand-primary/10' : ''}`}>
-                        <td className="px-6 py-3 text-center">
+                        <td className="px-6 py-3 text-center relative group/date">
+                          {dailyCommentsMap[dateStr] && (
+                            <div 
+                              onClick={() => handleViewComment(dateStr)}
+                              className="absolute top-3 -right-1 w-4 h-4 bg-brand-primary text-white rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-lg z-10"
+                              title="Ver anotações"
+                            >
+                              <MessageSquare size={8} />
+                            </div>
+                          )}
                           <p className="text-sm font-black text-brand-text italic mb-0.5">{day.toString().padStart(2, '0')}/{mes.toString().padStart(2, '0')}</p>
                           <p className="text-[8px] text-brand-muted font-black uppercase tracking-widest opacity-30">{dateObj.toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '')}</p>
                         </td>
@@ -875,13 +898,7 @@ const Funcionario = () => {
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
                         <td className="px-6 py-2 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              {comentarios.some(c => {
-                                if (!c.dataReferencia) return false;
-                                try {
-                                  const dStr = typeof c.dataReferencia === 'string' ? c.dataReferencia : new Date(c.dataReferencia).toISOString();
-                                  return dStr.substring(0, 10) === dateStr;
-                                } catch (e) { return false; }
-                              }) && (
+                              {dailyCommentsMap[dateStr] && (
                                 <button 
                                   onClick={() => handleViewComment(dateStr)}
                                   title="Ver comentários" 
