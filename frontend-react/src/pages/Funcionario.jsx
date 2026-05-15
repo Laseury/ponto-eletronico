@@ -152,6 +152,27 @@ const Funcionario = () => {
   const canComment = true;
   const ehHoristaOuNoturno = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
 
+  const groupedAjustes = useMemo(() => {
+    const groups = {};
+    ajustes.forEach(a => {
+      const d = new Date(a.data);
+      const month = d.getUTCMonth();
+      const year = d.getUTCFullYear();
+      const key = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(a);
+    });
+    return Object.keys(groups).sort().reverse().map(key => {
+      const [y, m] = key.split('-');
+      const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+      return {
+        key,
+        label: date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }),
+        items: groups[key]
+      };
+    });
+  }, [ajustes]);
+
   const formatDateSafe = (date, includeTime = false) => {
     if (!date) return '—';
     try {
@@ -935,30 +956,41 @@ const Funcionario = () => {
           <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-8 flex items-center gap-3 opacity-60">
             <History size={20} className="text-brand-primary" /> Histórico de Ajustes de Saldo
           </h3>
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {ajustes.length === 0 ? (
+          <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            {groupedAjustes.length === 0 ? (
               <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-40">Nenhum ajuste de saldo registrado.</p>
             ) : (
-              ajustes.map(a => (
-                <div key={a.id} className="flex items-center justify-between bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5 group hover:border-brand-primary/20 transition-all">
-                  <div className="flex items-center gap-5">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs ${a.valor.startsWith('+') ? 'bg-brand-accent/10 text-brand-accent' : 'bg-rose-500/10 text-rose-500'}`}>
-                      {a.valor}
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60 mb-1">{a.usuario?.nome} em {formatDateSafe(a.data)}</p>
-                      <p className="text-sm font-black text-brand-text italic">{a.motivo}</p>
+              groupedAjustes.map(group => (
+                <div key={group.key} className="space-y-3">
+                  <div className="sticky top-0 z-10 bg-brand-surface py-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full text-[9px] font-black text-brand-primary uppercase tracking-widest">
+                      <Calendar size={10} /> {group.label}
                     </div>
                   </div>
-                  {canEdit && (
-                    <button 
-                      onClick={() => handleDeleteAjuste(a.id)}
-                      className="p-2 text-rose-500 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 rounded-xl transition-all"
-                      title="Excluir Ajuste"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+                  <div className="grid gap-3">
+                    {group.items.map(a => (
+                      <div key={a.id} className="flex items-center justify-between bg-brand-bg/40 border border-brand-border/30 rounded-2xl p-4 group hover:border-brand-primary/20 transition-all shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] shadow-sm ${a.valor.startsWith('+') ? 'bg-brand-accent/10 text-brand-accent' : 'bg-rose-500/10 text-rose-500'}`}>
+                            {a.valor}
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-brand-muted uppercase tracking-[0.1em] mb-0.5 opacity-50">{a.usuario?.nome} • {new Date(a.data).getUTCDate().toString().padStart(2, '0')}/{(new Date(a.data).getUTCMonth()+1).toString().padStart(2, '0')}</p>
+                            <p className="text-xs font-bold text-brand-text leading-tight">{a.motivo}</p>
+                          </div>
+                        </div>
+                        {canEdit && (
+                          <button 
+                            onClick={() => handleDeleteAjuste(a.id)}
+                            className="p-2 text-rose-500 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 rounded-xl transition-all"
+                            title="Excluir Ajuste"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))
             )}
