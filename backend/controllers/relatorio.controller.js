@@ -160,6 +160,7 @@ async function gerarRelatorio(req, res) {
             const extrasMin    = Number(row.total_extras_min || 0);
             const negativosMin = Number(row.total_negativos_min || 0);
             const noturnoMin   = Number(row.total_noturno_min || 0);
+            const trabMin      = Number(row.total_trabalhado_min || 0);
             const aj = ajustesMap[row.id] || { pos: 0, neg: 0, mesPos: 0, mesNeg: 0 };
             const saldoMesMin  = (extrasMin - negativosMin) + (aj.mesPos - aj.mesNeg);
             const diurnoMin    = Math.max(0, trabMin - noturnoMin);
