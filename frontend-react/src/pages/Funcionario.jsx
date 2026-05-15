@@ -243,7 +243,7 @@ const Funcionario = () => {
   };
 
   const analytics = useMemo(() => {
-    let stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0 };
+    const stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0, ajustesPos: 0, ajustesNeg: 0 };
     registros.forEach(r => {
       const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
 
@@ -282,13 +282,28 @@ const Funcionario = () => {
       stats.noturnoPuro += calcNoturnoPuro(r.e2, r.s2);
       stats.noturnoPuro += calcNoturnoPuro(r.e3, r.s3);
     });
+
+    // Incorporar ajustes do mês atual
+    ajustes.forEach(aj => {
+      // O backend já filtra ajustes por ciclo, mas aqui no frontend 'ajustes' contém todos os ajustes do funcionário.
+      // Precisamos filtrar apenas os do mês/ano atual para o saldo_mes.
+      const ajData = new Date(aj.data);
+      if (ajData.getMonth() + 1 === mes && ajData.getFullYear() === ano) {
+        if (aj.valor.startsWith('+')) {
+          stats.ajustesPos += min(aj.valor.slice(1));
+        } else if (aj.valor.startsWith('-')) {
+          stats.ajustesNeg += min(aj.valor.slice(1));
+        }
+      }
+    });
+
     const fmt = (m) => {
       const absM = Math.abs(m);
       const h = Math.floor(absM / 60).toString().padStart(2, '0');
       const mm = (absM % 60).toString().padStart(2, '0');
       return `${h}:${mm}`;
     };
-    const saldo = stats.extras - stats.negativos;
+    const saldo = (stats.extras - stats.negativos) + (stats.ajustesPos - stats.ajustesNeg);
     const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
     
     // Carga Mensal = (Dias do Mês - DSR - Feriados) * Carga Diária

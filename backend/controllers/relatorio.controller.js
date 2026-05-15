@@ -105,7 +105,16 @@ async function gerarRelatorio(req, res) {
                 SUM(CASE WHEN a.valor LIKE '-%:%'
                     THEN CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',2) AS INT)
-                    ELSE 0 END) AS ajustes_neg_min
+                    ELSE 0 END) AS ajustes_neg_min,
+                -- Ajustes apenas do mês atual
+                SUM(CASE WHEN a.valor LIKE '+%:%' AND EXTRACT(MONTH FROM a.data) = ${mes} AND EXTRACT(YEAR FROM a.data) = ${ano}
+                    THEN CAST(SPLIT_PART(REPLACE(a.valor,'+',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(a.valor,'+',''),':',2) AS INT)
+                    ELSE 0 END) AS ajustes_mes_pos_min,
+                SUM(CASE WHEN a.valor LIKE '-%:%' AND EXTRACT(MONTH FROM a.data) = ${mes} AND EXTRACT(YEAR FROM a.data) = ${ano}
+                    THEN CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',2) AS INT)
+                    ELSE 0 END) AS ajustes_mes_neg_min
             FROM ajustes_saldo a
             WHERE EXTRACT(YEAR FROM a.data)  = ${ano}
               AND EXTRACT(MONTH FROM a.data) >= ${mesInicioCiclo}
@@ -117,7 +126,9 @@ async function gerarRelatorio(req, res) {
         ajustesResult.forEach(function (row) {
             ajustesMap[row.funcionario_id] = {
                 pos: Number(row.ajustes_pos_min || 0),
-                neg: Number(row.ajustes_neg_min || 0)
+                neg: Number(row.ajustes_neg_min || 0),
+                mesPos: Number(row.ajustes_mes_pos_min || 0),
+                mesNeg: Number(row.ajustes_mes_neg_min || 0)
             };
         });
 
@@ -149,8 +160,8 @@ async function gerarRelatorio(req, res) {
             const extrasMin    = Number(row.total_extras_min || 0);
             const negativosMin = Number(row.total_negativos_min || 0);
             const noturnoMin   = Number(row.total_noturno_min || 0);
-            const trabMin      = Number(row.total_trabalhado_min || 0);
-            const saldoMesMin  = extrasMin - negativosMin;
+            const aj = ajustesMap[row.id] || { pos: 0, neg: 0, mesPos: 0, mesNeg: 0 };
+            const saldoMesMin  = (extrasMin - negativosMin) + (aj.mesPos - aj.mesNeg);
             const diurnoMin    = Math.max(0, trabMin - noturnoMin);
 
             const banco    = bancoMap[row.id] || { extras: 0, negativos: 0 };
