@@ -96,6 +96,11 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
                   th { background: #333; color: #fff; padding: 4px 2px; font-size: 8px; text-align: center; }
                   td { border: 1px solid #ddd; padding: 3px 1px; text-align: center; font-size: 8.5px; }
                   .page-break { page-break-before: always; }
+                  .notes-box { margin-top: 15px; border: 1px solid #eee; border-radius: 6px; padding: 10px; page-break-inside: avoid; background: #fafafa; }
+                  .notes-title { font-size: 8px; font-weight: 900; border-bottom: 1.5px solid #333; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; color: #333; }
+                  .note-item { font-size: 7.5px; margin-bottom: 4px; color: #444; border-bottom: 1px solid #f0f0f0; padding-bottom: 3px; text-align: left; }
+                  .note-item:last-child { border-bottom: none; }
+                  .note-date { font-weight: 900; min-width: 55px; display: inline-block; color: #666; }
                 </style></head><body>
             `;
 
@@ -156,13 +161,28 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
                         if (!firstPage) htmlContent += `<div class="page-break"></div>`;
                         firstPage = false;
 
-                        const [relRes, regRes] = await Promise.all([
+                        const [relRes, regRes, comRes, ajuRes] = await Promise.all([
                             axios.get(`/relatorio/${m}/${ano}?valor_hora=0`),
-                            axios.get(`/registros/${func.id}?mes=${m}&ano=${ano}`)
+                            axios.get(`/registros/${func.id}?mes=${m}&ano=${ano}`),
+                            axios.get(`/comentarios/${func.id}`),
+                            axios.get(`/ajustes/${func.id}`)
                         ]);
 
                         const relatorio = relRes.data.find(d => d.id === func.id) || {};
                         const registros = regRes.data || [];
+                        const todosComentarios = comRes.data || [];
+                        const todosAjustes = ajuRes.data || [];
+
+                        // Filtrar comentários e ajustes para o mês atual no loop
+                        const comentariosMes = todosComentarios.filter(c => {
+                            const d = c.dataReferencia ? new Date(c.dataReferencia) : new Date(c.criadoEm);
+                            return (d.getUTCMonth() + 1 === m && d.getUTCFullYear() === ano);
+                        });
+
+                        const ajustesMes = todosAjustes.filter(a => {
+                            const d = new Date(a.data);
+                            return d.getUTCMonth() + 1 === m && d.getUTCFullYear() === ano;
+                        });
 
                         // Usar campos já calculados pelo backend (mesmo motor do JSON detalhado)
                         // saldo_anterior vem diretamente do relatorio.controller
@@ -179,7 +199,10 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
                                 <div class="card"><strong>Feriados</strong>${relatorio.dias_feriados > 0 ? `${relatorio.dias_feriados}d - ${relatorio.total_feriados || '00:00'}` : '00:00'}</div>
                                 <div class="card"><strong>S. Anterior</strong>${_saldoAnteriorStr}</div>
                                 <div class="card"><strong>S. Mês</strong>${relatorio.saldo_mes || '00:00'}</div>
-                                <div class="card"><strong>Consolidado</strong>${relatorio.banco_horas || '00:00'}</div>
+                                <div class="card" style="background: #10b981; color: white; border: none; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                                    <strong style="color: rgba(255,255,255,0.7)">Consolidado</strong>
+                                    <span style="font-size: 11px; font-weight: 900;">${relatorio.banco_horas || '00:00'}</span>
+                                </div>
                             </div>
                             <table>
                                 <thead>
@@ -226,6 +249,41 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
                             `;
                         }
                         htmlContent += `</tbody></table>`;
+
+                        if (comentariosMes.length > 0) {
+                            htmlContent += `
+                                <div class="notes-box">
+                                    <div class="notes-title">Comentários e Observações do Mês</div>
+                                    ${comentariosMes.map(c => `
+                                        <div class="note-item">
+                                            <span class="note-date">${new Date(c.dataReferencia || c.criadoEm).toLocaleDateString('pt-BR')}</span>
+                                            <span><strong>${c.usuario?.nome || 'Sistema'}:</strong> ${c.texto}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+
+                        if (ajustesMes.length > 0) {
+                            htmlContent += `
+                                <div class="notes-box">
+                                    <div class="notes-title">Ajustes de Saldo Realizados</div>
+                                    ${ajustesMes.map(a => `
+                                        <div class="note-item">
+                                            <span class="note-date">${new Date(a.data).toLocaleDateString('pt-BR')}</span>
+                                            <span><strong>${a.valor}</strong> — ${a.motivo} (${a.usuario?.nome || 'Sistema'})</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+
+                        htmlContent += `
+                            <div style="margin-top: 40px; display: flex; justify-content: space-around;">
+                                <div style="text-align: center; border-top: 1px solid #000; width: 180px; padding-top: 5px; font-size: 8px;">Assinatura do Colaborador</div>
+                                <div style="text-align: center; border-top: 1px solid #000; width: 180px; padding-top: 5px; font-size: 8px;">Assinatura do Responsável</div>
+                            </div>
+                        `;
                     }
                 }
             }

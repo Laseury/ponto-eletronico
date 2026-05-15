@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import ToastContainer from './ToastContainer';
-import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2 } from 'lucide-react';
+import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2, Calculator, Plus, Minus, RotateCcw, Equal } from 'lucide-react';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 
@@ -16,6 +16,7 @@ const ProtectedLayout = () => {
   const [feriados, setFeriados] = React.useState([]);
   const [feriadosLoading, setFeriadosLoading] = React.useState(false);
   const [feriadosAno, setFeriadosAno] = React.useState(new Date().getFullYear());
+  const [calcOpen, setCalcOpen] = React.useState(false);
 
   const fetchFeriados = React.useCallback(async (ano) => {
     setFeriadosLoading(true);
@@ -153,6 +154,91 @@ const ProtectedLayout = () => {
     });
   };
 
+  const HourCalculator = () => {
+    const [entries, setEntries] = React.useState([{ val: '', op: '+' }]);
+    
+    const parse = (str) => {
+      if (!str || !str.includes(':')) return 0;
+      const parts = str.split(':');
+      const h = parseInt(parts[0]) || 0;
+      const m = parseInt(parts[1]) || 0;
+      return (h * 60) + m;
+    };
+
+    const format = (min) => {
+      const abs = Math.abs(min);
+      const h = Math.floor(abs / 60);
+      const m = abs % 60;
+      return `${min < 0 ? '-' : ''}${h}:${m.toString().padStart(2, '0')}`;
+    };
+
+    const totalMin = entries.reduce((acc, curr) => {
+      const m = parse(curr.val);
+      return curr.op === '+' ? acc + m : acc - m;
+    }, 0);
+
+    const addEntry = () => setEntries([...entries, { val: '', op: '+' }]);
+    const updateEntry = (i, field, value) => {
+      const newEntries = [...entries];
+      newEntries[i][field] = value;
+      setEntries(newEntries);
+    };
+    const removeEntry = (i) => i > 0 && setEntries(entries.filter((_, idx) => idx !== i));
+
+    if (!calcOpen) return null;
+
+    return (
+      <div className="fixed bottom-6 right-6 w-80 bg-brand-surface border border-brand-border rounded-[2rem] shadow-2xl z-[100] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-300">
+        <div className="p-4 bg-brand-primary text-white flex justify-between items-center">
+          <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Calculator size={14}/> Calculadora de Horas</h4>
+          <button onClick={() => setCalcOpen(false)} className="hover:bg-white/20 p-1 rounded-lg transition-colors"><X size={16}/></button>
+        </div>
+        <div className="p-4 max-h-60 overflow-y-auto space-y-3 custom-scrollbar">
+          {entries.map((e, i) => (
+            <div key={i} className="flex items-center gap-2">
+              {i > 0 ? (
+                <button 
+                  onClick={() => updateEntry(i, 'op', e.op === '+' ? '-' : '+')}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-black transition-colors ${e.op === '+' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-rose-500/10 text-rose-500'}`}
+                >
+                  {e.op === '+' ? <Plus size={12}/> : <Minus size={12}/>}
+                </button>
+              ) : (
+                <div className="w-8 h-8 flex items-center justify-center text-brand-muted opacity-30"><Plus size={12}/></div>
+              )}
+              <input 
+                type="text" 
+                placeholder="00:00"
+                value={e.val}
+                onChange={(e) => updateEntry(i, 'val', e.target.value)}
+                className="flex-1 bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-sm font-black text-brand-text outline-none focus:ring-2 focus:ring-brand-primary/20"
+              />
+              {i > 0 && (
+                <button onClick={() => removeEntry(i)} className="text-brand-muted hover:text-rose-500 transition-colors"><X size={14}/></button>
+              )}
+            </div>
+          ))}
+          <button 
+            onClick={addEntry}
+            className="w-full py-2 border-2 border-dashed border-brand-border rounded-xl text-[10px] font-black text-brand-muted uppercase tracking-widest hover:border-brand-primary/50 hover:text-brand-primary transition-all mt-2"
+          >
+            + Adicionar Linha
+          </button>
+        </div>
+        <div className="p-4 bg-brand-bg/50 border-t border-brand-border">
+          <div className="flex justify-between items-center mb-2">
+             <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Total Calculado</span>
+             <button onClick={() => setEntries([{ val: '', op: '+' }])} className="text-brand-muted hover:text-brand-primary transition-colors" title="Limpar"><RotateCcw size={12}/></button>
+          </div>
+          <div className="text-2xl font-black text-brand-text tracking-tighter flex items-center justify-between">
+             <span className="opacity-30"><Equal size={20}/></span>
+             <span className={totalMin > 0 ? 'text-brand-primary' : totalMin < 0 ? 'text-rose-500' : ''}>{format(totalMin)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-brand-bg flex items-center justify-center transition-colors duration-300">
@@ -212,6 +298,13 @@ const ProtectedLayout = () => {
               title="Resumo dos Eventos"
             >
               <HelpCircle size={20} />
+            </button>
+            <button 
+              onClick={() => setCalcOpen(!calcOpen)}
+              className={`p-2.5 rounded-xl transition-all border border-transparent hover:border-brand-border ${calcOpen ? 'bg-brand-primary text-white' : 'text-brand-muted hover:text-brand-primary hover:bg-brand-surface'}`}
+              title="Calculadora de Horas"
+            >
+              <Calculator size={20} />
             </button>
             <button 
               onClick={handleSettings}
@@ -350,6 +443,9 @@ const ProtectedLayout = () => {
           </div>
         </div>
       )}
+
+      {/* Calculadora de Horas Flutuante */}
+      <HourCalculator />
 
       {/* Toast Notifications Globais */}
       <ToastContainer />

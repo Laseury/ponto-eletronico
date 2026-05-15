@@ -486,9 +486,9 @@ const Funcionario = () => {
     if (dayComments.length === 0) return;
 
     const html = dayComments.map(c => `
-      <div style="text-align: left; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <div style="font-size: 10px; font-weight: 900; color: #10b981; text-transform: uppercase; letter-spacing: 1px;">${c.usuario?.nome || 'Sistema'}</div>
-        <div style="font-size: 13px; margin-top: 8px; color: #f8fafc; font-weight: 500;">${c.texto}</div>
+      <div style="text-align: left; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--color-brand-border);">
+        <div style="font-size: 10px; font-weight: 900; color: var(--color-brand-primary); text-transform: uppercase; letter-spacing: 1px;">${c.usuario?.nome || 'Sistema'}</div>
+        <div style="font-size: 13px; margin-top: 8px; color: var(--color-brand-text); font-weight: 500;">${c.texto}</div>
       </div>
     `).join('');
 
