@@ -3,10 +3,25 @@ const prisma = require("../db/prisma");
 async function criarComentario(req, res) {
     try {
         const { texto, tipo, data_referencia, funcionario_id } = req.body;
-        const usuario_id = req.user.id;
+        const usuario_id = Number(req.user.id);
 
         if (!texto || !tipo || !funcionario_id) {
+            console.error("Erro ao criar comentário: Dados incompletos", { texto, tipo, funcionario_id });
             return res.status(400).json({ erro: "Texto, tipo e funcionário são obrigatórios" });
+        }
+
+        const parsedFuncionarioId = Number(funcionario_id);
+        if (isNaN(parsedFuncionarioId)) {
+            return res.status(400).json({ erro: "ID do funcionário inválido" });
+        }
+
+        let parsedDataReferencia = null;
+        if (data_referencia) {
+            parsedDataReferencia = new Date(data_referencia);
+            if (isNaN(parsedDataReferencia.getTime())) {
+                console.error("Erro ao criar comentário: Data inválida", data_referencia);
+                return res.status(400).json({ erro: "Data de referência inválida" });
+            }
         }
 
         const { comentario, log } = await prisma.$transaction(async (tx) => {
@@ -14,8 +29,8 @@ async function criarComentario(req, res) {
                 data: {
                     texto,
                     tipo,
-                    dataReferencia: data_referencia ? new Date(data_referencia) : null,
-                    funcionarioId: parseInt(funcionario_id),
+                    dataReferencia: parsedDataReferencia,
+                    funcionarioId: parsedFuncionarioId,
                     usuarioId: usuario_id
                 },
                 include: {
@@ -27,12 +42,12 @@ async function criarComentario(req, res) {
 
             const l = await tx.logRegistro.create({
                 data: {
-                    funcionarioId: parseInt(funcionario_id),
+                    funcionarioId: parsedFuncionarioId,
                     usuario: req.user?.login || "Sistema",
                     acao: "criacao",
                     campoAlterado: "comentario",
                     valorNovo: texto.substring(0, 100) + (texto.length > 100 ? "..." : ""),
-                    dataRegistro: data_referencia ? new Date(data_referencia) : new Date()
+                    dataRegistro: parsedDataReferencia || new Date()
                 }
             });
 

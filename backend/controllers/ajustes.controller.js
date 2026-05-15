@@ -3,23 +3,28 @@ const prisma = require("../db/prisma");
 async function criarAjuste(req, res) {
     try {
         const { valor, motivo, funcionario_id } = req.body;
-        const usuario_id = req.user.id;
+        const usuario_id = Number(req.user.id);
 
         if (!valor || !motivo || !funcionario_id) {
             return res.status(400).json({ erro: "Valor, motivo e funcionário são obrigatórios" });
         }
 
         // Validar formato do valor (+HH:mm ou -HH:mm)
-        const regex = /^[+-]\d{2,}:\d{2}$/;
+        const regex = /^[+-]\d+:\d{2}$/;
         if (!regex.test(valor)) {
             return res.status(400).json({ erro: "Formato de valor inválido. Use +HH:mm ou -HH:mm" });
+        }
+
+        const parsedFuncionarioId = Number(funcionario_id);
+        if (isNaN(parsedFuncionarioId)) {
+            return res.status(400).json({ erro: "ID do funcionário inválido" });
         }
 
         const ajuste = await prisma.ajusteSaldo.create({
             data: {
                 valor,
                 motivo,
-                funcionarioId: parseInt(funcionario_id),
+                funcionarioId: parsedFuncionarioId,
                 usuarioId: usuario_id
             },
             include: {

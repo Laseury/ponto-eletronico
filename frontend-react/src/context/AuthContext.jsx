@@ -20,6 +20,26 @@ export const AuthProvider = ({ children }) => {
     return Promise.reject(error);
   });
 
+  // Interceptor de resposta: lida com erros globais (401, 403, 404)
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      // Se o servidor retornar 401 (Não autorizado) ou 403 (Proibido),
+      // provavelmente o token expirou ou é inválido.
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.warn('Sessão expirada ou acesso negado. Redirecionando para login...');
+        localStorage.removeItem('usuario_logado');
+        localStorage.removeItem('token');
+        setUser(null);
+        // Não usamos logout() aqui para evitar loop se o logout chamar a API
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+
   useEffect(() => {
     const savedUser = localStorage.getItem('usuario_logado');
     const token = localStorage.getItem('token');

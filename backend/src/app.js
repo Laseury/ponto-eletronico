@@ -111,17 +111,23 @@ if (fs.existsSync(distPath) && fs.existsSync(indexPath)) {
     
     // SPA fallback - servir index.html para todas as rotas não encontradas
     app.use((req, res, next) => {
-        // 1. Não fazer fallback para API routes
-        if (req.path.startsWith('/api/') || req.path.startsWith('/funcionarios') || 
-            req.path.startsWith('/registros') || req.path.startsWith('/relatorio') ||
-            req.path.startsWith('/resumo') || req.path.startsWith('/logs') ||
-            req.path.startsWith('/ia') || req.path.startsWith('/debug/') ||
-            req.path.startsWith('/auth')) {
+        // 1. Lista de prefixos da API que NÃO devem fazer fallback para o frontend
+        const apiPrefixes = [
+            '/auth', '/funcionarios', '/registros', '/relatorio', 
+            '/resumo', '/logs', '/ia', '/debug', '/comentarios', '/ajustes', '/api'
+        ];
+
+        // Verifica se a rota atual é uma rota de API (exata ou sub-rota)
+        const isApiRoute = apiPrefixes.some(prefix => 
+            req.path === prefix || req.path.startsWith(prefix + '/')
+        );
+
+        if (isApiRoute) {
             return next();
         }
 
         // 2. Não fazer fallback para arquivos estáticos (evitar erro de MIME type)
-        // Ajuste crítico: Ignora arquivos com extensão ou caminho /assets/ que não existem para evitar MIME type error
+        // Se o caminho tem uma extensão (ex: .png, .css, .js) e não foi encontrado pelo express.static
         if (req.path.includes('.') || req.path.startsWith('/assets/')) {
             return next();
         }
