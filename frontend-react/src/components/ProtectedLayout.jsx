@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import ToastContainer from './ToastContainer';
-import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2, Calculator, Plus, Minus, RotateCcw, Equal } from 'lucide-react';
+import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2, Calculator, Plus, Minus, RotateCcw, Equal, BookOpen, Clock, BarChart3, FileCheck } from 'lucide-react';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 
@@ -137,20 +137,88 @@ const ProtectedLayout = () => {
     });
   };
 
-  const handleShowEventSummary = () => {
+  const handleShowHelpCenter = () => {
     swalTheme({
-      title: 'Resumo dos Eventos',
+      title: 'Central de Ajuda',
+      width: 600,
       html: `
-        <div style="text-align: left; font-size: 14px; line-height: 1.6; margin-top: 10px;">
-          <p><strong>🏖️ Folga Domingo / 📅 DSR:</strong> Dia de descanso. Zera as horas negativas. Se houver registro de ponto, o tempo trabalhado vira 100% Extra.</p>
-          <p><strong>❌ Falta:</strong> Ausência não justificada. Gera horas negativas iguais à carga diária (podendo ser manual), descontando do saldo/banco de horas.</p>
-          <p><strong>🏥 Atestado / 🏄 Férias / 📄 Declaração:</strong> Ausência justificada. O sistema anula as horas negativas para que não haja desconto no saldo.</p>
-          <p><strong>🎉 Feriado:</strong> Dia não útil. Não gera horas negativas e bloqueia o cálculo automático de horas extras caso haja marcação.</p>
-          <p><strong>🏦 Folga Banco:</strong> Descanso utilizando banco. Gera horas negativas propositalmente para descontar as horas tiradas do saldo acumulado do funcionário.</p>
+        <div style="text-align: left; margin-top: 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <button onclick="window.switchHelpTab('inicio')" style="padding: 10px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">🏠 Início</button>
+            <button onclick="window.switchHelpTab('lancamento')" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">⏱️ Lançamentos</button>
+            <button onclick="window.switchHelpTab('banco')" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">🏦 Banco de Horas</button>
+            <button onclick="window.switchHelpTab('eventos')" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">📅 Eventos</button>
+          </div>
+          
+          <div id="help-content-area" style="min-height: 300px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+             <!-- Conteúdo Dinâmico -->
+             <div id="help-inicio">
+               <h4 style="color: #10b981; margin: 0 0 10px 0;">Bem-vindo ao Sistema de Ponto</h4>
+               <p style="font-size: 13px; color: var(--color-brand-muted); line-height: 1.5;">Este sistema foi desenvolvido para facilitar o controle de jornada e banco de horas da equipe.</p>
+               <ul style="font-size: 12px; padding-left: 20px; color: var(--color-brand-text);">
+                 <li style="margin-bottom: 8px;"><b>Dashboard:</b> Veja seu saldo atual e banco consolidado.</li>
+                 <li style="margin-bottom: 8px;"><b>Espelho de Ponto:</b> Confira cada batida de ponto e comentários do gestor.</li>
+                 <li style="margin-bottom: 8px;"><b>Calculadora:</b> Use o ícone de calculadora no topo para somar horas.</li>
+               </ul>
+             </div>
+          </div>
         </div>
       `,
-      icon: 'info',
-      confirmButtonText: 'Entendi'
+      showConfirmButton: false,
+      showCloseButton: true,
+      didOpen: () => {
+        const contentArea = document.getElementById('help-content-area');
+        window.switchHelpTab = (tab) => {
+          let html = '';
+          if (tab === 'inicio') {
+            html = `
+              <h4 style="color: #10b981; margin: 0 0 10px 0;">Bem-vindo ao Sistema de Ponto</h4>
+              <p style="font-size: 13px; color: var(--color-brand-muted); line-height: 1.5;">Este sistema foi desenvolvido para facilitar o controle de jornada e banco de horas da equipe.</p>
+              <ul style="font-size: 12px; padding-left: 20px; color: var(--color-brand-text);">
+                <li style="margin-bottom: 8px;"><b>Dashboard:</b> Veja seu saldo atual e banco consolidado.</li>
+                <li style="margin-bottom: 8px;"><b>Espelho de Ponto:</b> Confira cada batida de ponto e comentários do gestor.</li>
+              </ul>
+            `;
+          } else if (tab === 'lancamento') {
+            html = `
+              <h4 style="color: #3b82f6; margin: 0 0 10px 0;">Como Lançar Horas</h4>
+              <p style="font-size: 13px; color: var(--color-brand-muted); line-height: 1.5;">Existem três formas principais de gerir os horários:</p>
+              <div style="font-size: 12px; background: rgba(59,130,246,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                <b>1. Lançamento por Funcionário:</b> Na tela do funcionário, clique no ícone de lápis na linha do dia desejado.
+              </div>
+              <div style="font-size: 12px; background: rgba(59,130,246,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                <b>2. Lançamento em Lote:</b> Vá em "Lançamento em Lote" no menu para aplicar o mesmo horário para vários funcionários ao mesmo tempo.
+              </div>
+              <div style="font-size: 12px; background: rgba(59,130,246,0.1); padding: 10px; border-radius: 8px;">
+                <b>3. Lançamento Direto:</b> Use a tabela de "Lançamento" para preencher uma planilha rápida de batidas.
+              </div>
+            `;
+          } else if (tab === 'banco') {
+            html = `
+              <h4 style="color: #f59e0b; margin: 0 0 10px 0;">Entendendo o Banco de Horas</h4>
+              <p style="font-size: 12px; color: var(--color-brand-muted); line-height: 1.5;">O sistema calcula automaticamente o saldo baseado na carga horária diária.</p>
+              <div style="margin-top: 10px; border-left: 3px solid #f59e0b; padding-left: 10px;">
+                <p style="font-size: 11px; margin-bottom: 5px;"><b>Saldo Anterior:</b> Valor que veio do mês/período anterior.</p>
+                <p style="font-size: 11px; margin-bottom: 5px;"><b>Saldo do Mês:</b> Resultado apenas das batidas deste mês (Extras - Negativas).</p>
+                <p style="font-size: 11px; font-weight: bold; color: #10b981;"><b>Banco Consolidado:</b> A soma real do que o funcionário tem a receber ou compensar.</p>
+              </div>
+              <p style="font-size: 11px; margin-top: 10px; font-style: italic;">Use o botão "Ajuste de Saldo" na tela do funcionário para correções manuais (ex: pagamento de horas).</p>
+            `;
+          } else if (tab === 'eventos') {
+            html = `
+              <h4 style="color: #ef4444; margin: 0 0 10px 0;">Tipos de Eventos</h4>
+              <p style="font-size: 11px; color: var(--color-brand-text);">Os eventos alteram como as horas são calculadas:</p>
+              <div style="font-size: 11px; line-height: 1.6; margin-top: 8px;">
+                <p><b>🏖️ Folga Domingo / DSR:</b> Dia de descanso. Zera negativas. Se houver ponto, vira 100% Extra.</p>
+                <p><b>❌ Falta:</b> Ausência não justificada. Desconta a carga horária do banco.</p>
+                <p><b>🏥 Atestado / Férias:</b> Justificado. O sistema abona o dia e não gera negativas.</p>
+                <p><b>🎉 Feriado:</b> Neutro para o banco. Marcações em feriado não geram extras automáticas.</p>
+              </div>
+            `;
+          }
+          contentArea.innerHTML = html;
+        };
+      }
     });
   };
 
@@ -293,11 +361,11 @@ const ProtectedLayout = () => {
               <CalendarDays size={20} />
             </button>
             <button 
-              onClick={handleShowEventSummary}
+              onClick={handleShowHelpCenter}
               className="hidden sm:flex p-2.5 text-brand-muted hover:text-brand-primary hover:bg-brand-surface rounded-xl transition-all border border-transparent hover:border-brand-border"
-              title="Resumo dos Eventos"
+              title="Central de Ajuda"
             >
-              <HelpCircle size={20} />
+              <BookOpen size={20} />
             </button>
             <button 
               onClick={() => setCalcOpen(!calcOpen)}
