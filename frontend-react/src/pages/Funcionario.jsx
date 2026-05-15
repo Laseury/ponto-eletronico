@@ -145,7 +145,7 @@ const Funcionario = () => {
   const [comentarioModalOpen, setComentarioModalOpen] = useState(false);
   const [ajusteModalOpen, setAjusteModalOpen] = useState(false);
   const [commentData, setCommentData] = useState({ texto: '', tipo: 'GERAL', data_referencia: null });
-  const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '' });
+  const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '', data: new Date().toISOString().slice(0, 7) });
   const [allFuncionarios, setAllFuncionarios] = useState([]);
 
   const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador', 'RH'].includes(user?.perfil), [user]);
@@ -410,14 +410,35 @@ const Funcionario = () => {
       await axios.post('/ajustes', {
         funcionario_id: id,
         valor: finalValor,
-        motivo: ajusteData.motivo
+        motivo: ajusteData.motivo,
+        data: ajusteData.data
       });
       setAjusteModalOpen(false);
-      setAjusteData({ valor: '+00:00', motivo: '' });
+      setAjusteData({ valor: '+00:00', motivo: '', data: new Date().toISOString().slice(0, 7) });
       fetchFuncionarioData();
       swalTheme({ title: 'Sucesso!', text: 'Ajuste de saldo realizado.', icon: 'success', timer: 1000, showConfirmButton: false });
     } catch (error) {
-      swalTheme({ title: 'Erro!', text: 'Não foi possível realizar o ajuste.', icon: 'error' });
+      swalTheme({ title: 'Erro!', text: 'Não foi possível salvar o ajuste.', icon: 'error' });
+    }
+  };
+
+  const handleDeleteAjuste = async (ajuId) => {
+    const res = await swalTheme({
+      title: 'Tem certeza?',
+      text: 'Deseja excluir este ajuste de saldo?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir',
+      cancelButtonText: 'Cancelar'
+    });
+    if (res.isConfirmed) {
+      try {
+        await axios.delete(`/ajustes/${ajuId}`);
+        fetchFuncionarioData();
+        swalTheme({ title: 'Excluído!', text: 'O ajuste foi removido.', icon: 'success', timer: 1000, showConfirmButton: false });
+      } catch (error) {
+        swalTheme({ title: 'Erro!', text: 'Não foi possível excluir.', icon: 'error' });
+      }
     }
   };
 
@@ -919,7 +940,7 @@ const Funcionario = () => {
               <p className="text-center py-10 text-brand-muted text-[10px] font-black uppercase tracking-widest opacity-40">Nenhum ajuste de saldo registrado.</p>
             ) : (
               ajustes.map(a => (
-                <div key={a.id} className="flex items-center justify-between bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5">
+                <div key={a.id} className="flex items-center justify-between bg-brand-bg/40 border border-brand-border/50 rounded-2xl p-5 group hover:border-brand-primary/20 transition-all">
                   <div className="flex items-center gap-5">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs ${a.valor.startsWith('+') ? 'bg-brand-accent/10 text-brand-accent' : 'bg-rose-500/10 text-rose-500'}`}>
                       {a.valor}
@@ -929,6 +950,15 @@ const Funcionario = () => {
                       <p className="text-sm font-black text-brand-text italic">{a.motivo}</p>
                     </div>
                   </div>
+                  {canEdit && (
+                    <button 
+                      onClick={() => handleDeleteAjuste(a.id)}
+                      className="p-2 text-rose-500 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 rounded-xl transition-all"
+                      title="Excluir Ajuste"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               ))
             )}
@@ -1011,6 +1041,15 @@ const Funcionario = () => {
                   placeholder="Ex: Pagamento de horas extras"
                   value={ajusteData.motivo}
                   onChange={(e) => setAjusteData({...ajusteData, motivo: e.target.value})}
+                  className="w-full bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all font-bold shadow-inner"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60">Mês de Referência</label>
+                <input 
+                  type="month"
+                  value={ajusteData.data}
+                  onChange={(e) => setAjusteData({...ajusteData, data: e.target.value})}
                   className="w-full bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 text-brand-text outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all font-bold shadow-inner"
                 />
               </div>

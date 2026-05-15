@@ -2,7 +2,7 @@ const prisma = require("../db/prisma");
 
 async function criarAjuste(req, res) {
     try {
-        const { valor, motivo, funcionario_id } = req.body;
+        const { valor, motivo, funcionario_id, data } = req.body;
         const usuario_id = Number(req.user.id);
 
         if (!valor || !motivo || !funcionario_id) {
@@ -25,7 +25,8 @@ async function criarAjuste(req, res) {
                 valor,
                 motivo,
                 funcionarioId: parsedFuncionarioId,
-                usuarioId: usuario_id
+                usuarioId: usuario_id,
+                data: data ? new Date(data) : undefined
             },
             include: {
                 usuario: {
@@ -67,8 +68,8 @@ async function excluirAjuste(req, res) {
         const { id } = req.params;
         const perfil = req.user.perfil;
 
-        if (perfil !== "Admin") {
-            return res.status(403).json({ erro: "Apenas administradores podem excluir ajustes de saldo" });
+        if (!['Admin', 'Gestor', 'Contador', 'RH'].includes(perfil)) {
+            return res.status(403).json({ erro: "Sem permissão para excluir ajustes de saldo" });
         }
 
         await prisma.ajusteSaldo.delete({
