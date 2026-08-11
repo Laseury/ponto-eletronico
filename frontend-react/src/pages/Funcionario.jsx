@@ -863,17 +863,17 @@ const Funcionario = () => {
                   {funcionario?.ativo !== false ? 'Ativo' : 'Inativo'}
                 </span>
               </h1>
-              <div className="bg-brand-surface border border-brand-border/80 rounded-xl px-3 py-1.5 flex items-center shadow-sm">
-                 <span className="text-[9px] font-extrabold text-brand-muted uppercase tracking-widest mr-2 opacity-60">Alternar:</span>
+              <div className="flex items-center gap-1.5 bg-brand-surface border border-brand-border/80 rounded-xl pl-3 pr-2 py-1.5 shadow-sm group hover:border-brand-primary/40 transition-colors">
+                 <Users size={12} className="text-brand-muted/60 shrink-0" />
                  <select 
                    value={id || ""} 
                    onChange={(e) => {
                      if(e.target.value) navigate(`/funcionario?id=${e.target.value}&mes=${mes}&ano=${ano}`);
                    }}
-                   className="bg-transparent text-brand-text text-xs font-bold outline-none cursor-pointer w-44"
+                   className="bg-transparent text-brand-text text-xs font-semibold outline-none cursor-pointer w-48 pr-1"
                  >
                    <option value="" disabled>Trocar colaborador...</option>
-                   {allFuncionarios.map(f => (
+                   {[...allFuncionarios].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map(f => (
                      <option key={f.id} value={f.id} className="bg-brand-surface text-brand-text">{f.nome}</option>
                    ))}
                  </select>
@@ -883,59 +883,82 @@ const Funcionario = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-brand-surface p-1.5 rounded-2xl border border-brand-border/80 shadow-md">
-            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="bg-brand-bg text-brand-text text-xs font-bold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Seletor de Período */}
+          <div className="flex items-center gap-1 bg-brand-surface p-1 rounded-2xl border border-brand-border/80 shadow-md">
+            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="bg-brand-bg/80 text-brand-text text-xs font-semibold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50 hover:border-brand-primary/40">
               {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (<option key={i+1} value={i+1} className="bg-brand-surface">{m}</option>))}
             </select>
-            <select value={ano} onChange={(e) => setAno(Number(e.target.value))} className="bg-brand-bg text-brand-text text-xs font-bold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50">
+            <select value={ano} onChange={(e) => setAno(Number(e.target.value))} className="bg-brand-bg/80 text-brand-text text-xs font-semibold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50 hover:border-brand-primary/40">
               {[2024, 2025, 2026].map(a => (<option key={a} value={a} className="bg-brand-surface">{a}</option>))}
             </select>
           </div>
 
+          {/* Separator */}
+          <div className="w-px h-8 bg-brand-border/50 mx-1" />
+
+          {/* Atualizar Horários */}
           {canEdit && (
             <button 
               onClick={handleRecalcularHorarios}
               disabled={recalculating}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-amber-500/10 transition-all text-xs uppercase tracking-wider disabled:opacity-50 hover:scale-[1.02]"
               title="Recalcular todos os horários do mês com a carga atual"
+              className="group relative flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-white border border-amber-500/30 font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 text-xs uppercase tracking-wide disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-md hover:shadow-amber-500/20 hover:scale-[1.02]"
             >
-              <RotateCcw size={14} className={recalculating ? "animate-spin" : ""} />
-              {recalculating ? "Atualizando..." : "Atualizar Horários"}
+              <RotateCcw size={14} className={recalculating ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"} />
+              {recalculating ? "Atualizando..." : "Atualizar"}
             </button>
           )}
 
+          {/* Ajustar Saldo */}
           {canEdit && (
             <button 
               onClick={() => setAjusteModalOpen(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-emerald-500/10 transition-all text-xs uppercase tracking-wider hover:scale-[1.02]"
+              title="Adicionar ajuste manual de saldo"
+              className="group flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-emerald-900/30 transition-all duration-200 text-xs uppercase tracking-wide hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-[1.02]"
             >
-              <PlusCircle size={15} /> Ajustar Saldo
+              <PlusCircle size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+              Ajustar Saldo
             </button>
           )}
 
-          <div className="flex items-center gap-2 border-l border-brand-border/60 pl-3 ml-1">
+          {/* Separator */}
+          <div className="w-px h-8 bg-brand-border/50 mx-1" />
+
+          {/* Botões secundários agrupados */}
+          <div className="flex items-center gap-1.5 bg-brand-surface border border-brand-border/60 rounded-2xl p-1.5 shadow-md">
+            {/* IA Export */}
             {canEdit && (
               <button 
                 onClick={exportarParaIA}
-                className="flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 font-bold px-3.5 py-2.5 rounded-xl transition-all text-xs uppercase tracking-wider"
-                title="Exportar dados estruturados para IA"
+                title="Exportar dados para análise com IA"
+                className="group flex items-center gap-1.5 px-3 py-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-500 border border-transparent hover:border-indigo-500/50 transition-all duration-200 text-[11px] font-semibold uppercase tracking-wide"
               >
-                <Sparkles size={13} /> IA
+                <Sparkles size={13} className="group-hover:animate-pulse" />
+                <span>IA</span>
               </button>
             )}
+
+            {/* PDF */}
             <button 
               onClick={generatePDF}
-              className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 font-bold px-3.5 py-2.5 rounded-xl transition-all text-xs uppercase tracking-wider"
-              title="Imprimir ou salvar em PDF"
+              title="Imprimir ou salvar como PDF"
+              className="group flex items-center gap-1.5 px-3 py-2 rounded-xl text-brand-muted hover:text-white hover:bg-brand-primary border border-transparent hover:border-brand-primary/50 transition-all duration-200 text-[11px] font-semibold uppercase tracking-wide"
             >
-              <FileDown size={13} /> PDF
+              <FileDown size={13} className="group-hover:-translate-y-0.5 transition-transform duration-200" />
+              <span>PDF</span>
             </button>
+
+            {/* Ativar / Inativar */}
             {canEdit && (
               <button 
                 onClick={handleToggleAtivo}
-                className={`flex items-center gap-1.5 font-bold py-2.5 px-3.5 rounded-xl border transition-all text-xs uppercase tracking-wider ${funcionario?.ativo !== false ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'}`}
                 title={funcionario?.ativo !== false ? 'Inativar colaborador' : 'Ativar colaborador'}
+                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl border border-transparent transition-all duration-200 text-[11px] font-semibold uppercase tracking-wide ${
+                  funcionario?.ativo !== false 
+                    ? 'text-rose-400 hover:text-white hover:bg-rose-500 hover:border-rose-500/50' 
+                    : 'text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-500/50'
+                }`}
               >
                 {funcionario?.ativo !== false ? <X size={14} /> : <Save size={14} />}
                 {funcionario?.ativo !== false ? 'Inativar' : 'Ativar'}
