@@ -24,10 +24,35 @@ import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 import { useAuth } from '../context/AuthContext';
 
-const InfoCard = ({ label, value, color, isProminent }) => (
-  <div className={`border rounded-[1.5rem] p-6 flex flex-col items-center justify-center text-center shadow-lg group transition-all ${isProminent ? 'bg-brand-primary border-brand-primary shadow-brand-primary/20 scale-105' : 'bg-brand-surface border-brand-border hover:border-brand-primary/30'}`}>
-    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 ${isProminent ? 'text-white/60' : 'text-brand-muted opacity-60'}`}>{label}</p>
-    <p className={`text-2xl font-black ${isProminent ? 'text-white' : (color || 'text-brand-text')}`}>{value || '—'}</p>
+const InfoCard = ({ label, value, color, icon: Icon, isProminent, subtext }) => (
+  <div className={`relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
+    isProminent 
+      ? 'bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white shadow-xl shadow-emerald-950/40 border border-emerald-400/30 hover:scale-[1.02]' 
+      : 'bg-brand-surface border border-brand-border/80 hover:border-brand-primary/40 shadow-md hover:shadow-lg'
+  }`}>
+    {isProminent && (
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
+    )}
+    <div className="flex justify-between items-start mb-3 relative z-10">
+      <span className={`text-[10px] font-extrabold uppercase tracking-[0.2em] ${isProminent ? 'text-emerald-200/80' : 'text-brand-muted/70'}`}>
+        {label}
+      </span>
+      {Icon && (
+        <div className={`p-2 rounded-xl ${isProminent ? 'bg-white/10 text-white' : 'bg-brand-bg text-brand-primary border border-brand-border/50'}`}>
+          <Icon size={16} />
+        </div>
+      )}
+    </div>
+    <div className="relative z-10 flex items-baseline justify-between">
+      <p className={`text-2xl font-extrabold tracking-tight font-mono ${isProminent ? 'text-white' : (color || 'text-brand-text')}`}>
+        {value || '00:00'}
+      </p>
+      {subtext && (
+        <span className={`text-[10px] font-bold ${isProminent ? 'text-emerald-100/70' : 'text-brand-muted'}`}>
+          {subtext}
+        </span>
+      )}
+    </div>
   </div>
 );
 
@@ -819,94 +844,104 @@ const Funcionario = () => {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <button onClick={() => navigate(-1)} className="p-2.5 bg-brand-surface border border-brand-border rounded-xl text-brand-muted hover:text-brand-primary hover:border-brand-primary transition-all shadow-lg">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pb-2">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-3 bg-brand-surface border border-brand-border/80 rounded-2xl text-brand-muted hover:text-brand-primary hover:border-brand-primary/50 transition-all shadow-md">
             <ArrowLeft size={18} />
           </button>
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <h1 className="text-2xl font-black text-brand-text tracking-tight flex items-center gap-3 italic">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-extrabold text-brand-text tracking-tight flex items-center gap-2.5">
                 {funcionario?.nome}
                 {canEdit && (
-                  <button onClick={handleOpenEditFunc} title="Editar Cadastro e Cargas Horárias" className="p-1 text-brand-muted hover:text-brand-primary transition-colors">
-                    <Edit2 size={16} />
+                  <button onClick={handleOpenEditFunc} title="Editar Cadastro e Cargas Horárias" className="p-1.5 rounded-lg bg-brand-surface border border-brand-border/50 text-brand-muted hover:text-brand-primary hover:border-brand-primary/50 transition-all shadow-sm">
+                    <Edit2 size={14} />
                   </button>
                 )}
-                <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-full border tracking-widest ${funcionario?.ativo !== false ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                <span className={`text-[9px] uppercase font-bold px-2.5 py-1 rounded-full border tracking-widest flex items-center gap-1.5 ${funcionario?.ativo !== false ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${funcionario?.ativo !== false ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
                   {funcionario?.ativo !== false ? 'Ativo' : 'Inativo'}
                 </span>
               </h1>
-              <div className="bg-brand-surface border border-brand-border rounded-xl px-3 py-1 flex items-center shadow-sm">
-                 <span className="text-[9px] font-black text-brand-muted uppercase tracking-widest mr-2 opacity-50">Alternar:</span>
+              <div className="bg-brand-surface border border-brand-border/80 rounded-xl px-3 py-1.5 flex items-center shadow-sm">
+                 <span className="text-[9px] font-extrabold text-brand-muted uppercase tracking-widest mr-2 opacity-60">Alternar:</span>
                  <select 
                    value={id || ""} 
                    onChange={(e) => {
                      if(e.target.value) navigate(`/funcionario?id=${e.target.value}&mes=${mes}&ano=${ano}`);
                    }}
-                   className="bg-transparent text-brand-text text-xs font-black outline-none cursor-pointer w-40"
+                   className="bg-transparent text-brand-text text-xs font-bold outline-none cursor-pointer w-44"
                  >
-                   <option value="" disabled>Trocar de colaborador...</option>
+                   <option value="" disabled>Trocar colaborador...</option>
                    {allFuncionarios.map(f => (
-                     <option key={f.id} value={f.id} className="bg-brand-bg text-brand-text">{f.nome}</option>
+                     <option key={f.id} value={f.id} className="bg-brand-surface text-brand-text">{f.nome}</option>
                    ))}
                  </select>
               </div>
             </div>
-            <p className="text-brand-muted font-bold text-xs mt-1.5 opacity-60">Visualizando registro detalhado do ponto.</p>
+            <p className="text-brand-muted font-medium text-xs mt-1 opacity-70">Espelho de ponto individual e controle de saldo de horas.</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-brand-surface p-2 rounded-xl border border-brand-border shadow-lg">
-            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="bg-brand-bg text-brand-text text-xs font-black px-3 py-2 rounded-lg outline-none transition-all cursor-pointer hover:bg-brand-surface border border-brand-border/50 shadow-inner">
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 bg-brand-surface p-1.5 rounded-2xl border border-brand-border/80 shadow-md">
+            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="bg-brand-bg text-brand-text text-xs font-bold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50">
               {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (<option key={i+1} value={i+1} className="bg-brand-surface">{m}</option>))}
             </select>
-            <select value={ano} onChange={(e) => setAno(Number(e.target.value))} className="bg-brand-bg text-brand-text text-xs font-black px-3 py-2 rounded-lg outline-none transition-all cursor-pointer hover:bg-brand-surface border border-brand-border/50 shadow-inner">
+            <select value={ano} onChange={(e) => setAno(Number(e.target.value))} className="bg-brand-bg text-brand-text text-xs font-bold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50">
               {[2024, 2025, 2026].map(a => (<option key={a} value={a} className="bg-brand-surface">{a}</option>))}
             </select>
           </div>
+
           {canEdit && (
             <button 
               onClick={handleRecalcularHorarios}
               disabled={recalculating}
-              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 px-5 rounded-xl shadow-lg shadow-amber-500/20 transition-all text-[9px] uppercase tracking-widest disabled:opacity-50"
-              title="Recalcular todos os horários e saldos do colaborador para o período selecionado"
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-amber-500/10 transition-all text-xs uppercase tracking-wider disabled:opacity-50 hover:scale-[1.02]"
+              title="Recalcular todos os horários do mês com a carga atual"
             >
-              <RotateCcw size={15} className={recalculating ? "animate-spin" : ""} />
+              <RotateCcw size={14} className={recalculating ? "animate-spin" : ""} />
               {recalculating ? "Atualizando..." : "Atualizar Horários"}
             </button>
           )}
-          {canEdit && (
-            <button 
-              onClick={handleToggleAtivo}
-              className={`flex items-center gap-2 font-black py-3 px-6 rounded-xl shadow-lg transition-all text-[9px] uppercase tracking-widest ${funcionario?.ativo !== false ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'}`}
-            >
-              {funcionario?.ativo !== false ? <X size={18} /> : <Save size={18} />}
-              {funcionario?.ativo !== false ? 'Inativar' : 'Ativar'}
-            </button>
-          )}
-          {canEdit && (
-            <button 
-              onClick={exportarParaIA}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-500/20 uppercase tracking-widest"
-            >
-              <Sparkles size={14} /> Exportar para IA
-            </button>
-          )}
-          <button 
-            onClick={generatePDF}
-            className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/80 text-brand-bg text-[10px] font-black px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-primary/20 uppercase tracking-widest"
-          >
-            <FileDown size={14} /> Imprimir PDF
-          </button>
+
           {canEdit && (
             <button 
               onClick={() => setAjusteModalOpen(true)}
-              className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-white font-black py-3 px-6 rounded-xl shadow-lg shadow-brand-primary/20 transition-all text-[9px] uppercase tracking-widest"
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-emerald-500/10 transition-all text-xs uppercase tracking-wider hover:scale-[1.02]"
             >
-              <PlusCircle size={18} /> Ajustar Saldo
+              <PlusCircle size={15} /> Ajustar Saldo
             </button>
           )}
+
+          <div className="flex items-center gap-2 border-l border-brand-border/60 pl-3 ml-1">
+            {canEdit && (
+              <button 
+                onClick={exportarParaIA}
+                className="flex items-center gap-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 font-bold px-3.5 py-2.5 rounded-xl transition-all text-xs uppercase tracking-wider"
+                title="Exportar dados estruturados para IA"
+              >
+                <Sparkles size={13} /> IA
+              </button>
+            )}
+            <button 
+              onClick={generatePDF}
+              className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 font-bold px-3.5 py-2.5 rounded-xl transition-all text-xs uppercase tracking-wider"
+              title="Imprimir ou salvar em PDF"
+            >
+              <FileDown size={13} /> PDF
+            </button>
+            {canEdit && (
+              <button 
+                onClick={handleToggleAtivo}
+                className={`flex items-center gap-1.5 font-bold py-2.5 px-3.5 rounded-xl border transition-all text-xs uppercase tracking-wider ${funcionario?.ativo !== false ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'}`}
+                title={funcionario?.ativo !== false ? 'Inativar colaborador' : 'Ativar colaborador'}
+              >
+                {funcionario?.ativo !== false ? <X size={14} /> : <Save size={14} />}
+                {funcionario?.ativo !== false ? 'Inativar' : 'Ativar'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -939,38 +974,45 @@ const Funcionario = () => {
           
           return (
             <>
-              <InfoCard label="Saldo Anterior" value={saldoAnteriorStr} color={saldoAnteriorColor} />
-              <InfoCard label="Saldo do Mês" value={saldoMesStr} color={saldoMesColor} />
-              <InfoCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" />
-              <InfoCard label="Banco Consolidado" value={bancoStr} isProminent />
+              <InfoCard label="Saldo Anterior" value={saldoAnteriorStr} color={saldoAnteriorColor} icon={History} />
+              <InfoCard label="Saldo do Mês" value={saldoMesStr} color={saldoMesColor} icon={Calendar} />
+              <InfoCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" icon={Sun} />
+              <InfoCard label="Banco Consolidado" value={bancoStr} isProminent icon={Sparkles} />
             </>
           );
         })()}
       </div>
 
-      <div className="bg-brand-surface border border-brand-border rounded-3xl overflow-hidden shadow-2xl">
-        <div className="p-6 border-b border-brand-border flex justify-between items-center bg-brand-surface/50">
-          <h2 className="text-xl font-black text-brand-text flex items-center gap-3 tracking-tighter italic"><Calendar className="text-brand-primary" size={20} /> Espelho de Ponto</h2>
-          <div className="flex gap-4">
-             <div className="flex items-center gap-2 text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60"><div className="w-2 h-2 bg-brand-accent rounded-full"></div> Positivo</div>
-             <div className="flex items-center gap-2 text-[9px] font-black text-brand-muted uppercase tracking-widest opacity-60"><div className="w-2 h-2 bg-rose-500 rounded-full"></div> Negativo</div>
+      <div className="bg-brand-surface border border-brand-border/80 rounded-3xl overflow-hidden shadow-xl">
+        <div className="p-6 border-b border-brand-border/80 flex flex-wrap gap-4 justify-between items-center bg-brand-surface">
+          <h2 className="text-xl font-extrabold text-brand-text flex items-center gap-3 tracking-tight">
+            <Calendar className="text-brand-primary" size={20} /> Espelho de Ponto
+          </h2>
+          <div className="flex items-center gap-4 bg-brand-bg/50 px-3.5 py-1.5 rounded-xl border border-brand-border/50">
+             <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+               <span className="w-2 h-2 bg-emerald-400 rounded-full shadow-sm shadow-emerald-400/50" /> Extras (+)
+             </div>
+             <div className="w-px h-3 bg-brand-border/60" />
+             <div className="flex items-center gap-1.5 text-[10px] font-bold text-rose-400 uppercase tracking-wider">
+               <span className="w-2 h-2 bg-rose-400 rounded-full shadow-sm shadow-rose-400/50" /> Débitos (-)
+             </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-brand-bg/50 border-b border-brand-border">
-                <th className="px-6 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Data</th>
-                <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">E1 / S1</th>
-                <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">E2 / S2</th>
-                <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">E3 / S3</th>
-                <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Total</th>
-                <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Noturno</th>
-                {(funcionario?.tipo?.includes('Noturno')) && <th className="px-3 py-4 text-[9px] font-black text-indigo-400/80 uppercase tracking-[0.25em] text-center">Prorrog.</th>}
-                <th className="px-3 py-4 text-[9px] font-black text-brand-accent/60 uppercase tracking-[0.25em] text-center">Extras</th>
-                {!ehHoristaOuNoturno && <th className="px-3 py-4 text-[9px] font-black text-rose-500/60 uppercase tracking-[0.25em] text-center">Neg.</th>}
-                <th className="px-4 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Evento</th>
-                <th className="px-6 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-right opacity-60">Ação</th>
+              <tr className="bg-brand-bg/60 border-b border-brand-border/80">
+                <th className="px-6 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">Data</th>
+                <th className="px-3 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">E1 / S1</th>
+                <th className="px-3 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">E2 / S2</th>
+                <th className="px-3 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">E3 / S3</th>
+                <th className="px-3 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">Total</th>
+                <th className="px-3 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">Noturno</th>
+                {(funcionario?.tipo?.includes('Noturno')) && <th className="px-3 py-3.5 text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider text-center">Prorrog.</th>}
+                <th className="px-3 py-3.5 text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider text-center">Extras</th>
+                {!ehHoristaOuNoturno && <th className="px-3 py-3.5 text-[10px] font-extrabold text-rose-400 uppercase tracking-wider text-center">Débitos</th>}
+                <th className="px-4 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-center">Evento</th>
+                <th className="px-6 py-3.5 text-[10px] font-extrabold text-brand-muted uppercase tracking-wider text-right">Ação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-border bg-brand-surface/20">
@@ -995,8 +1037,8 @@ const Funcionario = () => {
                     const prorrogacaoDisplay = prorrogacaoLinhaMin > 0 ? fmt(prorrogacaoLinhaMin) : null;
 
                     return (
-                      <tr key={dateStr} className={`hover:bg-brand-bg/30 transition-colors ${isToday ? 'bg-brand-primary/10' : ''}`}>
-                        <td className="px-6 py-3 text-center relative group/date">
+                      <tr key={dateStr} className={`hover:bg-brand-surface/60 transition-colors ${isToday ? 'bg-emerald-500/[0.06] border-l-2 border-l-brand-primary' : ''}`}>
+                        <td className="px-6 py-3.5 text-center relative group/date">
                           {dailyCommentsMap[dateStr] && (
                             <div 
                               onClick={() => handleViewComment(dateStr)}
@@ -1006,57 +1048,94 @@ const Funcionario = () => {
                               <MessageSquare size={8} />
                             </div>
                           )}
-                          <p className="text-sm font-black text-brand-text italic mb-0.5">{day.toString().padStart(2, '0')}/{mes.toString().padStart(2, '0')}</p>
-                          <p className="text-[8px] text-brand-muted font-black uppercase tracking-widest opacity-50">{dateObj.toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '')}</p>
+                          <div className="flex flex-col items-center justify-center gap-0.5">
+                            <span className="text-sm font-extrabold text-brand-text font-mono tracking-tight">{day.toString().padStart(2, '0')}/{mes.toString().padStart(2, '0')}</span>
+                            <span className="text-[9px] font-bold text-brand-muted uppercase tracking-wider px-2 py-0.5 rounded bg-brand-bg border border-brand-border/50">{dateObj.toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '')}</span>
+                          </div>
                         </td>
-                        <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e1?.substring(0,5) || '—'}</span><span>{r.s1?.substring(0,5) || '—'}</span></div></td>
-                        <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e2?.substring(0,5) || '—'}</span><span>{r.s2?.substring(0,5) || '—'}</span></div></td>
-                        <td className="px-3 py-2 text-center text-xs font-black text-brand-text opacity-70"><div className="flex flex-col"><span>{r.e3?.substring(0,5) || '—'}</span><span>{r.s3?.substring(0,5) || '—'}</span></div></td>
-                        <td className="px-3 py-2 text-center text-xs font-black text-brand-text bg-brand-bg/20">{r.total || '—'}</td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-3 text-center text-xs font-mono font-medium text-brand-text/80"><div className="flex flex-col gap-0.5"><span>{r.e1?.substring(0,5) || '—'}</span><span>{r.s1?.substring(0,5) || '—'}</span></div></td>
+                        <td className="px-3 py-3 text-center text-xs font-mono font-medium text-brand-text/80"><div className="flex flex-col gap-0.5"><span>{r.e2?.substring(0,5) || '—'}</span><span>{r.s2?.substring(0,5) || '—'}</span></div></td>
+                        <td className="px-3 py-3 text-center text-xs font-mono font-medium text-brand-text/80"><div className="flex flex-col gap-0.5"><span>{r.e3?.substring(0,5) || '—'}</span><span>{r.s3?.substring(0,5) || '—'}</span></div></td>
+                        <td className="px-3 py-3 text-center text-xs">
+                          {r.total ? (
+                            <span className="px-2 py-1 rounded-md bg-brand-bg border border-brand-border/60 font-mono font-bold text-brand-text">{r.total}</span>
+                          ) : <span className="text-brand-muted/30 font-mono">—</span>}
+                        </td>
+                        <td className="px-3 py-3 text-center font-mono">
                           {noturnoLinhaMin > 0 ? (
-                            <span className="px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary text-[10px] font-black border border-brand-primary/20">
+                            <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">
                               {noturnoDisplay}
                             </span>
-                          ) : '—'}
+                          ) : <span className="text-brand-muted/30">—</span>}
                         </td>
                         {(funcionario?.tipo?.includes('Noturno')) && (
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-3 text-center font-mono">
                             {prorrogacaoDisplay ? (
-                              <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[10px] font-black border border-indigo-500/20">
+                              <span className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 text-xs font-bold border border-purple-500/20">
                                 {prorrogacaoDisplay}
                               </span>
-                            ) : <span className="text-brand-muted opacity-30">—</span>}
+                            ) : <span className="text-brand-muted/30">—</span>}
                           </td>
                         )}
-                        <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{displayExtras || '—'}</td>
-                        {!ehHoristaOuNoturno && <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{displayNegativos || '—'}</td>}
-                        <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
-                        <td className="px-6 py-2 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {dailyCommentsMap[dateStr] && (
-                                <button 
-                                  onClick={() => handleViewComment(dateStr)}
-                                  title="Ver comentários" 
-                                  className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"
-                                >
-                                  <MessageSquare size={14} />
-                                </button>
-                              )}
-                             {canComment && (
-                               <button 
-                                 onClick={() => {
-                                   setCommentData({ texto: '', tipo: 'DIARIO', data_referencia: dateStr });
-                                   setComentarioModalOpen(true);
-                                 }}
-                                 className="p-2 text-brand-muted hover:text-brand-primary transition-all"
-                               >
-                                 <PlusCircle size={14} />
-                               </button>
-                             )}
-                             <button onClick={() => handleEdit(r)} className="p-2 text-brand-muted hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"><Edit2 size={14} /></button>
-                           </div>
-                         </td>
+                        <td className="px-3 py-3 text-center font-mono text-xs">
+                          {displayExtras && displayExtras !== '00:00' ? (
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">
+                              {displayExtras}
+                            </span>
+                          ) : <span className="text-brand-muted/30">00:00</span>}
+                        </td>
+                        {!ehHoristaOuNoturno && (
+                          <td className="px-3 py-3 text-center font-mono text-xs">
+                            {displayNegativos && displayNegativos !== '00:00' ? (
+                              <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20">
+                                {displayNegativos}
+                              </span>
+                            ) : <span className="text-brand-muted/30">00:00</span>}
+                          </td>
+                        )}
+                        <td className="px-3 py-3 text-center">
+                          {r.evento ? (
+                            <span className={`px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase border shadow-sm ${
+                              r.evento === 'Falta' 
+                                ? 'bg-rose-500/15 text-rose-400 border-rose-500/30' 
+                                : r.evento === 'DSR' 
+                                ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                                : r.evento === 'Feriado'
+                                ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+                                : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                            }`}>
+                              {r.evento}
+                            </span>
+                          ) : <span className="text-brand-muted/20">—</span>}
+                        </td>
+                        <td className="px-6 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {dailyCommentsMap[dateStr] && (
+                              <button 
+                                onClick={() => handleViewComment(dateStr)}
+                                title="Ver anotações" 
+                                className="p-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"
+                              >
+                                <MessageSquare size={14} />
+                              </button>
+                            )}
+                            {canComment && (
+                              <button 
+                                onClick={() => {
+                                  setCommentData({ texto: '', tipo: 'DIARIO', data_referencia: dateStr });
+                                  setComentarioModalOpen(true);
+                                }}
+                                title="Adicionar anotação"
+                                className="p-2 text-brand-muted/70 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all"
+                              >
+                                <PlusCircle size={14} />
+                              </button>
+                            )}
+                            <button onClick={() => handleEdit(r)} title="Editar horários" className="p-2 text-brand-muted/70 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-all">
+                              <Edit2 size={14} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })
