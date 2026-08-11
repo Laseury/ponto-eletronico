@@ -1,20 +1,19 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   UserPlus, 
   Users, 
   ClipboardList, 
-  FileStack, 
-  Zap, 
   FileText, 
   History, 
   LogOut,
   ChevronRight,
   Sun,
   Moon,
-  Shield,
-  ShieldCheck
+  ShieldCheck,
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -39,6 +38,7 @@ const SidebarLink = ({ to, icon: Icon, label }) => (
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   const menuItems = {
     Admin: [
@@ -46,7 +46,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       { to: '/funcionarios', icon: Users, label: 'Funcionários' },
       { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
       { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
-
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
       { to: '/usuarios', icon: ShieldCheck, label: 'Gestão de Acessos' },
       { to: '/logs', icon: History, label: 'Logs do Sistema' },
@@ -56,7 +55,6 @@ const Sidebar = ({ isOpen, onClose }) => {
       { to: '/funcionarios', icon: Users, label: 'Funcionários' },
       { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
       { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
-
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
     ],
     Gestor: [
@@ -75,6 +73,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     currentMenu = currentMenu.filter(item => item.to !== '/logs');
   }
 
+  const showLancarHoras = ['Admin', 'RH'].includes(user?.perfil) || ['Admin', 'RH'].includes(user?.cargo);
+
   return (
     <>
       {/* Overlay para mobile */}
@@ -91,57 +91,81 @@ const Sidebar = ({ isOpen, onClose }) => {
         transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-      {/* Header / Logo */}
-      <div className="p-6 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center shadow-lg shadow-brand-primary/40">
-            <span className="text-white font-black text-lg italic">V</span>
+
+        {/* Header / Logo */}
+        <div className="p-6 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center shadow-lg shadow-brand-primary/40">
+              <span className="text-white font-black text-lg italic">V</span>
+            </div>
+            <div>
+              <h2 className="text-brand-text font-black text-lg tracking-tight leading-none mb-0.5">VISO PONTO</h2>
+              <p className="text-brand-muted text-[8px] uppercase font-black tracking-widest leading-none opacity-60">Hotelaria &amp; Gestão</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-brand-text font-black text-lg tracking-tight leading-none mb-0.5">VISO PONTO</h2>
-            <p className="text-brand-muted text-[8px] uppercase font-black tracking-widest leading-none opacity-60">Hotelaria & Gestão</p>
-          </div>
+
+          <button 
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-brand-bg border border-brand-border text-brand-muted hover:text-brand-primary hover:border-brand-primary/30 transition-all shadow-inner"
+            title="Alternar Tema"
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </div>
 
-        <button 
-          onClick={toggleTheme}
-          className="p-2.5 rounded-xl bg-brand-bg border border-brand-border text-brand-muted hover:text-brand-primary hover:border-brand-primary/30 transition-all shadow-inner"
-          title="Alternar Tema"
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar pt-6">
+          <p className="px-5 text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 opacity-40">Menu Principal</p>
+          
+          {currentMenu.map((item) => (
+            <SidebarLink key={item.to} {...item} />
+          ))}
+        </nav>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar pt-6">
-        <p className="px-5 text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 opacity-40">Menu Principal</p>
-        
-        {currentMenu.map((item) => (
-          <SidebarLink key={item.to} {...item} />
-        ))}
-      </nav>
+        {/* ─── Botão de Destaque: Lançar Hora Mês ─── */}
+        {showLancarHoras && (
+          <div className="px-4 py-3 border-t border-brand-border/50">
+            <p className="px-1 text-[9px] font-extrabold text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-40">Ação Rápida</p>
+            <button
+              onClick={() => navigate('/lancamento-horas')}
+              className="group w-full relative overflow-hidden flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-brand-primary to-teal-600 text-white font-bold text-xs uppercase tracking-wide shadow-lg shadow-brand-primary/30 hover:shadow-xl hover:shadow-brand-primary/40 hover:from-emerald-400 hover:to-teal-500 hover:scale-[1.02] transition-all duration-200"
+              title="Lançar Horas do Mês em Massa"
+            >
+              {/* Brilho decorativo */}
+              <div className="absolute -top-6 -right-6 w-20 h-20 bg-white/10 rounded-full blur-xl pointer-events-none" />
+              <div className="p-1.5 bg-white/20 rounded-lg shrink-0 group-hover:bg-white/30 transition-colors">
+                <Clock size={15} className="group-hover:rotate-12 transition-transform duration-300" />
+              </div>
+              <div className="flex flex-col items-start leading-tight relative z-10">
+                <span className="font-extrabold tracking-wide">Lançar Hora Mês</span>
+                <span className="text-[9px] font-medium text-white/70 normal-case tracking-normal mt-0.5">Lançamento em massa</span>
+              </div>
+              <ArrowRight size={14} className="ml-auto opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 relative z-10" />
+            </button>
+          </div>
+        )}
 
-      {/* Footer / User Profile */}
-      <div className="p-3 border-t border-brand-border">
-        <div className="bg-brand-bg/50 rounded-xl p-3 flex items-center gap-3 mb-3 border border-brand-border shadow-inner">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-primary to-brand-accent flex items-center justify-center text-white font-black text-xs shadow-lg">
-            {user?.nome?.charAt(0).toUpperCase()}
+        {/* Footer / User Profile */}
+        <div className="p-3 border-t border-brand-border">
+          <div className="bg-brand-bg/50 rounded-xl p-3 flex items-center gap-3 mb-3 border border-brand-border shadow-inner">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-primary to-brand-accent flex items-center justify-center text-white font-black text-xs shadow-lg">
+              {user?.nome?.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-brand-text font-black text-sm truncate leading-tight tracking-tight italic">{user?.nome}</p>
+              <p className="text-brand-muted text-[8px] font-black uppercase tracking-widest opacity-60 mt-0.5">{user?.cargo}</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-brand-text font-black text-sm truncate leading-tight tracking-tight italic">{user?.nome}</p>
-            <p className="text-brand-muted text-[8px] font-black uppercase tracking-widest opacity-60 mt-0.5">{user?.cargo}</p>
-          </div>
+
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-500 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 group border border-transparent hover:border-rose-500/20"
+          >
+            <LogOut size={18} className="transition-transform group-hover:scale-110" />
+            <span className="font-black uppercase tracking-widest text-[10px]">Sair do Sistema</span>
+          </button>
         </div>
-
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-500 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 group border border-transparent hover:border-rose-500/20"
-        >
-          <LogOut size={18} className="transition-transform group-hover:scale-110" />
-          <span className="font-black uppercase tracking-widest text-[10px]">Sair do Sistema</span>
-        </button>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 };
