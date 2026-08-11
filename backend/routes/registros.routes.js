@@ -1,12 +1,13 @@
 const express = require("express");
 const router  = express.Router();
 
-const { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro, loteEvento } = require("../controllers/registros.controller");
+const { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro, loteEvento, recalcularRegistrosFuncionario } = require("../controllers/registros.controller");
 
 router.get("/verificar", verificarRegistro); // ← adicione antes das outras
 router.get("/:funcionario_id", listarRegistros);
 router.post("/", salvarRegistro);
 router.post("/lote-evento", loteEvento);
+router.post("/recalcular/:funcionario_id", recalcularRegistrosFuncionario);
 router.put("/:id", salvarRegistro);
 router.delete("/:id", excluirRegistro);
 

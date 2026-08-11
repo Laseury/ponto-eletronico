@@ -54,6 +54,7 @@ model RegistroPonto {
   negativos     String?     @db.VarChar(10)
   evento        String?     @db.VarChar(20)
   noturno       String?     @db.VarChar(10)
+  prorrogacao   String?     @db.VarChar(10)
   funcionario   Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([funcionarioId, data])

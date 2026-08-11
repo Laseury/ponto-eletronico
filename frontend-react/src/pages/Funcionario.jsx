@@ -16,7 +16,9 @@ import {
   Trash2,
   Save,
   Users,
-  Sparkles
+  Sparkles,
+  RotateCcw,
+  RefreshCw
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
@@ -147,6 +149,96 @@ const Funcionario = () => {
   const [commentData, setCommentData] = useState({ texto: '', tipo: 'GERAL', data_referencia: null });
   const [ajusteData, setAjusteData] = useState({ valor: '+00:00', motivo: '', data: new Date().toISOString().slice(0, 7) });
   const [allFuncionarios, setAllFuncionarios] = useState([]);
+  
+  const [recalculating, setRecalculating] = useState(false);
+  const [editFuncModalOpen, setEditFuncModalOpen] = useState(false);
+  const [editFuncData, setEditFuncData] = useState({ nome: '', tipo: '', cargaDiaria: '07:20', cargaMensal: '220:00' });
+
+  const minToHHMM = (m) => {
+    if (m === null || m === undefined) return '07:20';
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  };
+
+  const hhmmToMin = (str) => {
+    if (!str) return 0;
+    const parts = str.split(':');
+    const h = parseInt(parts[0]) || 0;
+    const m = parseInt(parts[1]) || 0;
+    return (h * 60) + m;
+  };
+
+  const handleRecalcularHorarios = async () => {
+    if (!id) return;
+    setRecalculating(true);
+    try {
+      const res = await axios.post(`/registros/recalcular/${id}?mes=${mes}&ano=${ano}`);
+      await fetchFuncionarioData();
+      swalTheme({
+        title: 'Horários Atualizados!',
+        text: `Foram recalculados ${res.data.count} registros de ponto.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error(error);
+      swalTheme({ title: 'Erro!', text: 'Falha ao recalcular os horários.', icon: 'error' });
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
+  const handleOpenEditFunc = () => {
+    if (!funcionario) return;
+    const cd = funcionario.cargaHorariaDiaria || (funcionario.tipo === 'Horista' ? 480 : 440);
+    const cm = funcionario.cargaHorariaMensal || (funcionario.tipo === 'Horista' ? 14400 : 13200);
+    setEditFuncData({
+      nome: funcionario.nome,
+      tipo: funcionario.tipo,
+      cargaDiaria: minToHHMM(cd),
+      cargaMensal: minToHHMM(cm)
+    });
+    setEditFuncModalOpen(true);
+  };
+
+  const handleTipoChangeEditModal = (newTipo) => {
+    setEditFuncData(prev => {
+      let cd = prev.cargaDiaria;
+      let cm = prev.cargaMensal;
+      if (newTipo === 'Mensalista') {
+        cd = '07:20';
+        cm = '220:00';
+      } else if (newTipo === 'Horista') {
+        cd = '08:00';
+        cm = '240:00';
+      } else if (newTipo === 'Horista Noturno') {
+        cd = '07:20';
+        cm = '220:00';
+      }
+      return { ...prev, tipo: newTipo, cargaDiaria: cd, cargaMensal: cm };
+    });
+  };
+
+  const handleSaveFunc = async () => {
+    if (!editFuncData.nome) return swalTheme({ title: 'Atenção', text: 'Nome é obrigatório.', icon: 'warning' });
+    try {
+      await axios.put(`/funcionarios/${id}`, {
+        nome: editFuncData.nome,
+        tipo: editFuncData.tipo,
+        cargaHorariaDiaria: hhmmToMin(editFuncData.cargaDiaria),
+        cargaHorariaMensal: hhmmToMin(editFuncData.cargaMensal)
+      });
+      // Recalcular horários automaticamente
+      await axios.post(`/registros/recalcular/${id}`);
+      setEditFuncModalOpen(false);
+      fetchFuncionarioData();
+      swalTheme({ title: 'Sucesso!', text: 'Dados e horários do colaborador atualizados.', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error) {
+      swalTheme({ title: 'Erro!', text: 'Falha ao salvar as alterações do colaborador.', icon: 'error' });
+    }
+  };
 
   const canEdit = useMemo(() => ['Admin', 'Gestor', 'Contador', 'RH'].includes(user?.perfil), [user]);
   const canComment = true;
@@ -270,6 +362,17 @@ const Funcionario = () => {
     return intersection(e, s, 1320, 1740) + intersection(e, s, -120, 300);
   };
 
+  const calcProrrogacao = (ent, sai) => {
+    if (!ent || !sai) return 0;
+    let e = min(ent); let s = min(sai);
+    if (s < e) s += 1440;
+    const startsInNight = (e >= 1320 || e < 300);
+    if (!startsInNight) return 0;
+    if (e >= 1320 && s > 1740) return s - 1740;
+    if (e < 300 && s > 300) return s - 300;
+    return 0;
+  };
+
   const fmt = (m) => {
     const absM = Math.abs(m);
     const h = Math.floor(absM / 60).toString().padStart(2, '0');
@@ -278,9 +381,10 @@ const Funcionario = () => {
   };
 
   const analytics = useMemo(() => {
-    const stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0, ajustesPos: 0, ajustesNeg: 0 };
+    const stats = { extras: 0, negativos: 0, faltas: 0, trabalhado: 0, noturno: 0, noturnoPuro: 0, prorrogacao: 0, feriados: 0, dias_feriados: 0, dias_dsr: 0, ajustesPos: 0, ajustesNeg: 0 };
     registros.forEach(r => {
-      const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
+      const ehHoristaOuNoturnoLocal = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
+      const diaria = ehHoristaOuNoturnoLocal ? 480 : (funcionario?.cargaHorariaDiaria || 440);
 
       // Ler extras/negativos diretamente dos campos gravados pelo registros.controller
       // (lógica correta: DSR/Folga/Feriado/Atestado não geram débito automático)
@@ -313,9 +417,12 @@ const Funcionario = () => {
       }
 
       if (r.noturno) stats.noturno += min(r.noturno);
-      stats.noturnoPuro += calcNoturnoPuro(r.e1, r.s1);
-      stats.noturnoPuro += calcNoturnoPuro(r.e2, r.s2);
-      stats.noturnoPuro += calcNoturnoPuro(r.e3, r.s3);
+      stats.noturnoPuro += calcNoturnoPuro(r.e1, r.s1) + calcProrrogacao(r.e1, r.s1);
+      stats.noturnoPuro += calcNoturnoPuro(r.e2, r.s2) + calcProrrogacao(r.e2, r.s2);
+      stats.noturnoPuro += calcNoturnoPuro(r.e3, r.s3) + calcProrrogacao(r.e3, r.s3);
+      stats.prorrogacao += calcProrrogacao(r.e1, r.s1);
+      stats.prorrogacao += calcProrrogacao(r.e2, r.s2);
+      stats.prorrogacao += calcProrrogacao(r.e3, r.s3);
     });
 
     // Incorporar ajustes do mês atual
@@ -339,7 +446,8 @@ const Funcionario = () => {
       return `${h}:${mm}`;
     };
     const saldo = (stats.extras - stats.negativos) + (stats.ajustesPos - stats.ajustesNeg);
-    const diaria = funcionario?.tipo === 'Horista Noturno' ? 440 : (funcionario?.cargaHorariaDiaria || (funcionario?.tipo === 'Horista' ? 480 : 440));
+    const ehHOristaOuNotLocal = funcionario?.tipo === 'Horista' || funcionario?.tipo === 'Horista Noturno';
+    const diaria = ehHOristaOuNotLocal ? 480 : (funcionario?.cargaHorariaDiaria || 440);
     
     // Carga Mensal = (Dias do Mês - DSR - Feriados) * Carga Diária
     const totalDiasMes = new Date(ano, mes, 0).getDate();
@@ -359,6 +467,8 @@ const Funcionario = () => {
       saldo: saldo === 0 ? '00:00' : (saldo > 0 ? `+${fmt(saldo)}` : `-${fmt(saldo)}`),
       saldoMin: saldo,
       noturno: fmt(stats.noturnoPuro),
+      prorrogacao: fmt(stats.prorrogacao),
+      prorrogacaoMin: stats.prorrogacao,
       diurno: fmt(diurnoMin),
       noturnoComFator: fmt(noturnoFatorMin),
       baseCalculo: fmt(baseCalculoMin),
@@ -718,6 +828,11 @@ const Funcionario = () => {
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <h1 className="text-2xl font-black text-brand-text tracking-tight flex items-center gap-3 italic">
                 {funcionario?.nome}
+                {canEdit && (
+                  <button onClick={handleOpenEditFunc} title="Editar Cadastro e Cargas Horárias" className="p-1 text-brand-muted hover:text-brand-primary transition-colors">
+                    <Edit2 size={16} />
+                  </button>
+                )}
                 <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-full border tracking-widest ${funcionario?.ativo !== false ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
                   {funcionario?.ativo !== false ? 'Ativo' : 'Inativo'}
                 </span>
@@ -750,6 +865,17 @@ const Funcionario = () => {
               {[2024, 2025, 2026].map(a => (<option key={a} value={a} className="bg-brand-surface">{a}</option>))}
             </select>
           </div>
+          {canEdit && (
+            <button 
+              onClick={handleRecalcularHorarios}
+              disabled={recalculating}
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-black py-3 px-5 rounded-xl shadow-lg shadow-amber-500/20 transition-all text-[9px] uppercase tracking-widest disabled:opacity-50"
+              title="Recalcular todos os horários e saldos do colaborador para o período selecionado"
+            >
+              <RotateCcw size={15} className={recalculating ? "animate-spin" : ""} />
+              {recalculating ? "Atualizando..." : "Atualizar Horários"}
+            </button>
+          )}
           {canEdit && (
             <button 
               onClick={handleToggleAtivo}
@@ -840,6 +966,7 @@ const Funcionario = () => {
                 <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">E3 / S3</th>
                 <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Total</th>
                 <th className="px-3 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Noturno</th>
+                {(funcionario?.tipo?.includes('Noturno')) && <th className="px-3 py-4 text-[9px] font-black text-indigo-400/80 uppercase tracking-[0.25em] text-center">Prorrog.</th>}
                 <th className="px-3 py-4 text-[9px] font-black text-brand-accent/60 uppercase tracking-[0.25em] text-center">Extras</th>
                 {!ehHoristaOuNoturno && <th className="px-3 py-4 text-[9px] font-black text-rose-500/60 uppercase tracking-[0.25em] text-center">Neg.</th>}
                 <th className="px-4 py-4 text-[9px] font-black text-brand-muted uppercase tracking-[0.25em] text-center opacity-60">Evento</th>
@@ -855,17 +982,17 @@ const Funcionario = () => {
                   const mapa = {}; registros.forEach(r => mapa[r.data.substring(0, 10)] = r);
                   return Array.from({length: daysInMonth}, (_, i) => {
                     const day = i + 1; const dateStr = `${ano}-${mes.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                    const r = mapa[dateStr] || { data: dateStr, e1: '', s1: '', e2: '', s2: '', e3: '', s3: '', extras: '', negativos: '', total: '', noturno: '', evento: '' };
+                    const r = mapa[dateStr] || { data: dateStr, e1: '', s1: '', e2: '', s2: '', e3: '', s3: '', extras: '', negativos: '', total: '', noturno: '', prorrogacao: '', evento: '' };
                     const isToday = new Date().toISOString().substring(0, 10) === dateStr;
                     const dateObj = new Date(dateStr + 'T12:00:00');
 
-                    // Usar os campos extras/negativos gravados no banco pelo registros.controller
-                    // (lógica correta: DSR/Folga/Feriado/Atestado não geram débito automático)
                     const displayExtras    = r.extras    || '';
                     const displayNegativos = r.negativos || '';
 
-                    const noturnoLinhaMin = calcNoturnoPuro(r.e1, r.s1) + calcNoturnoPuro(r.e2, r.s2) + calcNoturnoPuro(r.e3, r.s3);
+                    const noturnoLinhaMin = calcNoturnoPuro(r.e1, r.s1) + calcProrrogacao(r.e1, r.s1) + calcNoturnoPuro(r.e2, r.s2) + calcProrrogacao(r.e2, r.s2) + calcNoturnoPuro(r.e3, r.s3) + calcProrrogacao(r.e3, r.s3);
+                    const prorrogacaoLinhaMin = calcProrrogacao(r.e1, r.s1) + calcProrrogacao(r.e2, r.s2) + calcProrrogacao(r.e3, r.s3);
                     const noturnoDisplay = noturnoLinhaMin > 0 ? fmt(noturnoLinhaMin) : '—';
+                    const prorrogacaoDisplay = prorrogacaoLinhaMin > 0 ? fmt(prorrogacaoLinhaMin) : null;
 
                     return (
                       <tr key={dateStr} className={`hover:bg-brand-bg/30 transition-colors ${isToday ? 'bg-brand-primary/10' : ''}`}>
@@ -893,6 +1020,15 @@ const Funcionario = () => {
                             </span>
                           ) : '—'}
                         </td>
+                        {(funcionario?.tipo?.includes('Noturno')) && (
+                          <td className="px-3 py-2 text-center">
+                            {prorrogacaoDisplay ? (
+                              <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[10px] font-black border border-indigo-500/20">
+                                {prorrogacaoDisplay}
+                              </span>
+                            ) : <span className="text-brand-muted opacity-30">—</span>}
+                          </td>
+                        )}
                         <td className="px-3 py-2 text-center text-xs font-black text-brand-accent">{displayExtras || '—'}</td>
                         {!ehHoristaOuNoturno && <td className="px-3 py-2 text-center text-xs font-black text-rose-400">{displayNegativos || '—'}</td>}
                         <td className="px-3 py-2 text-center">{r.evento && (<span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${r.evento === 'Falta' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'}`}>{r.evento}</span>)}</td>
@@ -947,8 +1083,9 @@ const Funcionario = () => {
            <div className="bg-brand-surface border border-brand-border rounded-[3rem] p-8 shadow-xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity"><Moon size={150} /></div>
               <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 flex items-center gap-3 opacity-60"><Moon size={20} className="text-brand-primary" /> Resumo Noturno</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8">
                 <div className="bg-brand-primary/10 border border-brand-primary/20 p-4 rounded-2xl"><p className="text-[10px] font-black text-brand-primary uppercase mb-2 flex items-center gap-2"><Moon size={12} /> Noturnas</p><p className="text-xl font-black text-brand-text">{analytics.noturno}</p></div>
+                <div className="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl"><p className="text-[10px] font-black text-indigo-400 uppercase mb-2 flex items-center gap-2"><Moon size={12} /> Prorrogação</p><p className="text-xl font-black text-brand-text">{analytics.prorrogacaoMin > 0 ? analytics.prorrogacao : '—'}</p></div>
                 <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl"><p className="text-[10px] font-black text-amber-500 uppercase mb-2 flex items-center gap-2"><Sun size={12} /> Diurnas</p><p className="text-xl font-black text-brand-text">{analytics.diurno}</p></div>
                 <div className="bg-brand-accent/10 border border-brand-accent/20 p-4 rounded-2xl"><p className="text-[10px] font-black text-brand-accent uppercase mb-2">Fator Legal</p><p className="text-xl font-black text-brand-text">{analytics.noturnoComFator}</p></div>
               </div>
@@ -1158,6 +1295,73 @@ const Funcionario = () => {
               <button onClick={() => setAjusteModalOpen(false)} className="flex-1 py-5 bg-brand-bg text-brand-muted font-black rounded-2xl border border-brand-border transition-all uppercase text-[10px] tracking-widest">Cancelar</button>
               <button onClick={handleAddAjuste} className="flex-1 py-5 bg-brand-accent text-white font-black rounded-2xl shadow-xl transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
                 <Save size={14} /> Aplicar Ajuste
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Cadastro do Colaborador */}
+      {editFuncModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-bg/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-brand-surface border border-brand-border w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-brand-border flex justify-between items-center bg-brand-surface/30">
+              <h3 className="text-lg font-black text-brand-text flex items-center gap-2 tracking-tight italic">
+                <Edit2 size={18} className="text-brand-primary" /> Editar Colaborador
+              </h3>
+              <button onClick={() => setEditFuncModalOpen(false)} className="p-2 hover:bg-brand-bg rounded-lg text-brand-muted transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60">Nome Completo</label>
+                <input 
+                  type="text" 
+                  value={editFuncData.nome}
+                  onChange={(e) => setEditFuncData({...editFuncData, nome: e.target.value})}
+                  className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60">Tipo de Contrato</label>
+                <select 
+                  value={editFuncData.tipo}
+                  onChange={(e) => handleTipoChangeEditModal(e.target.value)}
+                  className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all shadow-inner"
+                >
+                  <option value="Mensalista">Mensalista</option>
+                  <option value="Horista">Horista</option>
+                  <option value="Horista Noturno">Horista Noturno</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60">Carga Diária</label>
+                  <input 
+                    type="text" 
+                    placeholder="07:20"
+                    value={editFuncData.cargaDiaria}
+                    onChange={(e) => setEditFuncData({...editFuncData, cargaDiaria: e.target.value})}
+                    className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all text-center shadow-inner"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-60">Carga Mensal</label>
+                  <input 
+                    type="text" 
+                    placeholder="220:00"
+                    value={editFuncData.cargaMensal}
+                    onChange={(e) => setEditFuncData({...editFuncData, cargaMensal: e.target.value})}
+                    className="w-full bg-brand-bg border border-brand-border rounded-xl px-4 py-3 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 transition-all text-center shadow-inner"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-brand-bg/40 flex gap-4 border-t border-brand-border">
+              <button onClick={() => setEditFuncModalOpen(false)} className="flex-1 py-3.5 bg-brand-bg hover:bg-brand-surface text-brand-muted font-black rounded-xl border border-brand-border transition-all uppercase text-[10px] tracking-widest">Cancelar</button>
+              <button onClick={handleSaveFunc} className="flex-1 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-xl shadow-xl shadow-brand-primary/20 transition-all uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
+                <Save size={14} /> Salvar & Recalcular
               </button>
             </div>
           </div>

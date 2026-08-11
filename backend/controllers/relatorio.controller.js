@@ -45,21 +45,24 @@ async function gerarRelatorio(req, res) {
                     ELSE 0 END
                 ) AS total_noturno_min,
                 SUM(
+                    CASE WHEN r.prorrogacao LIKE '%:%'
+                    THEN CAST(SPLIT_PART(r.prorrogacao,':',1) AS INT)*60 +
+                         CAST(SPLIT_PART(r.prorrogacao,':',2) AS INT)
+                    ELSE 0 END
+                ) AS total_prorrogacao_min,
+                SUM(
                     CASE 
                         WHEN r.total LIKE '%:%' AND (r.evento IS NULL OR r.evento NOT IN ('DSR', 'Feriado', 'Folga Feriado', 'Pago')) 
                         THEN CAST(SPLIT_PART(r.total,':',1) AS INT)*60 + CAST(SPLIT_PART(r.total,':',2) AS INT)
                         
                         WHEN (r.total IS NULL OR r.total = '') AND r.evento IN ('Folga', 'Folga Domingo', 'Atestado', 'Ferias', 'Férias', 'Declaração', 'Declaracao') 
-                        THEN CASE 
-                            WHEN f.tipo = 'Horista Noturno' THEN 440
-                            ELSE COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
-                        END
+                        THEN COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
                         ELSE 0 
                     END
                 ) AS total_trabalhado_min,
                 SUM(
                     CASE WHEN r.evento = 'Feriado'
-                    THEN COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo = 'Horista' THEN 480 ELSE 440 END)
+                    THEN COALESCE(f.carga_horaria_diaria, CASE WHEN f.tipo IN ('Horista', 'Horista Noturno') THEN 480 ELSE 440 END)
                     ELSE 0 END
                 ) AS total_feriado_min
             FROM funcionarios f
@@ -157,10 +160,11 @@ async function gerarRelatorio(req, res) {
         }
 
         const relatorio = resultado.map(function (row) {
-            const extrasMin    = Number(row.total_extras_min || 0);
-            const negativosMin = Number(row.total_negativos_min || 0);
-            const noturnoMin   = Number(row.total_noturno_min || 0);
-            const trabMin      = Number(row.total_trabalhado_min || 0);
+            const extrasMin       = Number(row.total_extras_min || 0);
+            const negativosMin    = Number(row.total_negativos_min || 0);
+            const noturnoMin      = Number(row.total_noturno_min || 0);
+            const prorrogacaoMin  = Number(row.total_prorrogacao_min || 0);
+            const trabMin         = Number(row.total_trabalhado_min || 0);
             const aj = ajustesMap[row.id] || { pos: 0, neg: 0, mesPos: 0, mesNeg: 0 };
             const saldoMesMin  = (extrasMin - negativosMin) + (aj.mesPos - aj.mesNeg);
             const diurnoMin    = Math.max(0, trabMin - noturnoMin);
@@ -189,14 +193,14 @@ async function gerarRelatorio(req, res) {
                 banco_horas:      formatarSaldo(bancoMin),
                 ciclo:            `${mesInicioCiclo <= 6 ? "Jan–Jun" : "Jul–Dez"} ${ano}`,
                 total_noturno:    minutosParaHorario(noturnoMin),
+                total_prorrogacao: minutosParaHorario(prorrogacaoMin),
                 total_diurno:     minutosParaHorario(diurnoMin),
                 total_trabalhado: minutosParaHorario(trabMin),
                 carga_mensal:     minutosParaHorario((function() {
                     const totalDias = new Date(ano, mes, 0).getDate();
                     const diasDSR = Number(row.dias_dsr || 0);
                     const diasFeriado = Number(row.dias_feriados || 0);
-                    let cargaDiaria = Number(row.carga_horaria_diaria || (row.tipo === 'Horista' ? 480 : 440));
-                    if (row.tipo === 'Horista Noturno') cargaDiaria = 440;
+                    let cargaDiaria = Number(row.carga_horaria_diaria || ((row.tipo === 'Horista' || row.tipo === 'Horista Noturno') ? 480 : 440));
                     return (totalDias - diasDSR - diasFeriado) * cargaDiaria;
                 })()),
                 valor_noturno:    valorNoturno,

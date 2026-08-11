@@ -22,21 +22,37 @@ function minutosParaHorario(minutos) {
     return `${String(horas).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
-function calcularNoturno(entrada, saida) {
-    if (!entrada || !saida) return 0;
+function calcularNoturnoEProrrogacao(entrada, saida) {
+    if (!entrada || !saida) return { noturno: 0, prorrogacao: 0 };
 
-    let minEntrada = calcularMinutos(entrada);
-    let minSaida   = calcularMinutos(saida);
-    if (minSaida < minEntrada) minSaida += 1440;
+    let e = calcularMinutos(entrada);
+    let s = calcularMinutos(saida);
+    if (s < e) s += 1440;
 
-    const entradaNoPeriodo = minEntrada >= 22 * 60 || minEntrada < 5 * 60;
-    if (entradaNoPeriodo) {
-        return minSaida - minEntrada;
+    const intersection = (s1, e1, s2, e2) => {
+        const start = Math.max(s1, s2);
+        const end = Math.min(e1, e2);
+        return end > start ? end - start : 0;
+    };
+
+    let regularNoturno = intersection(e, s, 1320, 1740) + intersection(e, s, -120, 300);
+    let prorrogacao = 0;
+
+    const startsInNight = (e >= 1320 || e < 300);
+    if (startsInNight) {
+        if (e >= 1320 && s > 1740) {
+            prorrogacao = s - 1740;
+        } else if (e < 300 && s > 300) {
+            prorrogacao = s - 300;
+        }
     }
 
-    const NOTURNO_INICIO = 22 * 60;
-    const inicio = Math.max(minEntrada, NOTURNO_INICIO);
-    return minSaida > NOTURNO_INICIO ? minSaida - inicio : 0;
+    return { noturno: regularNoturno, prorrogacao };
+}
+
+function calcularNoturno(entrada, saida) {
+    const res = calcularNoturnoEProrrogacao(entrada, saida);
+    return res.noturno + res.prorrogacao;
 }
 
 // Adaptadores para Prisma (Time -> Date e Date -> String HH:mm)
@@ -118,7 +134,7 @@ async function salvarRegistro(req, res) {
 
         const ehHoristaOuNoturno = tipo === "Horista" || tipo === "Horista Noturno";
         const ehHorista = tipo === "Horista"; 
-        const cargaMinutos = tipo === "Horista Noturno" ? 440 : (func.cargaHorariaDiaria || (ehHorista ? 480 : 440));
+        const cargaMinutos = func.cargaHorariaDiaria || (tipo === "Horista" ? 480 : 440);
 
         let extrasMinutos = 0;
         let negativosMinutos = 0;
@@ -152,10 +168,15 @@ async function salvarRegistro(req, res) {
         const extras = extrasMinutos > 0 ? "+" + minutosParaHorario(extrasMinutos) : "00:00";
         const negativos = negativosMinutos > 0 ? "-" + minutosParaHorario(negativosMinutos) : "00:00";
 
-        const noturnoMin = calcularNoturno(e1, s1)
-            + calcularNoturno(e2, s2)
-            + calcularNoturno(e3, s3);
+        const t1 = calcularNoturnoEProrrogacao(e1, s1);
+        const t2 = calcularNoturnoEProrrogacao(e2, s2);
+        const t3 = calcularNoturnoEProrrogacao(e3, s3);
+
+        const noturnoMin = t1.noturno + t1.prorrogacao + t2.noturno + t2.prorrogacao + t3.noturno + t3.prorrogacao;
+        const prorrogacaoMin = t1.prorrogacao + t2.prorrogacao + t3.prorrogacao;
+
         const noturno = minutosParaHorario(noturnoMin);
+        const prorrogacao = minutosParaHorario(prorrogacaoMin);
 
         // Prisma Upsert
         const parsedData = new Date(data);
@@ -179,7 +200,8 @@ async function salvarRegistro(req, res) {
             total,
             extras,
             negativos,
-            noturno
+            noturno,
+            prorrogacao
         };
 
         const resultado = await prisma.registroPonto.upsert({
@@ -303,7 +325,7 @@ async function loteEvento(req, res) {
             if (!func) continue;
 
             const ehHoristaOuNoturno = func.tipo === "Horista" || func.tipo === "Horista Noturno";
-            const cargaMinutos = func.tipo === "Horista Noturno" ? 440 : (func.cargaHorariaDiaria || (func.tipo === "Horista" ? 480 : 440));
+            const cargaMinutos = func.cargaHorariaDiaria || (func.tipo === "Horista" ? 480 : 440);
 
             let current = new Date(data_inicio);
             const end = new Date(data_fim);
@@ -324,6 +346,7 @@ async function loteEvento(req, res) {
                     extras,
                     negativos,
                     noturno: "00:00",
+                    prorrogacao: "00:00",
                     e1: null, s1: null, e2: null, s2: null, e3: null, s3: null
                 };
 
@@ -344,4 +367,107 @@ async function loteEvento(req, res) {
         res.status(500).json({ erro: erro.message });
     }
 }
-module.exports = { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro, loteEvento };
+
+async function recalcularRegistrosFuncionario(req, res) {
+    try {
+        const funcionario_id = parseInt(req.params.funcionario_id);
+        const mes = req.query.mes ? parseInt(req.query.mes) : null;
+        const ano = req.query.ano ? parseInt(req.query.ano) : null;
+
+        const func = await prisma.funcionario.findUnique({
+            where: { id: funcionario_id },
+            select: { tipo: true, cargaHorariaDiaria: true }
+        });
+
+        if (!func) {
+            return res.status(404).json({ erro: "Funcionário não encontrado" });
+        }
+
+        const where = { funcionarioId: funcionario_id };
+        if (mes && ano) {
+            where.data = {
+                gte: new Date(ano, mes - 1, 1),
+                lt:  new Date(ano, mes, 1)
+            };
+        }
+
+        const registros = await prisma.registroPonto.findMany({ where });
+
+        const tipo = func.tipo;
+        const ehHoristaOuNoturno = tipo === "Horista" || tipo === "Horista Noturno";
+        const cargaMinutos = func.cargaHorariaDiaria || (tipo === "Horista" ? 480 : 440);
+
+        let atualizadosCount = 0;
+
+        for (const r of registros) {
+            const e1 = formatTime(r.e1);
+            const s1 = formatTime(r.s1);
+            const e2 = formatTime(r.e2);
+            const s2 = formatTime(r.s2);
+            const e3 = formatTime(r.e3);
+            const s3 = formatTime(r.s3);
+            const evento = r.evento;
+
+            let totalMinutos = 0;
+            totalMinutos += calcularTurno(e1, s1);
+            totalMinutos += calcularTurno(e2, s2);
+            totalMinutos += calcularTurno(e3, s3);
+
+            let extrasMinutos = 0;
+            let negativosMinutos = 0;
+
+            if (evento === "Férias" || evento === "Ferias" || evento === "Atestado" || evento === "Declaração" || evento === "Declaracao" || evento === "Folga" || evento === "Folga Domingo" || evento === "DSR") {
+                negativosMinutos = 0;
+                extrasMinutos = totalMinutos;
+            } else if (evento === "Feriado" || evento === "Folga Feriado" || evento === "Pago") {
+                negativosMinutos = 0;
+                extrasMinutos = 0;
+            } else if (evento === "Falta" || evento === "Folga Banco") {
+                negativosMinutos = ehHoristaOuNoturno ? 0 : cargaMinutos;
+                extrasMinutos = 0;
+                totalMinutos = 0;
+            } else {
+                if (totalMinutos > cargaMinutos) {
+                    extrasMinutos = totalMinutos - cargaMinutos;
+                    negativosMinutos = 0;
+                } else if (totalMinutos < cargaMinutos) {
+                    extrasMinutos = 0;
+                    negativosMinutos = ehHoristaOuNoturno ? 0 : (cargaMinutos - totalMinutos);
+                }
+            }
+
+            const total = totalMinutos > 0 ? minutosParaHorario(totalMinutos) : null;
+            const extras = extrasMinutos > 0 ? "+" + minutosParaHorario(extrasMinutos) : "00:00";
+            const negativos = negativosMinutos > 0 ? "-" + minutosParaHorario(negativosMinutos) : "00:00";
+
+            const t1 = calcularNoturnoEProrrogacao(e1, s1);
+            const t2 = calcularNoturnoEProrrogacao(e2, s2);
+            const t3 = calcularNoturnoEProrrogacao(e3, s3);
+
+            const noturnoMin = t1.noturno + t1.prorrogacao + t2.noturno + t2.prorrogacao + t3.noturno + t3.prorrogacao;
+            const prorrogacaoMin = t1.prorrogacao + t2.prorrogacao + t3.prorrogacao;
+
+            const noturno = minutosParaHorario(noturnoMin);
+            const prorrogacao = minutosParaHorario(prorrogacaoMin);
+
+            await prisma.registroPonto.update({
+                where: { id: r.id },
+                data: {
+                    total,
+                    extras,
+                    negativos,
+                    noturno,
+                    prorrogacao
+                }
+            });
+            atualizadosCount++;
+        }
+
+        res.json({ mensagem: "Registros recalculados com sucesso", count: atualizadosCount });
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message });
+    }
+}
+
+module.exports = { listarRegistros, salvarRegistro, verificarRegistro, excluirRegistro, loteEvento, recalcularRegistrosFuncionario };
+

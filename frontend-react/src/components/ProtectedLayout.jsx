@@ -223,21 +223,38 @@ const ProtectedLayout = () => {
   };
 
   const HourCalculator = () => {
+    const [calcMode, setCalcMode] = React.useState('somador'); // 'somador' | 'conversor'
     const [entries, setEntries] = React.useState([{ val: '', op: '+' }]);
     
+    // Converter HH:MM ou Decimal para minutos
     const parse = (str) => {
-      if (!str || !str.includes(':')) return 0;
-      const parts = str.split(':');
-      const h = parseInt(parts[0]) || 0;
-      const m = parseInt(parts[1]) || 0;
-      return (h * 60) + m;
+      if (!str) return 0;
+      const clean = str.trim();
+      if (clean.includes(':')) {
+        const parts = clean.split(':');
+        const h = parseInt(parts[0]) || 0;
+        const m = parseInt(parts[1]) || 0;
+        return (h * 60) + m;
+      }
+      // Se não tem ':', tentar parse de número decimal (ex: 7.5 ou 7,5)
+      const numStr = clean.replace(',', '.');
+      const num = parseFloat(numStr);
+      if (!isNaN(num)) {
+        return Math.round(num * 60);
+      }
+      return 0;
     };
 
-    const format = (min) => {
+    const formatHHMM = (min) => {
       const abs = Math.abs(min);
       const h = Math.floor(abs / 60);
       const m = abs % 60;
-      return `${min < 0 ? '-' : ''}${h}:${m.toString().padStart(2, '0')}`;
+      return `${min < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
+    const formatDecimal = (min) => {
+      const dec = (min / 60).toFixed(2).replace('.', ',');
+      return `${dec}h`;
     };
 
     const totalMin = entries.reduce((acc, curr) => {
@@ -253,56 +270,146 @@ const ProtectedLayout = () => {
     };
     const removeEntry = (i) => i > 0 && setEntries(entries.filter((_, idx) => idx !== i));
 
+    // Estados do Conversor Rápido
+    const [inputTime, setInputTime] = React.useState('');
+    const [inputDec, setInputDec] = React.useState('');
+
+    // Conversões instantâneas
+    const convertedDec = React.useMemo(() => {
+      const m = parse(inputTime);
+      if (!inputTime || m === 0 && !inputTime.includes('0')) return '—';
+      return (m / 60).toFixed(2).replace('.', ',');
+    }, [inputTime]);
+
+    const convertedHHMM = React.useMemo(() => {
+      if (!inputDec) return '—';
+      const num = parseFloat(inputDec.replace(',', '.'));
+      if (isNaN(num)) return '—';
+      const totalM = Math.round(num * 60);
+      return formatHHMM(totalM);
+    }, [inputDec]);
+
     if (!calcOpen) return null;
 
     return (
-      <div className="fixed bottom-6 right-6 w-80 bg-brand-surface border border-brand-border rounded-[2rem] shadow-2xl z-[100] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-300">
+      <div className="fixed bottom-6 right-6 w-84 bg-brand-surface border border-brand-border rounded-[2rem] shadow-2xl z-[100] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-300">
+        {/* Cabeçalho */}
         <div className="p-4 bg-brand-primary text-white flex justify-between items-center">
-          <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Calculator size={14}/> Calculadora de Horas</h4>
+          <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Calculator size={14}/> Calculadora do Ponto</h4>
           <button onClick={() => setCalcOpen(false)} className="hover:bg-white/20 p-1 rounded-lg transition-colors"><X size={16}/></button>
         </div>
-        <div className="p-4 max-h-60 overflow-y-auto space-y-3 custom-scrollbar">
-          {entries.map((e, i) => (
-            <div key={i} className="flex items-center gap-2">
-              {i > 0 ? (
-                <button 
-                  onClick={() => updateEntry(i, 'op', e.op === '+' ? '-' : '+')}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-black transition-colors ${e.op === '+' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-rose-500/10 text-rose-500'}`}
-                >
-                  {e.op === '+' ? <Plus size={12}/> : <Minus size={12}/>}
-                </button>
-              ) : (
-                <div className="w-8 h-8 flex items-center justify-center text-brand-muted opacity-30"><Plus size={12}/></div>
-              )}
-              <input 
-                type="text" 
-                placeholder="00:00"
-                value={e.val}
-                onChange={(e) => updateEntry(i, 'val', e.target.value)}
-                className="flex-1 bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-sm font-black text-brand-text outline-none focus:ring-2 focus:ring-brand-primary/20"
-              />
-              {i > 0 && (
-                <button onClick={() => removeEntry(i)} className="text-brand-muted hover:text-rose-500 transition-colors"><X size={14}/></button>
-              )}
-            </div>
-          ))}
+
+        {/* Abas */}
+        <div className="flex border-b border-brand-border bg-brand-bg/40 p-1 gap-1">
           <button 
-            onClick={addEntry}
-            className="w-full py-2 border-2 border-dashed border-brand-border rounded-xl text-[10px] font-black text-brand-muted uppercase tracking-widest hover:border-brand-primary/50 hover:text-brand-primary transition-all mt-2"
+            onClick={() => setCalcMode('somador')}
+            className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all ${calcMode === 'somador' ? 'bg-brand-surface text-brand-primary shadow-sm border border-brand-border' : 'text-brand-muted hover:text-brand-text'}`}
           >
-            + Adicionar Linha
+            Somador (HH:mm / Dec)
+          </button>
+          <button 
+            onClick={() => setCalcMode('conversor')}
+            className={`flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all ${calcMode === 'conversor' ? 'bg-brand-surface text-brand-primary shadow-sm border border-brand-border' : 'text-brand-muted hover:text-brand-text'}`}
+          >
+            Conversor Decimal
           </button>
         </div>
-        <div className="p-4 bg-brand-bg/50 border-t border-brand-border">
-          <div className="flex justify-between items-center mb-2">
-             <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Total Calculado</span>
-             <button onClick={() => setEntries([{ val: '', op: '+' }])} className="text-brand-muted hover:text-brand-primary transition-colors" title="Limpar"><RotateCcw size={12}/></button>
+
+        {/* Conteúdo Aba Somador */}
+        {calcMode === 'somador' && (
+          <>
+            <div className="p-4 max-h-56 overflow-y-auto space-y-2.5 custom-scrollbar">
+              {entries.map((e, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  {i > 0 ? (
+                    <button 
+                      onClick={() => updateEntry(i, 'op', e.op === '+' ? '-' : '+')}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center font-black transition-colors ${e.op === '+' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-rose-500/10 text-rose-500'}`}
+                    >
+                      {e.op === '+' ? <Plus size={12}/> : <Minus size={12}/>}
+                    </button>
+                  ) : (
+                    <div className="w-8 h-8 flex items-center justify-center text-brand-muted opacity-30"><Plus size={12}/></div>
+                  )}
+                  <input 
+                    type="text" 
+                    placeholder="00:00 ou 7.5"
+                    value={e.val}
+                    onChange={(ev) => updateEntry(i, 'val', ev.target.value)}
+                    className="flex-1 bg-brand-bg border border-brand-border rounded-xl px-3 py-2 text-sm font-black text-brand-text outline-none focus:ring-2 focus:ring-brand-primary/20 placeholder:text-brand-muted/30 placeholder:font-normal"
+                  />
+                  {i > 0 && (
+                    <button onClick={() => removeEntry(i)} className="text-brand-muted hover:text-rose-500 transition-colors"><X size={14}/></button>
+                  )}
+                </div>
+              ))}
+              <button 
+                onClick={addEntry}
+                className="w-full py-2 border-2 border-dashed border-brand-border rounded-xl text-[10px] font-black text-brand-muted uppercase tracking-widest hover:border-brand-primary/50 hover:text-brand-primary transition-all mt-1"
+              >
+                + Adicionar Linha
+              </button>
+            </div>
+            <div className="p-4 bg-brand-bg/50 border-t border-brand-border">
+              <div className="flex justify-between items-center mb-1">
+                 <span className="text-[10px] font-black text-brand-muted uppercase tracking-widest opacity-60">Total Calculado</span>
+                 <button onClick={() => setEntries([{ val: '', op: '+' }])} className="text-brand-muted hover:text-brand-primary transition-colors" title="Limpar"><RotateCcw size={12}/></button>
+              </div>
+              <div className="flex items-baseline justify-between">
+                 <span className="opacity-30"><Equal size={18}/></span>
+                 <div className="text-right">
+                   <div className={`text-2xl font-black tracking-tighter ${totalMin > 0 ? 'text-brand-primary' : totalMin < 0 ? 'text-rose-500' : 'text-brand-text'}`}>
+                     {formatHHMM(totalMin)}
+                   </div>
+                   <div className="text-[11px] font-black text-brand-muted opacity-80 mt-0.5">
+                     = <span className="text-brand-accent">{formatDecimal(totalMin)}</span> (decimal)
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Conteúdo Aba Conversor */}
+        {calcMode === 'conversor' && (
+          <div className="p-4 space-y-4">
+            <div className="bg-brand-bg border border-brand-border p-3.5 rounded-2xl space-y-2">
+              <label className="text-[9px] font-black text-brand-muted uppercase tracking-widest block">HH:mm ➔ Hora Decimal</label>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Ex: 07:20" 
+                  value={inputTime}
+                  onChange={(e) => setInputTime(e.target.value)}
+                  className="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm font-black text-brand-text outline-none focus:ring-2 focus:ring-brand-primary/20"
+                />
+                <div className="bg-brand-primary/10 border border-brand-primary/20 text-brand-primary px-3 py-2 rounded-xl text-sm font-black whitespace-nowrap min-w-[70px] text-center">
+                  {convertedDec !== '—' ? `${convertedDec}h` : '—'}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-brand-bg border border-brand-border p-3.5 rounded-2xl space-y-2">
+              <label className="text-[9px] font-black text-brand-muted uppercase tracking-widest block">Hora Decimal ➔ HH:mm</label>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Ex: 7.33" 
+                  value={inputDec}
+                  onChange={(e) => setInputDec(e.target.value)}
+                  className="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-sm font-black text-brand-text outline-none focus:ring-2 focus:ring-brand-primary/20"
+                />
+                <div className="bg-brand-accent/10 border border-brand-accent/20 text-brand-accent px-3 py-2 rounded-xl text-sm font-black whitespace-nowrap min-w-[70px] text-center">
+                  {convertedHHMM}
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-[10px] text-brand-muted opacity-60 text-center font-bold">
+              Tip: 30 min = 0,50h | 20 min = 0,33h | 15 min = 0,25h | 45 min = 0,75h
+            </p>
           </div>
-          <div className="text-2xl font-black text-brand-text tracking-tighter flex items-center justify-between">
-             <span className="opacity-30"><Equal size={20}/></span>
-             <span className={totalMin > 0 ? 'text-brand-primary' : totalMin < 0 ? 'text-rose-500' : ''}>{format(totalMin)}</span>
-          </div>
-        </div>
+        )}
       </div>
     );
   };

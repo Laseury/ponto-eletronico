@@ -137,12 +137,12 @@ const Cadastro = () => {
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     setTipo(val);
-                                    if (val === 'Mensalista' || val === 'Horista Noturno') {
-                                        setCargaDiaria('07:20');
-                                        setCargaMensal('220:00');
-                                    } else {
+                                    if (val === 'Horista' || val === 'Horista Noturno') {
                                         setCargaDiaria('08:00');
                                         setCargaMensal('240:00');
+                                    } else if (val === 'Mensalista') {
+                                        setCargaDiaria('07:20');
+                                        setCargaMensal('220:00');
                                     }
                                 }}
                                 className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all appearance-none cursor-pointer shadow-inner"

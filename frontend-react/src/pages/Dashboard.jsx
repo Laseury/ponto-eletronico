@@ -115,6 +115,66 @@ const Dashboard = () => {
   const [editingFunc, setEditingFunc] = useState(null);
   const [editNome, setEditNome] = useState('');
   const [editTipo, setEditTipo] = useState('');
+  const [editCargaDiaria, setEditCargaDiaria] = useState('07:20');
+  const [editCargaMensal, setEditCargaMensal] = useState('220:00');
+
+  const minToHHMM = (m) => {
+    if (m === null || m === undefined) return '07:20';
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  };
+
+  const hhmmToMin = (str) => {
+    if (!str) return 0;
+    const parts = str.split(':');
+    const h = parseInt(parts[0]) || 0;
+    const m = parseInt(parts[1]) || 0;
+    return (h * 60) + m;
+  };
+
+  const handleQuickEdit = (f) => {
+    setEditingFunc(f);
+    setEditNome(f.nome);
+    setEditTipo(f.tipo);
+    const cd = f.carga_horaria_diaria || (f.tipo === 'Horista' ? 480 : 440);
+    const cm = f.carga_horaria_mensal || (f.tipo === 'Horista' ? 14400 : 13200);
+    setEditCargaDiaria(minToHHMM(cd));
+    setEditCargaMensal(minToHHMM(cm));
+  };
+
+  const handleTipoChange = (newTipo) => {
+    setEditTipo(newTipo);
+    if (newTipo === 'Mensalista') {
+      setEditCargaDiaria('07:20');
+      setEditCargaMensal('220:00');
+    } else if (newTipo === 'Horista') {
+      setEditCargaDiaria('08:00');
+      setEditCargaMensal('240:00');
+    } else if (newTipo === 'Horista Noturno') {
+      setEditCargaDiaria('07:20');
+      setEditCargaMensal('220:00');
+    }
+  };
+
+  const saveQuickEdit = async () => {
+    if (!editNome) return swalTheme({ title: 'Atenção', text: 'Nome é obrigatório', icon: 'warning' });
+    try {
+      await axios.put(`/funcionarios/${editingFunc.id}`, { 
+        nome: editNome, 
+        tipo: editTipo,
+        cargaHorariaDiaria: hhmmToMin(editCargaDiaria),
+        cargaHorariaMensal: hhmmToMin(editCargaMensal)
+      });
+      // Recalcular os registros para ajustar débitos/créditos com a nova carga
+      await axios.post(`/registros/recalcular/${editingFunc.id}`);
+      swalTheme({ title: 'Sucesso!', text: 'Funcionário e horários recalculados com sucesso.', icon: 'success' });
+      setEditingFunc(null);
+      fetchDashboardData();
+    } catch (error) {
+      swalTheme({ title: 'Erro!', text: 'Não foi possível salvar as alterações.', icon: 'error' });
+    }
+  };
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -167,24 +227,6 @@ const Dashboard = () => {
         }
       }
     });
-  };
-
-  const handleQuickEdit = (f) => {
-    setEditingFunc(f);
-    setEditNome(f.nome);
-    setEditTipo(f.tipo);
-  };
-
-  const saveQuickEdit = async () => {
-    if (!editNome) return toast.error('Nome é obrigatório');
-    try {
-      await axios.put(`/funcionarios/${editingFunc.id}`, { nome: editNome, tipo: editTipo });
-      toast.success('Funcionário atualizado com sucesso!');
-      setEditingFunc(null);
-      fetchDashboardData();
-    } catch (error) {
-      toast.error('Não foi possível salvar as alterações.');
-    }
   };
 
   return (
@@ -384,12 +426,34 @@ const Dashboard = () => {
                         <select 
                             className="w-full bg-brand-bg border border-brand-border rounded-2xl px-6 py-4 text-brand-text text-base font-bold focus:ring-4 focus:ring-brand-primary/20 outline-none transition-all shadow-inner appearance-none cursor-pointer"
                             value={editTipo}
-                            onChange={(e) => setEditTipo(e.target.value)}
+                            onChange={(e) => handleTipoChange(e.target.value)}
                         >
                             <option value="Mensalista" className="bg-brand-surface">Mensalista</option>
                             <option value="Horista" className="bg-brand-surface">Horista</option>
                             <option value="Horista Noturno" className="bg-brand-surface">Horista Noturno</option>
                         </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-brand-muted uppercase tracking-widest ml-1">Carga Diária</label>
+                            <input 
+                                type="text" 
+                                placeholder="07:20"
+                                className="w-full bg-brand-bg border border-brand-border rounded-2xl px-5 py-4 text-brand-text text-base font-bold focus:ring-4 focus:ring-brand-primary/20 outline-none transition-all shadow-inner"
+                                value={editCargaDiaria}
+                                onChange={(e) => setEditCargaDiaria(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-brand-muted uppercase tracking-widest ml-1">Carga Mensal</label>
+                            <input 
+                                type="text" 
+                                placeholder="220:00"
+                                className="w-full bg-brand-bg border border-brand-border rounded-2xl px-5 py-4 text-brand-text text-base font-bold focus:ring-4 focus:ring-brand-primary/20 outline-none transition-all shadow-inner"
+                                value={editCargaMensal}
+                                onChange={(e) => setEditCargaMensal(e.target.value)}
+                            />
+                        </div>
                     </div>
                     <div className="flex gap-4 pt-6">
                         <button 
