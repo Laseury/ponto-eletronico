@@ -161,6 +161,7 @@ const Funcionario = () => {
 
   const [mes, setMes] = useState(searchParams.get('mes') ? Number(searchParams.get('mes')) : new Date().getMonth() + 1);
   const [ano, setAno] = useState(searchParams.get('ano') ? Number(searchParams.get('ano')) : new Date().getFullYear());
+  const [modoCiclo, setModoCiclo] = useState('semestral');
   const [funcionario, setFuncionario] = useState(null);
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -335,7 +336,7 @@ const Funcionario = () => {
       const [funcRes, regRes, relRes] = await Promise.all([
         axios.get(`/funcionarios/${id}`),
         axios.get(`/registros/${id}?mes=${mes}&ano=${ano}`),
-        axios.get(`/relatorio/${mes}/${ano}?valor_hora=0`)
+        axios.get(`/relatorio/${mes}/${ano}?valor_hora=0&ciclo=${modoCiclo}`)
       ]);
       setFuncionario(funcRes.data);
       setRegistros(regRes.data);
@@ -357,7 +358,7 @@ const Funcionario = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, mes, ano]);
+  }, [id, mes, ano, modoCiclo]);
 
   useEffect(() => {
     fetchFuncionarioData();
@@ -886,6 +887,10 @@ const Funcionario = () => {
         <div className="flex flex-wrap items-center gap-2">
           {/* Seletor de Período */}
           <div className="flex items-center gap-1 bg-brand-surface p-1 rounded-2xl border border-brand-border/80 shadow-md">
+            <select value={modoCiclo} onChange={(e) => setModoCiclo(e.target.value)} className="bg-brand-bg/80 text-brand-text text-xs font-semibold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50 hover:border-brand-primary/40 mr-1">
+              <option value="semestral" className="bg-brand-surface">Ciclo Semestral</option>
+              <option value="anual" className="bg-brand-surface">Ciclo Extensivo (Anual)</option>
+            </select>
             <select value={mes} onChange={(e) => setMes(Number(e.target.value))} className="bg-brand-bg/80 text-brand-text text-xs font-semibold px-3 py-2 rounded-xl outline-none transition-all cursor-pointer border border-brand-border/50 hover:border-brand-primary/40">
               {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (<option key={i+1} value={i+1} className="bg-brand-surface">{m}</option>))}
             </select>
@@ -968,7 +973,7 @@ const Funcionario = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {(() => {
           // Usar valores do backend (mesmo motor do JSON/relatorio.controller):
           // saldo_mes = totalExtras - totalNegativos (lido dos campos gravados no banco)
@@ -994,13 +999,36 @@ const Funcionario = () => {
 
           const saldoMesColor = saldoMesMin > 0 ? 'text-brand-accent' : saldoMesMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-60';
           const saldoAnteriorColor = !relatorio?.saldo_anterior ? 'text-brand-muted opacity-60' : saldoAnteriorMin > 0 ? 'text-brand-accent' : saldoAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-60';
+
+          const saldoSemestreAnteriorStr = relatorio?.saldo_semestre_anterior_rem || '00:00';
+          const saldoSemestreAnteriorMin = parseBalanceMin(saldoSemestreAnteriorStr);
+          const saldoSemAnteriorColor = saldoSemestreAnteriorMin > 0 ? 'text-brand-accent' : saldoSemestreAnteriorMin < 0 ? 'text-rose-400' : 'text-brand-muted opacity-60';
           
           return (
             <>
-              <InfoCard label="Saldo Anterior" value={saldoAnteriorStr} color={saldoAnteriorColor} icon={History} />
+              <InfoCard 
+                label="Saldo do 1º Sem." 
+                value={saldoSemestreAnteriorStr} 
+                color={saldoSemAnteriorColor} 
+                icon={History} 
+                subtext="Remanescente Jan-Jun" 
+              />
+              <InfoCard 
+                label="Saldo Anterior" 
+                value={saldoAnteriorStr} 
+                color={saldoAnteriorColor} 
+                icon={History} 
+                subtext={modoCiclo === 'anual' ? '(Inclui semestres anteriores)' : '(Apenas ciclo atual)'} 
+              />
               <InfoCard label="Saldo do Mês" value={saldoMesStr} color={saldoMesColor} icon={Calendar} />
               <InfoCard label="Feriados" value={analytics.totalFeriados} color="text-emerald-400" icon={Sun} />
-              <InfoCard label="Banco Consolidado" value={bancoStr} isProminent icon={Sparkles} />
+              <InfoCard 
+                label="Banco Consolidado" 
+                value={bancoStr} 
+                isProminent 
+                icon={Sparkles} 
+                subtext={modoCiclo === 'anual' ? 'Acumulado Anual' : 'Acumulado Semestral'} 
+              />
             </>
           );
         })()}

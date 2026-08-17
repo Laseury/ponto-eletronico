@@ -19,7 +19,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 
-const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
+const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados, modoCicloGlobal }) => {
     const [tipo, setTipo] = useState('resumido');
     const [ano, setAno] = useState(defaultAno);
     const [mesesSelecionados, setMesesSelecionados] = useState([]);
@@ -130,7 +130,7 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
                     `;
 
                     for (let m of mesesOrdenados) {
-                        const res = await axios.get(`/relatorio/${m}/${ano}?valor_hora=0`);
+                        const res = await axios.get(`/relatorio/${m}/${ano}?valor_hora=0&ciclo=${modoCicloGlobal || 'semestral'}`);
                         const r = res.data.find(d => d.id === func.id);
                         if (r) {
                             htmlContent += `
@@ -162,7 +162,7 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados }) => {
                         firstPage = false;
 
                         const [relRes, regRes, comRes, ajuRes] = await Promise.all([
-                            axios.get(`/relatorio/${m}/${ano}?valor_hora=0`),
+                            axios.get(`/relatorio/${m}/${ano}?valor_hora=0&ciclo=${modoCicloGlobal || 'semestral'}`),
                             axios.get(`/registros/${func.id}?mes=${m}&ano=${ano}`),
                             axios.get(`/comentarios/${func.id}`),
                             axios.get(`/ajustes/${func.id}`)
@@ -386,6 +386,7 @@ const Relatorio = () => {
     const navigate = useNavigate();
     const [mes, setMes] = useState(new Date().getMonth() + 1);
     const [ano, setAno] = useState(new Date().getFullYear());
+    const [modoCiclo, setModoCiclo] = useState('semestral');
     const [valorHora, setValorHora] = useState('');
     const [dados, setDados] = useState([]);
     const [filtroNome, setFiltroNome] = useState('');
@@ -409,7 +410,7 @@ const Relatorio = () => {
         setLoading(true);
         try {
             const vh = valorHora || 0;
-            const res = await axios.get(`/relatorio/${mes}/${ano}?valor_hora=${vh}`);
+            const res = await axios.get(`/relatorio/${mes}/${ano}?valor_hora=${vh}&ciclo=${modoCiclo}`);
             setDados(res.data);
         } catch (error) {
             swalTheme({ title: 'Erro', text: 'Não foi possível carregar o relatório mensal.', icon: 'error' });
@@ -420,7 +421,7 @@ const Relatorio = () => {
 
     useEffect(() => {
         fetchRelatorio();
-    }, [mes, ano, valorHora]);
+    }, [mes, ano, valorHora, modoCiclo]);
 
     const dadosFiltrados = useMemo(() => {
         return dados.filter(f => f.nome.toLowerCase().includes(filtroNome.toLowerCase()));
@@ -433,9 +434,9 @@ const Relatorio = () => {
 
         if (alvos.length === 0) return;
         
-        const headers = ["Nome", "Tipo", "Dias Trab.", "Faltas", "Feriados", "Extras", "Negativos", "Saldo", "Banco", "Noturno", "Valor Noturno"];
+        const headers = ["Nome", "Tipo", "Dias Trab.", "Faltas", "Feriados", "Extras", "Negativos", "Saldo", "Banco", "Noturno", "Valor Noturno", "Ciclo"];
         const rows = alvos.map(f => [
-            f.nome, f.tipo, f.dias_trabalhados, f.faltas, `${f.dias_feriados}d - ${f.total_feriados}`, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno
+            f.nome, f.tipo, f.dias_trabalhados, f.faltas, `${f.dias_feriados}d - ${f.total_feriados}`, f.total_extras, f.total_negativos, f.saldo_mes, f.banco_horas, f.total_noturno, f.valor_noturno, f.ciclo
         ]);
 
         const csvContent = [headers, ...rows].map(e => e.join(";")).join("\n");
@@ -451,7 +452,7 @@ const Relatorio = () => {
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <PdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} defaultAno={ano} preSelecionados={selecionados} />
+            <PdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} defaultAno={ano} preSelecionados={selecionados} modoCicloGlobal={modoCiclo} />
 
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -479,6 +480,14 @@ const Relatorio = () => {
 
                      {/* Date Selectors */}
                      <div className="flex items-center gap-3 bg-brand-surface border border-brand-border p-3 rounded-[1.5rem] shadow-xl">
+                        <select 
+                            value={modoCiclo} 
+                            onChange={(e) => setModoCiclo(e.target.value)}
+                            className="bg-brand-bg text-brand-text text-sm font-black px-5 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
+                        >
+                            <option value="semestral" className="bg-brand-surface">Semestral</option>
+                            <option value="anual" className="bg-brand-surface">Anual / Extensivo</option>
+                        </select>
                         <select 
                             value={mes} 
                             onChange={(e) => setMes(Number(e.target.value))}

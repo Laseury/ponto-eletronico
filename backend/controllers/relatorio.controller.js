@@ -12,8 +12,12 @@ async function gerarRelatorio(req, res) {
         const mes       = parseInt(req.params.mes);
         const ano       = parseInt(req.params.ano);
         const valorHora = parseFloat(req.query.valor_hora) || 0;
+        const modoCiclo = req.query.ciclo || 'semestral';
 
-        const mesInicioCiclo = mes <= 6 ? 1 : 7;
+        let mesInicioCiclo = mes <= 6 ? 1 : 7;
+        if (modoCiclo === 'anual' || modoCiclo === 'acumulado') {
+            mesInicioCiclo = 1;
+        }
 
         const resultado = await prisma.$queryRaw`
             SELECT
@@ -89,7 +93,19 @@ async function gerarRelatorio(req, res) {
                     THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
                     ELSE 0 END
-                ) AS banco_negativos_min
+                ) AS banco_negativos_min,
+                SUM(
+                    CASE WHEN EXTRACT(MONTH FROM r.data) <= 6 AND r.extras LIKE '+%:%' AND (r.evento IS NULL OR r.evento NOT IN ('Feriado', 'Folga Feriado', 'Pago'))
+                    THEN CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(r.extras,'+',''),':',2) AS INT)
+                    ELSE 0 END
+                ) AS banco_sem1_extras_min,
+                SUM(
+                    CASE WHEN EXTRACT(MONTH FROM r.data) <= 6 AND r.negativos LIKE '-%:%' AND f.tipo NOT IN ('Horista', 'Horista Noturno') AND (r.evento IS NULL OR r.evento NOT IN ('Feriado', 'Folga Feriado', 'Pago'))
+                    THEN CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(r.negativos,'-',''),':',2) AS INT)
+                    ELSE 0 END
+                ) AS banco_sem1_negativos_min
             FROM registros_ponto r
             JOIN funcionarios f ON r.funcionario_id = f.id
             WHERE EXTRACT(YEAR FROM r.data)  = ${ano}
@@ -117,7 +133,16 @@ async function gerarRelatorio(req, res) {
                 SUM(CASE WHEN a.valor LIKE '-%:%' AND EXTRACT(MONTH FROM a.data) = ${mes} AND EXTRACT(YEAR FROM a.data) = ${ano}
                     THEN CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',1) AS INT)*60
                        + CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',2) AS INT)
-                    ELSE 0 END) AS ajustes_mes_neg_min
+                    ELSE 0 END) AS ajustes_mes_neg_min,
+                -- Ajustes do Semestre 1
+                SUM(CASE WHEN EXTRACT(MONTH FROM a.data) <= 6 AND a.valor LIKE '+%:%'
+                    THEN CAST(SPLIT_PART(REPLACE(a.valor,'+',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(a.valor,'+',''),':',2) AS INT)
+                    ELSE 0 END) AS ajustes_sem1_pos_min,
+                SUM(CASE WHEN EXTRACT(MONTH FROM a.data) <= 6 AND a.valor LIKE '-%:%'
+                    THEN CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',1) AS INT)*60
+                       + CAST(SPLIT_PART(REPLACE(a.valor,'-',''),':',2) AS INT)
+                    ELSE 0 END) AS ajustes_sem1_neg_min
             FROM ajustes_saldo a
             WHERE EXTRACT(YEAR FROM a.data)  = ${ano}
               AND EXTRACT(MONTH FROM a.data) >= ${mesInicioCiclo}
@@ -131,16 +156,20 @@ async function gerarRelatorio(req, res) {
                 pos: Number(row.ajustes_pos_min || 0),
                 neg: Number(row.ajustes_neg_min || 0),
                 mesPos: Number(row.ajustes_mes_pos_min || 0),
-                mesNeg: Number(row.ajustes_mes_neg_min || 0)
+                mesNeg: Number(row.ajustes_mes_neg_min || 0),
+                sem1Pos: Number(row.ajustes_sem1_pos_min || 0),
+                sem1Neg: Number(row.ajustes_sem1_neg_min || 0)
             };
         });
 
         const bancoMap = {};
         bancResult.forEach(function (row) {
-            const aj = ajustesMap[row.funcionario_id] || { pos: 0, neg: 0 };
+            const aj = ajustesMap[row.funcionario_id] || { pos: 0, neg: 0, sem1Pos: 0, sem1Neg: 0 };
             bancoMap[row.funcionario_id] = {
                 extras:    Number(row.banco_extras_min || 0) + aj.pos,
-                negativos: Number(row.banco_negativos_min || 0) + aj.neg
+                negativos: Number(row.banco_negativos_min || 0) + aj.neg,
+                sem1Extras: Number(row.banco_sem1_extras_min || 0) + aj.sem1Pos,
+                sem1Negativos: Number(row.banco_sem1_negativos_min || 0) + aj.sem1Neg
             };
         });
 
@@ -149,7 +178,9 @@ async function gerarRelatorio(req, res) {
             if (!bancoMap[fId]) {
                 bancoMap[fId] = {
                     extras: ajustesMap[fId].pos,
-                    negativos: ajustesMap[fId].neg
+                    negativos: ajustesMap[fId].neg,
+                    sem1Extras: ajustesMap[fId].sem1Pos,
+                    sem1Negativos: ajustesMap[fId].sem1Neg
                 };
             }
         });
@@ -169,9 +200,15 @@ async function gerarRelatorio(req, res) {
             const saldoMesMin  = (extrasMin - negativosMin) + (aj.mesPos - aj.mesNeg);
             const diurnoMin    = Math.max(0, trabMin - noturnoMin);
 
-            const banco    = bancoMap[row.id] || { extras: 0, negativos: 0 };
+            const banco    = bancoMap[row.id] || { extras: 0, negativos: 0, sem1Extras: 0, sem1Negativos: 0 };
             const bancoMin = banco.extras - banco.negativos;
             const saldoAnteriorMin = bancoMin - saldoMesMin;
+            const saldoSemestreAnteriorMin = banco.sem1Extras - banco.sem1Negativos;
+
+            let stringCiclo = `${mesInicioCiclo <= 6 ? "Jan–Jun" : "Jul–Dez"} ${ano}`;
+            if (modoCiclo === 'anual' || modoCiclo === 'acumulado') {
+                stringCiclo = `Jan–Dez ${ano}`;
+            }
 
             const horasNoturno = noturnoMin / 60;
             const valorNoturno = valorHora > 0
@@ -191,7 +228,8 @@ async function gerarRelatorio(req, res) {
                 saldo_mes:        formatarSaldo(saldoMesMin),
                 saldo_anterior:   formatarSaldo(saldoAnteriorMin),
                 banco_horas:      formatarSaldo(bancoMin),
-                ciclo:            `${mesInicioCiclo <= 6 ? "Jan–Jun" : "Jul–Dez"} ${ano}`,
+                saldo_semestre_anterior_rem: formatarSaldo(saldoSemestreAnteriorMin),
+                ciclo:            stringCiclo,
                 total_noturno:    minutosParaHorario(noturnoMin),
                 total_prorrogacao: minutosParaHorario(prorrogacaoMin),
                 total_diurno:     minutosParaHorario(diurnoMin),

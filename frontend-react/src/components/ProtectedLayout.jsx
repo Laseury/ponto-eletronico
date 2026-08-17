@@ -140,17 +140,18 @@ const ProtectedLayout = () => {
   const handleShowHelpCenter = () => {
     swalTheme({
       title: 'Central de Ajuda',
-      width: 600,
+      width: 650,
       html: `
         <div style="text-align: left; margin-top: 20px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-            <button onclick="window.switchHelpTab('inicio')" style="padding: 10px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">🏠 Início</button>
-            <button onclick="window.switchHelpTab('lancamento')" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">⏱️ Lançamentos</button>
-            <button onclick="window.switchHelpTab('banco')" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">🏦 Banco de Horas</button>
-            <button onclick="window.switchHelpTab('eventos')" style="padding: 10px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">📅 Eventos</button>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center;">
+            <button onclick="window.switchHelpTab('inicio')" style="padding: 10px 15px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">🏠 Início</button>
+            <button onclick="window.switchHelpTab('novidades')" style="padding: 10px 15px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">✨ Novidades</button>
+            <button onclick="window.switchHelpTab('lancamento')" style="padding: 10px 15px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">⏱️ Lançamentos</button>
+            <button onclick="window.switchHelpTab('banco')" style="padding: 10px 15px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">🏦 Banco</button>
+            <button onclick="window.switchHelpTab('eventos')" style="padding: 10px 15px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;">📅 Eventos</button>
           </div>
           
-          <div id="help-content-area" style="min-height: 300px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+          <div id="help-content-area" style="min-height: 300px; max-height: 400px; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
              <!-- Conteúdo Dinâmico -->
              <div id="help-inicio">
                <h4 style="color: #10b981; margin: 0 0 10px 0;">Bem-vindo ao Sistema de Ponto</h4>
@@ -168,16 +169,55 @@ const ProtectedLayout = () => {
       showCloseButton: true,
       didOpen: () => {
         const contentArea = document.getElementById('help-content-area');
+        const buttons = document.querySelectorAll('button[onclick^="window.switchHelpTab"]');
+        
         window.switchHelpTab = (tab) => {
+          // Atualiza estilos dos botões
+          buttons.forEach(btn => {
+            if (btn.getAttribute('onclick').includes(tab)) {
+              btn.style.background = '#10b981';
+            } else {
+              btn.style.background = '#334155';
+            }
+          });
+
           let html = '';
           if (tab === 'inicio') {
             html = `
               <h4 style="color: #10b981; margin: 0 0 10px 0;">Bem-vindo ao Sistema de Ponto</h4>
               <p style="font-size: 13px; color: var(--color-brand-muted); line-height: 1.5;">Este sistema foi desenvolvido para facilitar o controle de jornada e banco de horas da equipe.</p>
-              <ul style="font-size: 12px; padding-left: 20px; color: var(--color-brand-text);">
+              <ul style="font-size: 12px; padding-left: 20px; color: var(--color-brand-text); margin-top: 15px;">
                 <li style="margin-bottom: 8px;"><b>Dashboard:</b> Veja seu saldo atual e banco consolidado.</li>
-                <li style="margin-bottom: 8px;"><b>Espelho de Ponto:</b> Confira cada batida de ponto e comentários do gestor.</li>
+                <li style="margin-bottom: 8px;"><b>Espelho de Ponto:</b> Confira cada batida de ponto e histórico de ajustes.</li>
+                <li style="margin-bottom: 8px;"><b>Calculadora:</b> Use o ícone de calculadora no topo para somar e converter horas (Decimal).</li>
               </ul>
+            `;
+          } else if (tab === 'novidades') {
+            html = `
+              <h4 style="color: #8b5cf6; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">✨ O que há de novo no sistema</h4>
+              <div style="font-size: 12px; color: var(--color-brand-text); line-height: 1.6;">
+                
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; border-radius: 4px;">
+                  <h5 style="margin: 0 0 5px 0; color: #a78bfa;">1. Banco de Horas: Ciclo Anual (Extensivo)</h5>
+                  <p style="margin: 0; color: var(--color-brand-muted);">Agora você pode visualizar o banco de horas acumulado ao longo de 12 meses (Jan-Dez). O sistema passa a exibir o <b>Saldo Remanescente do 1º Semestre</b> separadamente na tela do colaborador, somando tudo no Banco Consolidado sem perder o histórico do início do ano.</p>
+                </div>
+
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 4px;">
+                  <h5 style="margin: 0 0 5px 0; color: #60a5fa;">2. Relatórios de Ponto em Lote</h5>
+                  <p style="margin: 0; color: var(--color-brand-muted);">A tela de <b>Relatório Geral</b> agora gera PDFs massivos para todos os funcionários com um único clique. E exporta perfeitamente os dados gerenciais (incluindo a flag de ciclo) via arquivo CSV para o Excel.</p>
+                </div>
+
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(234, 179, 8, 0.1); border-left: 3px solid #eab308; border-radius: 4px;">
+                  <h5 style="margin: 0 0 5px 0; color: #fde047;">3. Horas Noturnas e Fator Legal</h5>
+                  <p style="margin: 0; color: var(--color-brand-muted);">A ficha agora converte automaticamente as horas noturnas cronológicas aplicando o fator legal (1.1428 / 52m30s), separando-as em <b>Prorrogação Noturna</b> e fornecendo a <b>Base para Pagamento</b> final pronta para a contabilidade.</p>
+                </div>
+
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px;">
+                  <h5 style="margin: 0 0 5px 0; color: #34d399;">4. Ajustes Manuais e Integração com IA</h5>
+                  <p style="margin: 0; color: var(--color-brand-muted);">Agora o RH pode inserir <b>Ajustes de Saldo</b> (ex: Pagamento de horas) com motivo e mês de competência sem mexer nos pontos. Além disso, incluímos um botão <b>IA</b> que exporta o json diário do funcionário para análise por inteligência artificial.</p>
+                </div>
+
+              </div>
             `;
           } else if (tab === 'lancamento') {
             html = `
