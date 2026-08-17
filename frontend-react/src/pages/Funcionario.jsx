@@ -1104,9 +1104,9 @@ const Funcionario = () => {
                             <span className="text-[9px] font-bold text-brand-muted uppercase tracking-wider px-2 py-0.5 rounded bg-brand-bg border border-brand-border/50">{dateObj.toLocaleDateString('pt-BR', {weekday: 'short'}).replace('.', '')}</span>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-center text-xs font-mono font-medium text-brand-text/80"><div className="flex flex-col gap-0.5"><span>{r.e1?.substring(0,5) || '—'}</span><span>{r.s1?.substring(0,5) || '—'}</span></div></td>
-                        <td className="px-3 py-3 text-center text-xs font-mono font-medium text-brand-text/80"><div className="flex flex-col gap-0.5"><span>{r.e2?.substring(0,5) || '—'}</span><span>{r.s2?.substring(0,5) || '—'}</span></div></td>
-                        <td className="px-3 py-3 text-center text-xs font-mono font-medium text-brand-text/80"><div className="flex flex-col gap-0.5"><span>{r.e3?.substring(0,5) || '—'}</span><span>{r.s3?.substring(0,5) || '—'}</span></div></td>
+                        <td className="px-3 py-3 text-center text-[13px] font-mono font-black text-brand-text tracking-wide"><div className="flex flex-col gap-1"><span className={!r.e1 ? 'opacity-30 font-medium' : 'drop-shadow-sm'}>{r.e1?.substring(0,5) || '—'}</span><span className={!r.s1 ? 'opacity-30 font-medium' : 'drop-shadow-sm'}>{r.s1?.substring(0,5) || '—'}</span></div></td>
+                        <td className="px-3 py-3 text-center text-[13px] font-mono font-black text-brand-text tracking-wide"><div className="flex flex-col gap-1"><span className={!r.e2 ? 'opacity-30 font-medium' : 'drop-shadow-sm'}>{r.e2?.substring(0,5) || '—'}</span><span className={!r.s2 ? 'opacity-30 font-medium' : 'drop-shadow-sm'}>{r.s2?.substring(0,5) || '—'}</span></div></td>
+                        <td className="px-3 py-3 text-center text-[13px] font-mono font-black text-brand-text tracking-wide"><div className="flex flex-col gap-1"><span className={!r.e3 ? 'opacity-30 font-medium' : 'drop-shadow-sm'}>{r.e3?.substring(0,5) || '—'}</span><span className={!r.s3 ? 'opacity-30 font-medium' : 'drop-shadow-sm'}>{r.s3?.substring(0,5) || '—'}</span></div></td>
                         <td className="px-3 py-3 text-center text-xs">
                           {r.total ? (
                             <span className="px-2 py-1 rounded-md bg-brand-bg border border-brand-border/60 font-mono font-bold text-brand-text">{r.total}</span>
