@@ -1181,16 +1181,16 @@ const LancamentoHoras = () => {
               {MESES_NOMES[parseInt(mesSelect) - 1]} {anoSelect}
             </h2>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-brand-bg/80 border border-brand-border rounded-xl px-2 py-1.5 focus-within:border-brand-primary/50 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all shadow-inner w-full md:w-auto">
+              <div className="flex items-center gap-3 bg-brand-bg/80 border border-brand-border rounded-xl px-3 py-1.5 focus-within:border-brand-primary/50 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all shadow-inner w-full md:w-auto">
                 <Zap size={14} className="text-brand-primary ml-1" />
                 <input
-                  type="number"
-                  min="1"
-                  max="31"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={2}
                   value={fastDay}
-                  onChange={(e) => setFastDay(e.target.value)}
+                  onChange={(e) => setFastDay(e.target.value.replace(/\\D/g, ''))}
                   placeholder="Dia"
-                  className="bg-brand-surface border border-brand-border/50 rounded-md px-2 py-1 text-[11px] text-brand-text outline-none w-12 text-center font-black focus:border-brand-primary/50"
+                  className="bg-brand-surface border border-brand-border/50 rounded-lg px-3 py-1.5 text-[12px] text-brand-text outline-none w-14 text-center font-black focus:border-brand-primary/50"
                   title="Opcional: Informe o dia que deseja preencher"
                 />
                 <input

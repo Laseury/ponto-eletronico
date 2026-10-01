@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import ToastContainer from './ToastContainer';
-import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2, Calculator, Plus, Minus, RotateCcw, Equal, BookOpen, Clock, BarChart3, FileCheck } from 'lucide-react';
+import { Bell, Search, Settings, HelpCircle, Menu, X, CalendarDays, Loader2, Calculator, Plus, Minus, RotateCcw, Equal, BookOpen, Clock, BarChart3, FileCheck, Check } from 'lucide-react';
 import Swal from 'sweetalert2';
 import swalTheme from '../utils/swalTheme';
 
@@ -17,6 +17,7 @@ const ProtectedLayout = () => {
   const [feriadosLoading, setFeriadosLoading] = React.useState(false);
   const [feriadosAno, setFeriadosAno] = React.useState(new Date().getFullYear());
   const [calcOpen, setCalcOpen] = React.useState(false);
+  const [notesOpen, setNotesOpen] = React.useState(false);
 
   const fetchFeriados = React.useCallback(async (ano) => {
     setFeriadosLoading(true);
@@ -454,6 +455,81 @@ const ProtectedLayout = () => {
     );
   };
 
+  const SystemNotesPanel = () => {
+    const [items, setItems] = React.useState([]);
+    const [newItem, setNewItem] = React.useState('');
+
+    React.useEffect(() => {
+      const saved = localStorage.getItem('system_notes_list');
+      if (saved) {
+        try {
+          setItems(JSON.parse(saved));
+        } catch(e) {}
+      }
+    }, []);
+
+    const saveItems = (newItems) => {
+      setItems(newItems);
+      localStorage.setItem('system_notes_list', JSON.stringify(newItems));
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && newItem.trim()) {
+        saveItems([...items, { id: Date.now(), text: newItem.trim(), done: false }]);
+        setNewItem('');
+      }
+    };
+
+    const toggleItem = (id) => {
+      saveItems(items.map(i => i.id === id ? { ...i, done: !i.done } : i));
+    };
+
+    const removeItem = (id) => {
+      saveItems(items.filter(i => i.id !== id));
+    };
+
+    if (!notesOpen) return null;
+
+    return (
+      <div className="fixed top-24 right-6 w-80 bg-brand-surface border border-brand-border rounded-[2rem] shadow-2xl z-[100] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-top-10 duration-300">
+        <div className="p-4 bg-amber-500 text-white flex justify-between items-center">
+          <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><FileCheck size={14}/> Lista de Atualizações</h4>
+          <button onClick={() => setNotesOpen(false)} className="hover:bg-black/20 p-1 rounded-lg transition-colors"><X size={16}/></button>
+        </div>
+        <div className="p-4 bg-brand-bg/50 border-b border-brand-border">
+          <input 
+            type="text" 
+            placeholder="Adicionar nova nota... (Enter)"
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full bg-brand-surface border border-brand-border rounded-xl px-3 py-2 text-xs font-bold text-brand-text outline-none focus:ring-2 focus:ring-amber-500/20"
+          />
+        </div>
+        <div className="p-2 max-h-64 overflow-y-auto custom-scrollbar">
+          {items.length === 0 ? (
+            <p className="text-center text-[10px] text-brand-muted uppercase font-black tracking-widest py-8 opacity-50">Nenhuma anotação.</p>
+          ) : (
+            items.map(item => (
+              <div key={item.id} className="flex items-start gap-2 p-2 hover:bg-brand-bg rounded-xl group transition-all">
+                <button 
+                  onClick={() => toggleItem(item.id)}
+                  className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ${item.done ? 'bg-amber-500 border-amber-500 text-white' : 'border-brand-border hover:border-amber-500'}`}
+                >
+                  {item.done && <Check size={10} strokeWidth={4} />}
+                </button>
+                <p className={`flex-1 text-xs font-bold transition-all ${item.done ? 'text-brand-muted line-through opacity-50' : 'text-brand-text'}`}>
+                  {item.text}
+                </p>
+                <button onClick={() => removeItem(item.id)} className="opacity-0 group-hover:opacity-100 p-1 text-brand-muted hover:text-rose-500 transition-all"><X size={12}/></button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-brand-bg flex items-center justify-center transition-colors duration-300">
@@ -520,6 +596,13 @@ const ProtectedLayout = () => {
               title="Calculadora de Horas"
             >
               <Calculator size={20} />
+            </button>
+            <button 
+              onClick={() => setNotesOpen(!notesOpen)}
+              className={`p-2.5 rounded-xl transition-all border border-transparent hover:border-brand-border ${notesOpen ? 'bg-amber-500 text-white' : 'text-brand-muted hover:text-amber-500 hover:bg-brand-surface'}`}
+              title="Lista de Atualizações / Ideias"
+            >
+              <FileCheck size={20} />
             </button>
             <button 
               onClick={handleSettings}
@@ -661,6 +744,9 @@ const ProtectedLayout = () => {
 
       {/* Calculadora de Horas Flutuante */}
       <HourCalculator />
+
+      {/* Painel de Anotações Flutuante */}
+      <SystemNotesPanel />
 
       {/* Toast Notifications Globais */}
       <ToastContainer />
