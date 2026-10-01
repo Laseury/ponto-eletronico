@@ -110,6 +110,7 @@ const Dashboard = () => {
   const [filtroTipo, setFiltroTipo] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [notas, setNotas] = useState('');
   
   // Estado para edição rápida
   const [editingFunc, setEditingFunc] = useState(null);
@@ -199,7 +200,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    const savedNotas = localStorage.getItem('dashboard_notas');
+    if (savedNotas) setNotas(savedNotas);
   }, [fetchDashboardData]);
+
+  const salvarNotas = () => {
+    localStorage.setItem('dashboard_notas', notas);
+    toast.success('Anotações salvas!');
+  };
 
   const funcionariosFiltrados = funcionarios.filter(f => {
     const bateNome = f.nome.toLowerCase().includes(filtroNome.toLowerCase());
@@ -274,6 +282,35 @@ const Dashboard = () => {
         <DashboardCard label="Faltas Mês" value={resumo.total_faltas} icon={AlertTriangle} color="bg-orange-500" />
         <DashboardCard label="Func. c/ Lacuna" value={resumo.funcs_com_lacuna} icon={Search} color="bg-rose-500" />
         <DashboardCard label="Dias s/ Reg." value={resumo.total_dias_lacuna} icon={AlertTriangle} color="bg-amber-500" />
+      </div>
+
+      {/* Bloco de Anotações / Ideias */}
+      <div className="bg-brand-surface border border-brand-border rounded-3xl p-6 shadow-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500">
+            <Edit2 size={18} />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-brand-text tracking-tighter italic">
+              Bloco de Ideias e Atualizações
+            </h2>
+            <p className="text-[11px] text-brand-muted uppercase tracking-widest font-black opacity-60 mt-0.5">O que vamos adicionar no futuro?</p>
+          </div>
+        </div>
+        <textarea
+          value={notas}
+          onChange={(e) => setNotas(e.target.value)}
+          placeholder="Escreva aqui ideias, coisas para testar ou novas ferramentas para adicionarmos ao sistema..."
+          className="w-full h-24 bg-brand-bg border border-brand-border/50 rounded-2xl p-4 text-brand-text text-sm font-medium focus:outline-none focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all resize-y shadow-inner"
+        />
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={salvarNotas}
+            className="px-6 py-2.5 bg-brand-bg hover:bg-amber-500 hover:text-white hover:border-amber-500 text-brand-muted font-black text-[10px] uppercase tracking-widest border border-brand-border rounded-xl transition-all shadow-md"
+          >
+            Salvar Anotações
+          </button>
+        </div>
       </div>
 
       {/* Lista de Funcionários */}
