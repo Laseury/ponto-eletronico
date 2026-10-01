@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   UserPlus, 
@@ -44,8 +44,13 @@ const Sidebar = ({ isOpen, onClose }) => {
     Admin: [
       { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/funcionarios', icon: Users, label: 'Funcionários' },
-      { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
-      { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
+      { 
+        label: 'Lançamentos', icon: UserPlus,
+        subItems: [
+          { to: '/lancamento', icon: UserPlus, label: 'Por Funcionário' },
+          { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' }
+        ]
+      },
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
       { to: '/usuarios', icon: ShieldCheck, label: 'Gestão de Acessos' },
       { to: '/logs', icon: History, label: 'Logs do Sistema' },
@@ -53,8 +58,13 @@ const Sidebar = ({ isOpen, onClose }) => {
     RH: [
       { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/funcionarios', icon: Users, label: 'Funcionários' },
-      { to: '/lancamento', icon: UserPlus, label: 'Lançamento' },
-      { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' },
+      { 
+        label: 'Lançamentos', icon: UserPlus,
+        subItems: [
+          { to: '/lancamento', icon: UserPlus, label: 'Por Funcionário' },
+          { to: '/lancamento-lote', icon: ClipboardList, label: 'Lançamento em Lote' }
+        ]
+      },
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
     ],
     Gestor: [
@@ -72,6 +82,29 @@ const Sidebar = ({ isOpen, onClose }) => {
   if (user?.perfil !== 'Admin' && user?.cargo !== 'Admin') {
     currentMenu = currentMenu.filter(item => item.to !== '/logs');
   }
+
+  const location = useLocation();
+  const [openMenus, setOpenMenus] = React.useState({});
+  
+  React.useEffect(() => {
+    // Automatically open menu if active
+    const newOpenMenus = { ...openMenus };
+    let changed = false;
+    currentMenu.forEach(item => {
+      if (item.subItems) {
+        const isActive = item.subItems.some(sub => location.pathname === sub.to);
+        if (isActive && !newOpenMenus[item.label]) {
+          newOpenMenus[item.label] = true;
+          changed = true;
+        }
+      }
+    });
+    if (changed) setOpenMenus(newOpenMenus);
+  }, [location.pathname, currentMenu]);
+
+  const toggleMenu = (label) => {
+    setOpenMenus(prev => ({...prev, [label]: !prev[label]}));
+  };
 
   const showLancarHoras = ['Admin', 'RH'].includes(user?.perfil) || ['Admin', 'RH'].includes(user?.cargo);
 
@@ -117,9 +150,33 @@ const Sidebar = ({ isOpen, onClose }) => {
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar pt-6">
           <p className="px-5 text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-6 opacity-40">Menu Principal</p>
           
-          {currentMenu.map((item) => (
-            <SidebarLink key={item.to} {...item} />
-          ))}
+          {currentMenu.map((item) => {
+            if (item.subItems) {
+              const isOpen = openMenus[item.label];
+              return (
+                <div key={item.label} className="space-y-1">
+                  <button
+                    onClick={() => toggleMenu(item.label)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                      isOpen ? 'bg-brand-surface text-brand-primary border border-brand-border shadow-sm' : 'text-brand-muted hover:bg-brand-surface/50 hover:text-brand-text'
+                    }`}
+                  >
+                    <item.icon size={18} className="shrink-0 transition-transform group-hover:scale-110" />
+                    <span className="font-black text-xs uppercase tracking-tight">{item.label}</span>
+                    <ChevronRight size={14} className={`ml-auto transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="pl-6 space-y-1 mt-1 border-l-2 border-brand-border/50 ml-6 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {item.subItems.map(sub => (
+                        <SidebarLink key={sub.to} {...sub} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return <SidebarLink key={item.to || item.label} {...item} />;
+          })}
         </nav>
 
         {/* ─── Botão de Destaque: Lançar Hora Mês ─── */}

@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   FileText,
   X,
-  Printer
+  Printer,
+  ChevronDown,
+  BarChart2
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -384,8 +386,19 @@ const PdfModal = ({ isOpen, onClose, defaultAno, preSelecionados, modoCicloGloba
 
 const Relatorio = () => {
     const navigate = useNavigate();
-    const [mes, setMes] = useState(new Date().getMonth() + 1);
-    const [ano, setAno] = useState(new Date().getFullYear());
+    
+    // Configura o mês anterior como padrão
+    const [mes, setMes] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d.getMonth() + 1;
+    });
+    const [ano, setAno] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d.getFullYear();
+    });
+
     const [modoCiclo, setModoCiclo] = useState('semestral');
     const [valorHora, setValorHora] = useState('');
     const [dados, setDados] = useState([]);
@@ -393,6 +406,7 @@ const Relatorio = () => {
     const [loading, setLoading] = useState(true);
     const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
     const [selecionados, setSelecionados] = useState([]);
+    const [mostrarCards, setMostrarCards] = useState(false);
 
     const toggleSelecionado = (id) => {
         setSelecionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -466,7 +480,7 @@ const Relatorio = () => {
 
                 <div className="flex flex-wrap items-center gap-3">
                      {/* Valor Hora Input */}
-                     <div className="flex items-center gap-3 bg-brand-surface border border-brand-border p-3 rounded-[1.5rem] shadow-xl">
+                     <div className="flex items-center gap-3 bg-brand-surface border border-brand-border p-2.5 rounded-[1.5rem] shadow-xl">
                         <span className="text-xs font-black text-brand-muted uppercase tracking-widest ml-2 flex items-center gap-2 opacity-60"><DollarSign size={14}/> R$/h:</span>
                         <input 
                             type="number" 
@@ -479,11 +493,11 @@ const Relatorio = () => {
                      </div>
 
                      {/* Date Selectors */}
-                     <div className="flex items-center gap-3 bg-brand-surface border border-brand-border p-3 rounded-[1.5rem] shadow-xl">
+                     <div className="flex items-center gap-2 bg-brand-surface border border-brand-border p-2.5 rounded-[1.5rem] shadow-xl">
                         <select 
                             value={modoCiclo} 
                             onChange={(e) => setModoCiclo(e.target.value)}
-                            className="bg-brand-bg text-brand-text text-sm font-black px-5 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
+                            className="bg-brand-bg text-brand-text text-sm font-black px-4 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
                         >
                             <option value="semestral" className="bg-brand-surface">Semestral</option>
                             <option value="anual" className="bg-brand-surface">Anual / Extensivo</option>
@@ -491,7 +505,7 @@ const Relatorio = () => {
                         <select 
                             value={mes} 
                             onChange={(e) => setMes(Number(e.target.value))}
-                            className="bg-brand-bg text-brand-text text-sm font-black px-5 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
+                            className="bg-brand-bg text-brand-text text-sm font-black px-4 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
                         >
                             {MESES.map((m, i) => (
                                 <option key={i+1} value={i+1} className="bg-brand-surface">{m}</option>
@@ -500,7 +514,7 @@ const Relatorio = () => {
                         <select 
                             value={ano} 
                             onChange={(e) => setAno(Number(e.target.value))}
-                            className="bg-brand-bg text-brand-text text-sm font-black px-5 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
+                            className="bg-brand-bg text-brand-text text-sm font-black px-4 py-3 rounded-xl outline-none appearance-none cursor-pointer hover:bg-brand-surface transition-all shadow-inner border border-brand-border/50"
                         >
                             {[2024, 2025, 2026].map(a => (
                                 <option key={a} value={a} className="bg-brand-surface">{a}</option>
@@ -508,36 +522,63 @@ const Relatorio = () => {
                         </select>
                      </div>
 
-                      <button 
-                        onClick={() => setIsPdfModalOpen(true)}
-                        className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg font-black py-4 px-8 rounded-[1.5rem] shadow-xl shadow-brand-primary/20 transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
-                      >
-                        <FileText size={18} /> {selecionados.length > 0 ? `PDF (${selecionados.length})` : 'Gerar PDF'}
-                      </button>
-
-                     <button 
-                        onClick={exportCSV}
-                        disabled={loading || dadosFiltrados.length === 0}
-                        className="bg-brand-accent hover:bg-brand-accent/90 text-white font-black py-4 px-8 rounded-[1.5rem] shadow-xl shadow-brand-accent/20 transition-all flex items-center gap-2 text-xs uppercase tracking-widest disabled:opacity-50"
-                     >
-                        <Download size={18} /> Exportar
-                     </button>
+                     <div className="flex items-center gap-2">
+                         <button 
+                            onClick={exportCSV}
+                            disabled={loading || dadosFiltrados.length === 0}
+                            className="bg-brand-accent hover:bg-brand-accent/90 text-white font-black py-4 px-6 rounded-[1.5rem] shadow-xl shadow-brand-accent/20 transition-all flex items-center gap-2 text-xs uppercase tracking-widest disabled:opacity-50"
+                         >
+                            <Download size={18} /> Exportar CSV
+                         </button>
+                          <button 
+                            onClick={() => setIsPdfModalOpen(true)}
+                            className="bg-brand-primary hover:bg-brand-primary/90 text-brand-bg font-black py-4 px-6 rounded-[1.5rem] shadow-xl shadow-brand-primary/20 transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
+                          >
+                            <FileText size={18} /> {selecionados.length > 0 ? `PDF (${selecionados.length})` : 'Gerar PDF'}
+                          </button>
+                     </div>
                 </div>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                {[
-                    { label: 'Total Colaboradores', value: dados.length, color: 'text-brand-text' },
-                    { label: 'Total Faltas', value: dados.reduce((acc, f) => acc + (f.faltas || 0), 0), color: 'text-rose-500' },
-                    { label: 'Saldos Positivos', value: dados.filter(f => f.saldo_mes?.startsWith('+')).length, color: 'text-brand-accent' },
-                    { label: 'Saldos Negativos', value: dados.filter(f => f.saldo_mes?.startsWith('-')).length, color: 'text-amber-500' }
-                ].map((m, idx) => (
-                    <div key={idx} className="bg-brand-surface border border-brand-border rounded-2xl p-6 shadow-xl flex flex-col items-center group hover:border-brand-primary/30 transition-all">
-                        <p className="text-[10px] font-black text-brand-muted uppercase tracking-widest mb-1.5 opacity-60">{m.label}</p>
-                        <p className={`text-2xl font-black ${m.color}`}>{m.value}</p>
+            {/* Container Retrátil dos Cards de Resumo */}
+            <div className="bg-brand-surface border border-brand-border rounded-3xl shadow-xl overflow-hidden transition-all duration-300">
+                <button 
+                    onClick={() => setMostrarCards(!mostrarCards)}
+                    className="w-full flex items-center justify-between p-6 hover:bg-brand-bg/50 transition-colors"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="p-2 bg-brand-primary/10 rounded-xl text-brand-primary">
+                            <BarChart2 size={22} />
+                        </div>
+                        <div className="text-left">
+                            <h2 className="text-xl font-black text-brand-text tracking-tighter">
+                                Visão Geral do Mês
+                            </h2>
+                            <p className="text-[11px] text-brand-muted uppercase font-black opacity-60 tracking-widest mt-0.5">
+                                {mostrarCards ? 'Clique para recolher' : 'Clique para expandir os totais'}
+                            </p>
+                        </div>
                     </div>
-                ))}
+                    <div className={`p-2 bg-brand-bg rounded-xl transition-transform duration-300 ${mostrarCards ? 'rotate-180' : ''}`}>
+                        <ChevronDown size={20} className="text-brand-muted" />
+                    </div>
+                </button>
+                
+                <div className={`transition-all duration-500 ease-in-out origin-top ${mostrarCards ? 'opacity-100 max-h-[500px] pb-6 px-6 border-t border-brand-border/50 scale-y-100' : 'opacity-0 max-h-0 scale-y-95 pointer-events-none'}`}>
+                    <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 pt-6 transition-transform duration-500 delay-100 ${mostrarCards ? 'translate-y-0' : '-translate-y-4'}`}>
+                        {[
+                            { label: 'Total Colaboradores', value: dados.length, color: 'text-brand-text' },
+                            { label: 'Total Faltas', value: dados.reduce((acc, f) => acc + (f.faltas || 0), 0), color: 'text-rose-500' },
+                            { label: 'Saldos Positivos', value: dados.filter(f => f.saldo_mes?.startsWith('+')).length, color: 'text-brand-accent' },
+                            { label: 'Saldos Negativos', value: dados.filter(f => f.saldo_mes?.startsWith('-')).length, color: 'text-amber-500' }
+                        ].map((m, idx) => (
+                            <div key={idx} className="bg-brand-bg border border-brand-border rounded-2xl p-6 shadow-inner flex flex-col items-center group hover:border-brand-primary/30 transition-all">
+                                <p className="text-[10px] font-black text-brand-muted uppercase tracking-widest mb-1.5 opacity-60">{m.label}</p>
+                                <p className={`text-2xl font-black ${m.color}`}>{m.value}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Main Table Content */}

@@ -9,6 +9,8 @@ import {
   Filter,
   Edit2,
   ChevronRight,
+  ChevronDown,
+  BarChart2,
   TrendingUp,
   UserX
 } from 'lucide-react';
@@ -110,6 +112,7 @@ const Dashboard = () => {
   const [filtroTipo, setFiltroTipo] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mostrarCards, setMostrarCards] = useState(false);
   
   // Estado para edição rápida
   const [editingFunc, setEditingFunc] = useState(null);
@@ -265,15 +268,41 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Grid de Cards de Resumo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-        <DashboardCard label="Funcionários" value={resumo.total_funcionarios} icon={Users} color="bg-brand-primary" />
-        <DashboardCard label="Lançados Hoje" value={resumo.lancados_hoje} icon={CalendarCheck} color="bg-brand-accent" trend="Alta" />
-        <DashboardCard label="Extras Mês" value={resumo.total_extras} icon={Clock} color="bg-brand-primary" />
-        <DashboardCard label="Feriados Mês" value={resumo.total_feriados} icon={CalendarCheck} color="bg-emerald-500" />
-        <DashboardCard label="Faltas Mês" value={resumo.total_faltas} icon={AlertTriangle} color="bg-orange-500" />
-        <DashboardCard label="Func. c/ Lacuna" value={resumo.funcs_com_lacuna} icon={Search} color="bg-rose-500" />
-        <DashboardCard label="Dias s/ Reg." value={resumo.total_dias_lacuna} icon={AlertTriangle} color="bg-amber-500" />
+      {/* Container Retrátil dos Cards de Resumo */}
+      <div className="bg-brand-surface border border-brand-border rounded-3xl shadow-xl overflow-hidden transition-all duration-300">
+        <button 
+          onClick={() => setMostrarCards(!mostrarCards)}
+          className="w-full flex items-center justify-between p-6 hover:bg-brand-bg/50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-brand-primary/10 rounded-xl text-brand-primary">
+              <BarChart2 size={22} />
+            </div>
+            <div className="text-left">
+              <h2 className="text-xl font-black text-brand-text tracking-tighter">
+                Visão Geral (Métricas)
+              </h2>
+              <p className="text-[11px] text-brand-muted uppercase font-black opacity-60 tracking-widest mt-0.5">
+                {mostrarCards ? 'Clique para recolher' : 'Clique para expandir os resumos do mês'}
+              </p>
+            </div>
+          </div>
+          <div className={`p-2 bg-brand-bg rounded-xl transition-transform duration-300 ${mostrarCards ? 'rotate-180' : ''}`}>
+            <ChevronDown size={20} className="text-brand-muted" />
+          </div>
+        </button>
+        
+        <div className={`transition-all duration-500 ease-in-out origin-top ${mostrarCards ? 'opacity-100 max-h-[1000px] pb-6 px-6 border-t border-brand-border/50 scale-y-100' : 'opacity-0 max-h-0 scale-y-95 pointer-events-none'}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 pt-6 transition-transform duration-500 delay-100 ${mostrarCards ? 'translate-y-0' : '-translate-y-4'}`}>
+            <DashboardCard label="Funcionários" value={resumo.total_funcionarios} icon={Users} color="bg-brand-primary" />
+            <DashboardCard label="Lançados Hoje" value={resumo.lancados_hoje} icon={CalendarCheck} color="bg-brand-accent" trend="Alta" />
+            <DashboardCard label="Extras Mês" value={resumo.total_extras} icon={Clock} color="bg-brand-primary" />
+            <DashboardCard label="Feriados Mês" value={resumo.total_feriados} icon={CalendarCheck} color="bg-emerald-500" />
+            <DashboardCard label="Faltas Mês" value={resumo.total_faltas} icon={AlertTriangle} color="bg-orange-500" />
+            <DashboardCard label="Func. c/ Lacuna" value={resumo.funcs_com_lacuna} icon={Search} color="bg-rose-500" />
+            <DashboardCard label="Dias s/ Reg." value={resumo.total_dias_lacuna} icon={AlertTriangle} color="bg-amber-500" />
+          </div>
+        </div>
       </div>
 
       {/* Lista de Funcionários */}
