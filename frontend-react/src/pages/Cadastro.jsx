@@ -17,6 +17,8 @@ const Cadastro = () => {
     const navigate = useNavigate();
     const [nome, setNome] = useState('');
     const [tipo, setTipo] = useState('');
+    const [cpf, setCpf] = useState('');
+    const [pis, setPis] = useState('');
     const [cargaDiaria, setCargaDiaria] = useState('');
     const [cargaMensal, setCargaMensal] = useState('');
     const [loading, setLoading] = useState(false);
@@ -59,6 +61,8 @@ const Cadastro = () => {
             const response = await axios.post('/funcionarios', { 
                 nome, 
                 tipo,
+                cpf: cpf.trim() || undefined,
+                pis: pis.trim() || undefined,
                 cargaHorariaDiaria: min(cargaDiaria),
                 cargaHorariaMensal: min(cargaMensal)
             });
@@ -72,6 +76,8 @@ const Cadastro = () => {
             
             setNome('');
             setTipo('');
+            setCpf('');
+            setPis('');
             setCargaDiaria('');
             setCargaMensal('');
             fetchFuncionarios();
@@ -180,6 +186,34 @@ const Cadastro = () => {
                                 className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all shadow-inner"
                             />
                         </div>
+
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-40">
+                                <Users size={14} className="text-brand-primary" /> PIS / PASEP (11 Dígitos)
+                            </label>
+                            <input 
+                                type="text" 
+                                value={pis}
+                                onChange={(e) => setPis(e.target.value)}
+                                placeholder="Ex: 123.45678.90-1"
+                                maxLength={14}
+                                className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all font-mono shadow-inner"
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-brand-muted uppercase tracking-widest ml-1 opacity-40">
+                                <Users size={14} className="text-brand-primary" /> CPF (11 Dígitos)
+                            </label>
+                            <input 
+                                type="text" 
+                                value={cpf}
+                                onChange={(e) => setCpf(e.target.value)}
+                                placeholder="Ex: 000.000.000-00"
+                                maxLength={14}
+                                className="w-full bg-brand-bg border border-brand-border rounded-xl px-5 py-3.5 text-brand-text text-sm font-black outline-none focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary/50 transition-all font-mono shadow-inner"
+                            />
+                        </div>
                     </div>
 
                     <div className="pt-8 flex justify-end">
@@ -239,6 +273,8 @@ const Cadastro = () => {
                             <tr className="border-b border-brand-border text-[10px] uppercase tracking-widest text-brand-muted opacity-60">
                                 <th className="px-4 py-3 font-black">ID</th>
                                 <th className="px-4 py-3 font-black">Nome Completo</th>
+                                <th className="px-4 py-3 font-black">PIS</th>
+                                <th className="px-4 py-3 font-black">CPF</th>
                                 <th className="px-4 py-3 font-black">Tipo de Contrato</th>
                                 <th className="px-4 py-3 font-black text-center">Status</th>
                                 <th className="px-4 py-3 font-black text-right">Ação</th>
@@ -250,6 +286,8 @@ const Cadastro = () => {
                                     <tr key={f.id} className="hover:bg-brand-bg/50 transition-colors">
                                         <td className="px-4 py-4 text-xs font-bold text-brand-muted">{f.id}</td>
                                         <td className="px-4 py-4 text-sm font-black text-brand-text">{f.nome}</td>
+                                        <td className="px-4 py-4 text-xs font-mono text-brand-muted">{f.pis || '—'}</td>
+                                        <td className="px-4 py-4 text-xs font-mono text-brand-muted">{f.cpf || '—'}</td>
                                         <td className="px-4 py-4 text-xs font-bold text-brand-primary">{f.tipo}</td>
                                         <td className="px-4 py-4 text-center">
                                             <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-full border tracking-widest ${f.ativo !== false ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
@@ -268,7 +306,7 @@ const Cadastro = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="3" className="px-4 py-8 text-center text-brand-muted text-sm italic opacity-60">
+                                    <td colSpan="7" className="px-4 py-8 text-center text-brand-muted text-sm italic opacity-60">
                                         Nenhum funcionário cadastrado ainda.
                                     </td>
                                 </tr>

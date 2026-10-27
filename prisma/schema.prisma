@@ -10,6 +10,8 @@ model Funcionario {
   id              Int               @id @default(autoincrement())
   nome            String            @db.VarChar(100)
   tipo            String            @db.VarChar(50)
+  cpf             String?           @db.VarChar(20)
+  pis             String?           @db.VarChar(20)
   extras          String?           @default("00:00") @db.VarChar(10)
   faltas          Int?              @default(0)
   ativo           Boolean?          @default(true)

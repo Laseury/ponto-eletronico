@@ -13,7 +13,8 @@ import {
   Moon,
   ShieldCheck,
   Clock,
-  ArrowRight
+  ArrowRight,
+  HardDriveDownload
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -52,6 +53,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         ]
       },
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
+      { to: '/exportar-afd', icon: HardDriveDownload, label: 'Exportar AFD' },
       { to: '/usuarios', icon: ShieldCheck, label: 'Gestão de Acessos' },
       { to: '/logs', icon: History, label: 'Logs do Sistema' },
     ],
@@ -66,6 +68,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         ]
       },
       { to: '/relatorios', icon: FileText, label: 'Relatórios' },
+      { to: '/exportar-afd', icon: HardDriveDownload, label: 'Exportar AFD' },
     ],
     Gestor: [
       { to: '/dashboard-gestor', icon: LayoutDashboard, label: 'Meu Painel' },
@@ -75,6 +78,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     Contador: [
       { to: '/dashboard-contador', icon: LayoutDashboard, label: 'Painel Contador' },
       { to: '/relatorios', icon: FileText, label: 'Relatórios Fiscais' },
+      { to: '/exportar-afd', icon: HardDriveDownload, label: 'Exportar AFD' },
     ],
   };
 

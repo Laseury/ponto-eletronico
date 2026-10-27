@@ -15,7 +15,8 @@ import {
   X,
   Printer,
   ChevronDown,
-  BarChart2
+  BarChart2,
+  Archive
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -408,6 +409,25 @@ const Relatorio = () => {
     const [selecionados, setSelecionados] = useState([]);
     const [mostrarCards, setMostrarCards] = useState(false);
 
+    const parseTimeToMinutes = (timeStr) => {
+        if (!timeStr) return 0;
+        const sign = timeStr.startsWith('-') ? -1 : 1;
+        const cleanStr = timeStr.replace(/[+-]/g, '');
+        const parts = cleanStr.split(':');
+        if (parts.length !== 2) return 0;
+        const hours = parseInt(parts[0], 10);
+        const mins = parseInt(parts[1], 10);
+        return sign * (hours * 60 + mins);
+    };
+
+    const getHeatmapStyle = (timeStr, maxMinutes = 2400) => {
+        const mins = parseTimeToMinutes(timeStr);
+        const percentage = Math.min(Math.abs(mins) / maxMinutes, 1) * 100;
+        if (mins === 0) return { width: '0%', background: 'transparent' };
+        if (mins > 0) return { width: `${percentage}%`, background: 'rgba(16, 185, 129, 0.2)' }; // brand-accent/20
+        return { width: `${percentage}%`, background: 'rgba(244, 63, 94, 0.2)' }; // rose-500/20
+    };
+
     const toggleSelecionado = (id) => {
         setSelecionados(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     };
@@ -523,6 +543,13 @@ const Relatorio = () => {
                      </div>
 
                      <div className="flex items-center gap-2">
+                         <Link 
+                            to="/exportar-afd"
+                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-black py-4 px-5 rounded-[1.5rem] shadow-xl transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
+                            title="Exportar Arquivo Fonte de Dados (AFD) para encerramento do sistema ou migração"
+                         >
+                            <Archive size={18} /> Exportar AFD
+                         </Link>
                          <button 
                             onClick={exportCSV}
                             disabled={loading || dadosFiltrados.length === 0}
@@ -679,11 +706,21 @@ const Relatorio = () => {
                                         <td className="px-6 py-4 text-center text-xs font-black text-rose-400 bg-rose-500/5">
                                             {f.tipo?.includes('Horista') ? '—' : f.total_negativos}
                                         </td>
-                                        <td className={`px-6 py-4 text-center text-sm font-black ${corSaldo}`}>{f.saldo_mes}</td>
-                                        <td className={`px-6 py-4 text-center text-sm font-black ${corBanco} bg-brand-bg/30`}>
-                                            <div className="flex flex-col items-center">
+                                        <td className={`px-6 py-4 text-center text-sm font-black ${corSaldo} relative overflow-hidden group`}>
+                                            <div 
+                                                className="absolute inset-y-0 left-0 -z-10 transition-all duration-500 ease-out rounded-r-lg group-hover:opacity-100 opacity-60"
+                                                style={getHeatmapStyle(f.saldo_mes)}
+                                            ></div>
+                                            <span className="relative z-10 drop-shadow-md">{f.saldo_mes}</span>
+                                        </td>
+                                        <td className={`px-6 py-4 text-center text-sm font-black ${corBanco} bg-brand-bg/30 relative overflow-hidden group`}>
+                                            <div 
+                                                className="absolute inset-y-0 left-0 -z-10 transition-all duration-500 ease-out rounded-r-lg group-hover:opacity-100 opacity-60"
+                                                style={getHeatmapStyle(f.banco_horas)}
+                                            ></div>
+                                            <div className="flex flex-col items-center z-10 relative drop-shadow-md">
                                                 <span>{f.banco_horas}</span>
-                                                <span className="text-[8px] text-brand-muted font-black uppercase tracking-tighter opacity-50 mt-0.5">Ciclo: {f.ciclo}</span>
+                                                <span className="text-[8px] text-brand-muted font-black uppercase tracking-tighter opacity-80 mt-0.5">Ciclo: {f.ciclo}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">

@@ -143,6 +143,7 @@ const LancamentoHoras = () => {
   // Célula atualmente em foco (para feedback visual e navegação estilo Excel)
   const [focusedCell, setFocusedCell] = useState({ rowIndex: null, colField: null });
   const [fastDay, setFastDay] = useState('');
+  const [isZenMode, setIsZenMode] = useState(false);
   const cellRefs = useRef({});
 
   // Carregar lista de funcionários
@@ -990,7 +991,7 @@ const LancamentoHoras = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+    <div className={isZenMode ? "fixed inset-0 z-[100] bg-brand-bg overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar animate-in zoom-in-95 duration-300" : "space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700"}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
@@ -1138,6 +1139,14 @@ const LancamentoHoras = () => {
                   className="flex items-center gap-2 px-6 py-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/20 transition-all shadow-xl cursor-pointer shadow-rose-500/10"
                 >
                   <Calendar size={16} /> Lançar Evento em Massa
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsZenMode(!isZenMode)}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl cursor-pointer border ${isZenMode ? 'bg-brand-primary text-white hover:bg-brand-primary/90 border-brand-primary' : 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary hover:bg-brand-primary/20 shadow-brand-primary/10'}`}
+                >
+                  <Zap size={16} /> {isZenMode ? 'Sair do Foco' : 'Modo Foco'}
                 </button>
               </div>
             )}

@@ -51,6 +51,7 @@ try {
     const authRoutes = require("../routes/auth.routes");
     const comentariosRoutes = require("../routes/comentarios.routes");
     const ajustesRoutes = require("../routes/ajustes.routes");
+    const afdRoutes = require("../routes/afd.routes");
     const { authMiddleware, authorizeRoles, Role } = require("../middlewares/auth.middleware");
 
     app.use("/auth", authRoutes);
@@ -62,6 +63,7 @@ try {
     app.use("/ia",           authMiddleware, iaRoutes);
     app.use("/comentarios",  authMiddleware, comentariosRoutes);
     app.use("/ajustes",     authMiddleware, ajustesRoutes);
+    app.use("/afd",         authMiddleware, authorizeRoles(Role.ADMIN, Role.RH, Role.CONTADOR), afdRoutes);
     
     console.log("✓ Todas as rotas carregadas com sucesso");
 } catch (error) {

@@ -14,6 +14,7 @@ import {
   TrendingUp,
   UserX
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import swalTheme from '../utils/swalTheme';
 import toast from '../utils/toast';
@@ -211,6 +212,19 @@ const Dashboard = () => {
     return bateNome && bateTipo && bateStatus;
   });
 
+  const chartData = funcionarios.map(f => {
+    let saldoMin = 0;
+    if (f.saldo_mes) {
+      const sign = f.saldo_mes.startsWith('-') ? -1 : 1;
+      const [h, m] = f.saldo_mes.replace(/[+-]/g, '').split(':').map(Number);
+      saldoMin = sign * ((h * 60) + (m || 0));
+    }
+    return {
+      nome: f.nome.split(' ')[0],
+      saldo: parseFloat((saldoMin / 60).toFixed(1))
+    };
+  }).sort((a,b) => b.saldo - a.saldo).slice(0, 15); // Top 15 para o gráfico não ficar gigante
+
   const handleInativar = (id, nome) => {
     swalTheme({
       title: 'Tem certeza?',
@@ -301,6 +315,30 @@ const Dashboard = () => {
             <DashboardCard label="Faltas Mês" value={resumo.total_faltas} icon={AlertTriangle} color="bg-orange-500" />
             <DashboardCard label="Func. c/ Lacuna" value={resumo.funcs_com_lacuna} icon={Search} color="bg-rose-500" />
             <DashboardCard label="Dias s/ Reg." value={resumo.total_dias_lacuna} icon={AlertTriangle} color="bg-amber-500" />
+          </div>
+
+          {/* Gráfico de Saldo */}
+          <div className={`mt-8 h-64 w-full transition-all duration-700 delay-300 ${mostrarCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <h3 className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-4 opacity-60">
+              Saldo de Horas (Top 15)
+            </h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="nome" tick={{ fill: '#888', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#888', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                  contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }} 
+                  formatter={(val) => [`${val}h`, 'Saldo']}
+                />
+                <ReferenceLine y={0} stroke="#333" />
+                <Bar dataKey="saldo" radius={[4, 4, 4, 4]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.saldo > 0 ? '#10b981' : entry.saldo < 0 ? '#f43f5e' : '#666'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

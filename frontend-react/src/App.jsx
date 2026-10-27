@@ -10,6 +10,7 @@ import LancamentoLote from './pages/LancamentoLote';
 
 import LancamentoHoras from './pages/LancamentoHoras';
 import Relatorio from './pages/Relatorio';
+import ExportarAFD from './pages/ExportarAFD';
 import Logs from './pages/Logs';
 import Usuarios from './pages/Usuarios';
 import GestorDashboard from './pages/gestor/GestorDashboard';
@@ -55,6 +56,7 @@ function App() {
 
             <Route path="/lancamento-horas" element={<LancamentoHoras />} />
             <Route path="/relatorios" element={<Relatorio />} />
+            <Route path="/exportar-afd" element={<ExportarAFD />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/usuarios" element={<Usuarios />} />
             

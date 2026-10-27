@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "funcionarios" ADD COLUMN IF NOT EXISTS "cpf" VARCHAR(20);
+ALTER TABLE "funcionarios" ADD COLUMN IF NOT EXISTS "pis" VARCHAR(20);
